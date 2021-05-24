@@ -175,7 +175,7 @@ public class WJDeviceSelectAdapter extends BaseRecyclerViewAdapter<DeviceInfo> {
         for (int i = 0; i < allData.size(); i++) {
             DeviceInfo deviceInfo = allData.get(i);
             Boolean aBoolean = mHashMap.get(deviceInfo.device_serial);
-            if (aBoolean) {
+            if (aBoolean!=null && aBoolean){
                 selectDatas.add(deviceInfo);
             }
         }
