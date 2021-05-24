@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="#ffffff">
+
+        <ImageView
+            android:id="@+id/back_iv"
+            android:layout_width="19dp"
+            android:layout_height="23dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="10dp"
+            android:padding="5dp"
+            android:src="@mipmap/wj_uikit_back" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="选择设备"
+            android:textColor="#FF333333"
+            android:textSize="17dp" />
+
+        <ImageView
+            android:id="@+id/device_add"
+            android:src="@mipmap/wj_uikit_add"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:layout_gravity="right|center_vertical"
+            android:layout_marginRight="10dp"
+            android:padding="5dp" />
+    </FrameLayout>
+
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:layout_marginTop="48dp"
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+
+    <TextView
+        android:id="@+id/confirm_tv"
+        android:textColor="#ffffff"
+        android:background="@drawable/wj_angle_blue_4"
+        android:layout_marginBottom="18dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:textSize="15dp"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:text="完成"
+        android:layout_width="302dp"
+        android:layout_height="44dp"/>
+    <FrameLayout
+        android:layout_marginTop="48dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <include
+            layout="@layout/wj_device_default"/>
+    </FrameLayout>
+
+
+</FrameLayout>

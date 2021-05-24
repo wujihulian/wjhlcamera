@@ -1,0 +1,65 @@
+plugins {
+    id 'com.android.library'
+}
+apply plugin: 'com.github.dcendents.android-maven'
+group = 'com.github.maxqiang1992'
+
+android {
+    compileSdkVersion 30
+    buildToolsVersion "30.0.1"
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 30
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+}
+
+dependencies {
+
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'com.google.android.material:material:1.1.0'
+    implementation 'org.jetbrains:annotations:15.0'
+    testImplementation 'junit:junit:4.+'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+    //   核心模块，必须依赖
+    api 'com.ezviz.sdk:ezviz-sdk:4.16.0'
+/*  //  视频通话模块，按需使用
+    api 'com.ezviz.sdk:videotalk:1.2.0'
+
+  //  码流获取模块，按需使用
+    api 'com.ezviz.sdk:streamctrl:1.2.0'*/
+    api 'com.google.code.gson:gson:2.8.6'
+    //XML JSON
+    api 'com.github.smart-fun:XmlToJson:1.4.5'
+    api "io.reactivex.rxjava3:rxjava:3.0.0"
+    api 'io.reactivex.rxjava2:rxandroid:2.1.0'
+    api 'com.squareup.okhttp3:logging-interceptor:4.2.2'
+
+    api 'com.fasterxml.jackson.core:jackson-databind:2.9.0.pr3'
+    api 'com.fasterxml.jackson.core:jackson-core:2.9.0.pr3'
+    api 'com.fasterxml.jackson.core:jackson-annotations:2.9.0.pr3'
+
+
+}
+

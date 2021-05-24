@@ -11,7 +11,10 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/UIkit" />
+            <option value="$PROJECT_DIR$/ap_add_component" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/wjcamera_library" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="84dp"
+    android:layout_height="240dp"
+    android:background="#ffffff"
+    android:id="@+id/raito_ll"
+    android:orientation="vertical">
+    <TextView
+        android:text="128"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:textColor="#333333"
+        android:textSize="14dp" />
+    <TextView
+        android:text="256"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:textColor="#333333"
+        android:textSize="14dp" />
+
+    <TextView
+        android:text="512"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:textColor="#333333"
+        android:textSize="14dp" />
+
+    <TextView
+        android:text="1024"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:textColor="#333333"
+        android:textSize="14dp" />
+    <TextView
+        android:text="2048"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:textColor="#333333"
+        android:textSize="14dp" />
+    <TextView
+        android:text="4096"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:textColor="#333333"
+        android:textSize="14dp" />
+</LinearLayout>

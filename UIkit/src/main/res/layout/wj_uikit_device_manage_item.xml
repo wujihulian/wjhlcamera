@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    >
+
+    <FrameLayout
+        android:background="@drawable/wj_angle_white_5"
+        android:layout_gravity="center_horizontal"
+        android:layout_width="344dp"
+        android:layout_height="214dp">
+
+        <ImageView
+            android:src="@mipmap/wj_uikit_def_img"
+            android:layout_gravity="center"
+            android:layout_width="122dp"
+            android:layout_height="92dp"/>
+
+        <LinearLayout
+            android:gravity="bottom"
+            android:layout_marginBottom="6dp"
+            android:layout_marginLeft="13dp"
+            android:layout_gravity="bottom"
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/device_name"
+                android:textColor="#FF333333"
+                android:text="IPC1"
+                android:textSize="13dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/device_location"
+                android:textColor="#FF333333"
+                android:text="教师2003"
+                android:textSize="13dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/edit_location"
+            android:src="@mipmap/wj_uikit_edit"
+            android:layout_marginBottom="5dp"
+            android:layout_marginRight="15dp"
+            android:layout_gravity="right|bottom"
+            android:padding="5dp"
+            android:layout_width="30dp"
+            android:layout_height="30dp"/>
+
+        <ImageView
+            android:layout_marginRight="22dp"
+            android:layout_marginTop="10dp"
+            android:layout_gravity="right"
+            android:src="@mipmap/wj_ic_close_icon"
+            android:id="@+id/iv_remove_device"
+            android:layout_width="14dp"
+            android:layout_height="14dp"/>
+    </FrameLayout>
+</FrameLayout>

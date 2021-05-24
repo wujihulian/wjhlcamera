@@ -1,2 +1,5 @@
+include ':wjcamera_library'
+include ':ap_add_component'
+include ':UIkit'
 include ':app'
 rootProject.name = "wjcamera"

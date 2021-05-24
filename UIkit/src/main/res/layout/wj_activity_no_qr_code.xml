@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="#ffffff">
+
+        <ImageView
+            android:id="@+id/back_iv"
+            android:layout_width="19dp"
+            android:layout_height="23dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="10dp"
+            android:padding="5dp"
+            android:src="@mipmap/wj_uikit_back" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="扫描二维码"
+            android:textColor="#FF333333"
+            android:textSize="17dp" />
+
+    </FrameLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:alpha="0.1"
+        android:background="#999999" />
+
+    <EditText
+        android:singleLine="true"
+        android:maxLength="9"
+        android:id="@+id/et_serial"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="#ffffff"
+        android:hint="请输入设备序列号"
+        android:maxLines="1"
+        android:paddingLeft="16dp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:alpha="0.1"
+        android:background="#999999" />
+
+    <EditText
+        android:singleLine="true"
+        android:maxLength="6"
+        android:id="@+id/et_code"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="#ffffff"
+        android:hint="请输入设备验证码"
+        android:maxLines="1"
+        android:paddingLeft="16dp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:alpha="0.1"
+        android:background="#999999" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+
+        <TextView
+            android:id="@+id/tv_next"
+            android:background="@drawable/wj_angle_blue_4"
+            android:textSize="15sp"
+            android:layout_marginBottom="24dp"
+            android:layout_gravity="bottom"
+            android:textColor="#ffffff"
+            android:text="下一步"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginLeft="36dp"
+            android:layout_marginRight="36dp" />
+
+    </FrameLayout>
+</LinearLayout>

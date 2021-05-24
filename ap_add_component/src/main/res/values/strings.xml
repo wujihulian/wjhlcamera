@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">ApConfigDemo</string>
+    <string name="type">DHCP</string>
+    <string name="type1">manual</string>
+    <string name="ipv4">10.21.84.44</string>
+    <string name="subnetMask">255.0.0.0</string>
+    <string name="defaultGateway">1.1.1.1</string>
+    <string name="dns_enabled">false</string>
+    <string name="dns_primary">10.1.7.7</string>
+    <string name="dns_secondary">10.1.1.8</string>
+</resources>
