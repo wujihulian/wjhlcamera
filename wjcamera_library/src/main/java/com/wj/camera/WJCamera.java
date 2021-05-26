@@ -1,5 +1,6 @@
 package com.wj.camera;
 
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.text.TextUtils;
 
@@ -15,6 +16,12 @@ import com.wj.camera.uitl.SPUtil;
 
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -86,9 +93,9 @@ public class WJCamera {
         } else {
             getToken(appKey, appSecret);
         }
-
-
     }
+
+
 
     private void getToken(String appKey, String appSecret) {
         getToken(appKey, appSecret, new JsonCallback<AccessToken>() {
@@ -98,6 +105,12 @@ public class WJCamera {
                 SPUtil.saveData(mApplication, "AccessToken", new Gson().toJson(data));
             }
         });
+    }
+
+    @SuppressLint("CheckResult")
+    public void  init(Application context, String appKey){
+        EZOpenSDK.showSDKLog(false);
+        EZOpenSDK.initLib(context, "aab9716cd40740508e5ad6ecbe5d8a65");
     }
 
     /**

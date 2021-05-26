@@ -1,9 +1,12 @@
 package com.wj.camera.net;
 
+import androidx.annotation.IntRange;
+
 import com.google.gson.Gson;
 import com.wj.camera.WJCamera;
 import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.callback.XmlCallback;
+import com.wj.camera.config.WJDeviceConfig;
 import com.wj.camera.response.ResponseStatus;
 import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.response.TwoWayAudio;
@@ -85,7 +88,6 @@ public class ISAPI {
     }
 
     public void zoom(int zoom) {
-
         ZoomResponse zoomResponse = new ZoomResponse();
         zoomResponse.setZoom(new ZoomResponse.ZoomDTO());
         zoomResponse.getZoom().setRatio(zoom);
@@ -99,6 +101,10 @@ public class ISAPI {
         put(xmlRequestBody, Api.PZTData, callback);
     }
 
+    //获取RTMP配置
+    public void getRTMP(String deviceSerial,JsonCallback<RtmpConfig> callback) {
+        get(Api.RTMP,deviceSerial, callback);
+    }
 
     //获取RTMP配置
     public void getRTMP(JsonCallback<RtmpConfig> callback) {
@@ -108,9 +114,29 @@ public class ISAPI {
     public void getAudio(JsonCallback<TwoWayAudio> callback) {
         get(Api.Audio, callback);
     }
-    public void setAuido(TwoWayAudio twoWayAudio, JsonCallback<ResponseStatus> callback){
+
+    public void setAuido(TwoWayAudio twoWayAudio, JsonCallback<ResponseStatus> callback) {
         RequestBody xmlRequestBody = createXmlRequestBody(twoWayAudio);
-        put(xmlRequestBody, Api.Audio,callback);
+        put(xmlRequestBody, Api.Audio, callback);
+    }
+    public void setVolume(String deviceSerial,@IntRange(from = 0,to = 100) int volume){
+        setVolume(deviceSerial,volume,null);
+
+    }
+    public void setVolume(String deviceSerial,@IntRange(from = 0,to = 100)int volume, JsonCallback<ResponseStatus> callback){
+
+        get(Api.Audio, deviceSerial, new JsonCallback<TwoWayAudio>() {
+            @Override
+            public void onSuccess(TwoWayAudio data) {
+                if (data!=null){
+                    if (data.getTwoWayAudioChannel()!=null) {
+                        data.getTwoWayAudioChannel().setSpeakerVolume(String.valueOf(volume));
+                        setAuido(data,callback);
+                    }
+                }
+            }
+        });
+
     }
 
     //获取RTMP配置
@@ -132,8 +158,9 @@ public class ISAPI {
         return null;
 
     }
+
     //获取RTMP配置
-    public RtmpConfig getRTMP(String device_serial,OkHttpClient client) {
+    public RtmpConfig getRTMP(String device_serial, OkHttpClient client) {
         Request request = new Request.Builder()
                 .url(Api.RTMP)
                 .addHeader("EZO-AccessToken", WJCamera.getInstance().getAccessToken())
@@ -180,6 +207,10 @@ public class ISAPI {
 
 
     private void get(String url, JsonCallback callback) {
+        get(url, deviceSerial, callback);
+    }
+
+    private void get(String url, String deviceSerial, JsonCallback callback) {
         Request request = new Request.Builder()
                 .url(url)
                 .addHeader("EZO-AccessToken", WJCamera.getInstance().getAccessToken())
@@ -206,6 +237,10 @@ public class ISAPI {
     }
 
     private void put(RequestBody requestBody, String url, JsonCallback callback) {
+        put(requestBody, url, deviceSerial, callback);
+    }
+
+    private void put(RequestBody requestBody, String url, String deviceSerial, JsonCallback callback) {
         Request request = new Request.Builder()
                 .url(url)
                 .put(requestBody)
@@ -220,5 +255,49 @@ public class ISAPI {
         get(Api.Zoom, jsonCallback);
     }
 
+    public void getZoom(String deviceSerial, JsonCallback<ZoomResponse> jsonCallback) {
+        get(Api.Zoom, deviceSerial, jsonCallback);
+    }
 
+    //设置码率
+    public void setBitrate(String deviceSerial ,String bitrate,JsonCallback<ResponseStatus> jsonCallback){
+        get(Api.setting101,deviceSerial, new JsonCallback<VideoConfig>() {
+            @Override
+            public void onSuccess(VideoConfig data) {
+                if (data!=null && data.getStreamingChannel()!=null && data.getStreamingChannel().getVideo()!=null){
+                            data.getStreamingChannel().getVideo().setVbrUpperCap(bitrate);
+                            RequestBody xmlRequestBody = createXmlRequestBody(data);
+                            put(xmlRequestBody, Api.setting101,deviceSerial, jsonCallback);
+                }else {
+                    if (jsonCallback!=null) {
+                        jsonCallback.onError(1001,"设置码率失败");
+                    }
+                }
+            }
+        });
+    }
+
+    //设置分辨率
+    public void setResolution(String deviceSerial ,String[] ratio,JsonCallback<ResponseStatus> jsonCallback){
+        get(Api.setting101,deviceSerial, new JsonCallback<VideoConfig>() {
+            @Override
+            public void onSuccess(VideoConfig data) {
+                if (data!=null && data.getStreamingChannel()!=null && data.getStreamingChannel().getVideo()!=null){
+                    data.getStreamingChannel().getVideo().setVideoResolutionHeight(ratio[0]);
+                    data.getStreamingChannel().getVideo().setVideoResolutionWidth(ratio[1]);
+                    RequestBody xmlRequestBody = createXmlRequestBody(data);
+                    put(xmlRequestBody, Api.setting101,deviceSerial, jsonCallback);
+                }else {
+                    if (jsonCallback!=null) {
+                        jsonCallback.onError(1001,"设置分辨率失败");
+                    }
+                }
+            }
+        });
+    }
+
+    //获取配置信息
+    public void getDeviceConfig(String deviceSerial, JsonCallback<VideoConfig> jsonCallback){
+        get(Api.setting101,deviceSerial, jsonCallback);
+    }
 }
