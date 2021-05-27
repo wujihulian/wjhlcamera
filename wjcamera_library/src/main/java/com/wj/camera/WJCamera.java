@@ -3,6 +3,7 @@ package com.wj.camera;
 import android.annotation.SuppressLint;
 import android.app.Application;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.videogo.openapi.EZOpenSDK;
@@ -11,20 +12,24 @@ import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.callback.StringCallbck;
 import com.wj.camera.net.Api;
 import com.wj.camera.net.SafeGuardInterceptor;
+import com.wj.camera.request.TokenRequest;
 import com.wj.camera.response.AccessToken;
+import com.wj.camera.uitl.MD5Util;
 import com.wj.camera.uitl.SPUtil;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.annotations.NonNull;
-import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
-import io.reactivex.rxjava3.schedulers.Schedulers;
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.FormBody;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
 
 /**
@@ -95,7 +100,6 @@ public class WJCamera {
     }
 
 
-
     private void getToken(String appKey, String appSecret) {
         getToken(appKey, appSecret, new JsonCallback<AccessToken>() {
             @Override
@@ -107,10 +111,73 @@ public class WJCamera {
     }
 
     @SuppressLint("CheckResult")
-    public void  init(Application context, String appKey){
+    public void init(String appId, String appKey, Application context) {
         EZOpenSDK.showSDKLog(false);
         EZOpenSDK.initLib(context, "aab9716cd40740508e5ad6ecbe5d8a65");
+
+
+        String str = (String) SPUtil.getData(mApplication, "WJAccessToken","");
+        if (!TextUtils.isEmpty(str)) {
+            AccessToken accessToken = new Gson().fromJson(str, AccessToken.class);
+            Long expireTime = accessToken.getData().getExpireTime();
+            if (System.currentTimeMillis() >= expireTime - 86400000) {
+            } else {
+                //获取缓存token
+                Log.i(TAG, "get cache accessToken" + accessToken.getCode());
+                login(accessToken.getData().getAccessToken());
+                return;
+            }
+        }
+        Log.i(TAG, "init camera");
+        OkHttpClient client = getClient();
+        MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+        TokenRequest tokenRequest = new TokenRequest();
+        tokenRequest.appId = appId;
+        long currentTimeMillis = System.currentTimeMillis();
+        tokenRequest.timestamp = currentTimeMillis + "";
+        String sign = MD5Util.stringToMD5(appId + appKey + currentTimeMillis);
+        tokenRequest.sign = sign;
+        RequestBody requestBody = RequestBody.create(JSON, new Gson().toJson(tokenRequest));
+        Request request = new Request.Builder()
+                .post(requestBody)
+                .url("https://test.1x.cn//api/course/nLive/token/get")
+                //.url("https://syswx.xx.cn/api/course/nLive/token/get")
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                if (e != null) {
+                    Log.i(TAG, "onFailure: " + e.getMessage());
+                }
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                String string = response.body().string();
+                Log.i(TAG, "onResponse: " + string);
+                try {
+                    AccessToken accessToken = new Gson().fromJson(string, AccessToken.class);
+                    if ("200".equals(accessToken.getCode())) {
+                        SPUtil.saveData(mApplication, "WJAccessToken", new Gson().toJson(accessToken));
+                        Log.i(TAG, "WJCamera init succeed" + accessToken.getCode());
+                        login(accessToken.getData().getAccessToken());
+                    } else {
+                        Log.i(TAG, "WJCamera init failure " + accessToken.getCode());
+                    }
+                } catch (Exception e) {
+                    Log.i(TAG, "WJCamera init failure " + e.getMessage());
+                    e.printStackTrace();
+                }
+
+
+            }
+        });
+
+
     }
+
+
+    private static final String TAG = "WJCamera";
 
     /**
      * 登录 适用sdk相关的 必须先登录
@@ -134,9 +201,11 @@ public class WJCamera {
         EZPlayer player = EZOpenSDK.getInstance().createPlayer(deviceSerial, cameraNo);
         return player;
     }
+
     public EZPlayer createPlayer(String deviceSerial) {
-        return createPlayer(deviceSerial,1);
+        return createPlayer(deviceSerial, 1);
     }
+
     public void getToken(String appKey, String appSecret, JsonCallback<AccessToken> callback) {
         FormBody.Builder builder = new FormBody.Builder();
         builder.addEncoded("appKey", appKey);
