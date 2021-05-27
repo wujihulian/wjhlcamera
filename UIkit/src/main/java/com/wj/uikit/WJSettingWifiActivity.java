@@ -6,13 +6,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -146,7 +146,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode==200){
+        if (requestCode == 200) {
             boolean wifiEnabled = mWifiMgr.isWifiEnabled();
             if (wifiEnabled) {
                 mLl_to_wifi.setVisibility(View.GONE);
@@ -430,31 +430,46 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
     public void onClick(String wifiPssword, int position) {
         ScanResult data = mWifiListAdapter.getData(position);
         List<ScanResult> allData = mWifiListAdapter.getAllData();
-        String  bssid ="";
+        String bssid = "";
 
         for (int i = 0; i < allData.size(); i++) {
-            if (allData.get(i).SSID.equals("HAP_"+ mDeviceInfo.device_serial)) {
-                bssid=allData.get(i).BSSID;
+            if (allData.get(i).SSID.equals("HAP_" + mDeviceInfo.device_serial)) {
+                bssid = allData.get(i).BSSID;
                 break;
-            };
+            }
+            ;
         }
-        Log.i(TAG, "onClick: "+bssid);
+        Log.i(TAG, "onClick: " + bssid);
 
-        startAp(data.SSID, wifiPssword,bssid);
+        startAp(data.SSID, wifiPssword, bssid);
 
 
     }
 
+    public boolean removeWifiConfig(String SSID) {
+        // TODO Auto-generated method stub
+        WifiManager wifiManager = mWifiMgr;
+        List<WifiConfiguration> configs = wifiManager.getConfiguredNetworks();
+        SSID = "\"" + SSID + "\"";
+        for (WifiConfiguration config : configs) {
+            if (SSID.equals(config.SSID)) {
+                boolean result = wifiManager.removeNetwork(config.networkId);
+                wifiManager.saveConfiguration();
+                return result;
+            }
+        }
+        return false;
+    }
 
     private long startApTime;
 
-    public void startAp(String wifiSsid, String wifiPassword,String  bssid) {
+    public void startAp(String wifiSsid, String wifiPassword, String bssid) {
         String password = "AP" + mDeviceInfo.device_code;
         //"EZVIZ_"+设备序列号
         String ssid = "HAP_" + mDeviceInfo.device_serial;
-
+        removeWifiConfig(ssid);
         WifiUtils.withContext(getApplicationContext())
-                .connectWith(ssid,password)
+                .connectWith(ssid, password)
                 .setTimeout(15000)
                 .onConnectionResult(new ConnectionSuccessListener() {
                     @Override
@@ -462,7 +477,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                         mLoadingPopupView = new XPopup.Builder(WJSettingWifiActivity.this).dismissOnTouchOutside(false).setPopupCallback(new SimpleCallback() {
                             @Override
                             public void onDismiss(BasePopupView popupView) {
-                                if (handler!=null) {
+                                if (handler != null) {
                                     handler.removeMessages(SEND_CHECK_DEVICE_MSG);
                                     handler.removeMessages(SEND_CHECK_ISAPI);
                                 }
@@ -479,7 +494,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                 .fixedIP(FIXED_IP.Companion.getWIRELESS_IPC_YS())  // 设备固定IP。这里针对萤石设备有  192.168.8.1 和 192.168.8.253 两款兼容，可扩展更多的ip
                                 .build();
 
-                        Log.i(TAG, "success: "+wifiSsid +" ----- "+wifiPassword);
+                        Log.i(TAG, "success: " + wifiSsid + " ----- " + wifiPassword);
                         YsApManager.INSTANCE.activateWifi(apConfigInfo, new YsApManager.ApActivateCallback() {
                             @Override
                             public void onStartSearch() {
@@ -499,7 +514,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                             @Override
                             public void onSuccess() {
                                 logPrint("wifi 配置成功！！");
-                                if (handler!=null) {
+                                if (handler != null) {
                                     startApTime = System.currentTimeMillis();
                                     if (mDeviceCode == 120020) {
                                         //已经添加过设备
@@ -537,7 +552,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                             new OnConfirmListener() {
                                                 @Override
                                                 public void onConfirm() {
-                                                    startAp(wifiSsid, wifiPassword,bssid);
+                                                    startAp(wifiSsid, wifiPassword, bssid);
                                                 }
                                             },
                                             null,

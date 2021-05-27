@@ -32,6 +32,15 @@ public class WJPlayView extends FrameLayout implements OnPlayStateListener {
     private WJSurfaceView mWjSurfaceView;
     private EZPlayer mEZPlayer;
     private List<WJPlayControl> mControlList = new ArrayList<>();
+    private OnPlayStateListener mOnPlayStateListener;
+
+    public void setOnPlayStateListener(OnPlayStateListener onPlayStateListener) {
+        mOnPlayStateListener = onPlayStateListener;
+    }
+
+    public OnPlayStateListener getOnPlayStateListener() {
+        return mOnPlayStateListener;
+    }
 
     public WJPlayView(@NonNull Context context) {
         super(context);
@@ -80,6 +89,9 @@ public class WJPlayView extends FrameLayout implements OnPlayStateListener {
 
     @Override
     public void playState(int state, Message data) {
+        if (getOnPlayStateListener()!=null){
+            getOnPlayStateListener().playState(state,data);
+        }
         for (WJPlayControl wjPlayControl : mControlList) {
             wjPlayControl.playState(state,data);
         }

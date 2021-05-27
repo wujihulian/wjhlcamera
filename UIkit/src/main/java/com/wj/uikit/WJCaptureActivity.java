@@ -154,12 +154,11 @@ public class WJCaptureActivity extends AppCompatActivity {
                                     public void onError(int code, String msg) {
                                         super.onError(code, msg);
                                         mLoadingPopupView.dismiss();
-                                        finish();
+                                        Toast.makeText(WJCaptureActivity.this, msg + "-" + code, Toast.LENGTH_LONG).show();
                                     }
                                 });
                             } else {
                                 mLoadingPopupView.dismiss();
-                                Log.i(TAG, "accept: " + result.getBaseException().getErrorCode());
 
                                 switch (result.getBaseException().getErrorCode()) {
                                     case 120023:
@@ -209,7 +208,7 @@ public class WJCaptureActivity extends AppCompatActivity {
 
                                         break;
                                     default:
-                                        Log.i(TAG, "accept: " +result.getBaseException().getErrorCode() );
+                                        Log.i(TAG, "accept: " + result.getBaseException().getErrorCode());
                              /*           Toast.makeText(WJCaptureActivity.this, "Request failed = "
                                                 + result.getBaseException().getErrorCode() + " msg=" + result.getBaseException().getErrorInfo().description, Toast
                                                 .LENGTH_LONG).show();*/
@@ -311,8 +310,8 @@ public class WJCaptureActivity extends AppCompatActivity {
             deviceInfo.device_serial = split[1];
             deviceInfo.device_code = split[2];
             deviceInfo.device_type = split[3];
-            String [] arr2 = deviceInfo.device_type.split(" ");
-            deviceInfo.device_type=arr2[0];
+            String[] arr2 = deviceInfo.device_type.split(" ");
+            deviceInfo.device_type = arr2[0];
             Log.i(TAG, "parse: " + new Gson().toJson(deviceInfo));
             return deviceInfo;
         }

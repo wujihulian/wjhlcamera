@@ -51,7 +51,6 @@ public class WJCamera {
     }
 
     private WJCamera() {
-        ;
         creteaClient();
     }
 
@@ -135,7 +134,9 @@ public class WJCamera {
         EZPlayer player = EZOpenSDK.getInstance().createPlayer(deviceSerial, cameraNo);
         return player;
     }
-
+    public EZPlayer createPlayer(String deviceSerial) {
+        return createPlayer(deviceSerial,1);
+    }
     public void getToken(String appKey, String appSecret, JsonCallback<AccessToken> callback) {
         FormBody.Builder builder = new FormBody.Builder();
         builder.addEncoded("appKey", appKey);
