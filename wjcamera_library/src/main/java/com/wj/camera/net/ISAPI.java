@@ -63,8 +63,11 @@ public class ISAPI {
     }
 
     public void setRtmp(RtmpConfig rtmpConfig, JsonCallback<ResponseStatus> callback) {
+        setRtmp(deviceSerial,rtmpConfig,callback);
+    }
+    public void setRtmp(String deviceSerial,RtmpConfig rtmpConfig, JsonCallback<ResponseStatus> callback) {
         RequestBody xmlRequestBody = createXmlRequestBody(rtmpConfig);
-        put(xmlRequestBody, Api.RTMP, callback);
+        put(xmlRequestBody,deviceSerial, Api.RTMP, callback);
     }
 
     public ResponseStatus setRtmp(String device_serial, RtmpConfig rtmpConfig) {

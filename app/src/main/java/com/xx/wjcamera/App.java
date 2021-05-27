@@ -2,9 +2,6 @@ package com.xx.wjcamera;
 
 import android.app.Application;
 
-import com.wj.camera.WJCamera;
-import com.wj.uikit.db.DBHelper;
-
 /**
  * FileName: App
  * Author: xiongxiang
@@ -15,11 +12,9 @@ import com.wj.uikit.db.DBHelper;
  * 作者姓名 修改时间 版本号 描述
  */
 public class App  extends Application {
-
     @Override
     public void onCreate() {
         super.onCreate();
-        WJCamera.getInstance().init(this,"appkey");
-        DBHelper.init(this);
+
     }
 }
