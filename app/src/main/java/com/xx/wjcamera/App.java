@@ -6,6 +6,7 @@ import androidx.multidex.MultiDex;
 
 import com.wj.camera.WJCamera;
 
+
 /**
  * FileName: App
  * Author: xiongxiang
@@ -20,6 +21,5 @@ public class App  extends Application {
     public void onCreate() {
         super.onCreate();
         MultiDex.install(this);
-
     }
 }

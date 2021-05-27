@@ -60,6 +60,8 @@ public class WJCamera {
     }
 
     private void creteaClient() {
+
+
         mClient = new OkHttpClient.Builder()
                 .addNetworkInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
                 .addInterceptor(new SafeGuardInterceptor())
@@ -114,7 +116,7 @@ public class WJCamera {
     public void init(String appId, String appKey, Application context) {
         EZOpenSDK.showSDKLog(false);
         EZOpenSDK.initLib(context, "aab9716cd40740508e5ad6ecbe5d8a65");
-
+        mApplication=context;
 
         String str = (String) SPUtil.getData(mApplication, "WJAccessToken","");
         if (!TextUtils.isEmpty(str)) {
@@ -123,7 +125,7 @@ public class WJCamera {
             if (System.currentTimeMillis() >= expireTime - 86400000) {
             } else {
                 //获取缓存token
-                Log.i(TAG, "get cache accessToken" + accessToken.getCode());
+                Log.i(TAG, "get cache " + accessToken.getCode());
                 login(accessToken.getData().getAccessToken());
                 return;
             }
@@ -154,12 +156,11 @@ public class WJCamera {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 String string = response.body().string();
-                Log.i(TAG, "onResponse: " + string);
                 try {
                     AccessToken accessToken = new Gson().fromJson(string, AccessToken.class);
                     if ("200".equals(accessToken.getCode())) {
                         SPUtil.saveData(mApplication, "WJAccessToken", new Gson().toJson(accessToken));
-                        Log.i(TAG, "WJCamera init succeed" + accessToken.getCode());
+                        Log.i(TAG, "WJCamera init succeed");
                         login(accessToken.getData().getAccessToken());
                     } else {
                         Log.i(TAG, "WJCamera init failure " + accessToken.getCode());

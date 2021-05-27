@@ -9,7 +9,7 @@ import android.content.SharedPreferences;
 
 public class SPUtil {
 
-    private static String fileName = "wj_camera";
+    private static String fileName = "wjcamera";
 
     public static String saveData(Context context, String key, Object object) {
 
