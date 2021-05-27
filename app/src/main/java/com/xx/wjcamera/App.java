@@ -4,7 +4,6 @@ import android.app.Application;
 
 import androidx.multidex.MultiDex;
 
-import com.wj.camera.WJCamera;
 
 
 /**

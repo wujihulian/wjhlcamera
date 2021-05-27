@@ -63,7 +63,7 @@ public class WJCamera {
 
 
         mClient = new OkHttpClient.Builder()
-                .addNetworkInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
+                //.addNetworkInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
                 .addInterceptor(new SafeGuardInterceptor())
                 .writeTimeout(3, TimeUnit.SECONDS)
                 .connectTimeout(3, TimeUnit.SECONDS)
@@ -142,8 +142,7 @@ public class WJCamera {
         RequestBody requestBody = RequestBody.create(JSON, new Gson().toJson(tokenRequest));
         Request request = new Request.Builder()
                 .post(requestBody)
-                .url("https://test.1x.cn//api/course/nLive/token/get")
-                //.url("https://syswx.xx.cn/api/course/nLive/token/get")
+                .url("https://syswx.xx.cn/api/course/nLive/token/get")
                 .build();
         client.newCall(request).enqueue(new Callback() {
             @Override
