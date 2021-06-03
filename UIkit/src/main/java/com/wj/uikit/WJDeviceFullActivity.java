@@ -36,6 +36,7 @@ public class WJDeviceFullActivity extends BaseUikitActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.wj_activity_device_full);
         Bundle extras = getIntent().getExtras();

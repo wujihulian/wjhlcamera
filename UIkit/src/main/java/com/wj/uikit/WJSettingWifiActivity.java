@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
@@ -13,6 +14,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -21,6 +23,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -146,6 +150,10 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode ==300){
+            getWifiList();
+        }
         if (requestCode == 200) {
             boolean wifiEnabled = mWifiMgr.isWifiEnabled();
             if (wifiEnabled) {
@@ -160,9 +168,23 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                 Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_WIFI_STATE},
                     100);
-
         } else {
+            showGPSContacts();
+        }
+
+
+
+    }
+    public void showGPSContacts() {
+        LocationManager   lm = (LocationManager) this.getSystemService(this.LOCATION_SERVICE);
+        boolean ok = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        if (ok) {//开了定位服务
             getWifiList();
+        } else {
+            Toast.makeText(this, "系统检测到未开启GPS定位服务,请开启", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent();
+            intent.setAction(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            startActivityForResult(intent, 300);
         }
     }
 
@@ -421,7 +443,8 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 100) {
             Log.i(TAG, "onRequestPermissionsResult: ");
-            getWifiList();
+            showGPSContacts();
+            //getWifiList();
             //registerPermission();
         }
     }

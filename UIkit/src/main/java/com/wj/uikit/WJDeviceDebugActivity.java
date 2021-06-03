@@ -17,8 +17,10 @@ import androidx.annotation.Nullable;
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.interfaces.OnConfirmListener;
 import com.videogo.openapi.EZPlayer;
+import com.wj.camera.Interfac.ISAPIInterface;
 import com.wj.camera.WJCamera;
 import com.wj.camera.callback.JsonCallback;
+import com.wj.camera.config.WJDeviceSceneEnum;
 import com.wj.camera.net.DeviceApi;
 import com.wj.camera.net.ISAPI;
 import com.wj.camera.net.RxConsumer;
@@ -26,6 +28,7 @@ import com.wj.camera.response.BaseDeviceResponse;
 import com.wj.camera.response.CheckDevcieUpdate;
 import com.wj.camera.response.DeviceUpdateStatus;
 import com.wj.camera.response.ResponseStatus;
+import com.wj.camera.response.SceneResponse;
 import com.wj.camera.response.TwoWayAudio;
 import com.wj.camera.response.VideoConfig;
 import com.wj.camera.response.ZoomResponse;
@@ -90,6 +93,8 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
     private FrameLayout mDevice_update_fl;
     private Disposable mDisposable;
     private CountDownTimer mCountDownTimer;
+    private FrameLayout mScene_fl;
+    private TextView mScene_tv;
 
 
     @Override
@@ -108,8 +113,6 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
 
 
         initAudio();
-
-
     }
 
     private void initAudio() {
@@ -158,6 +161,17 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
                     zoom = data.getZoom().getRatio();
                     zoomIndex = data.getZoom().getRatio() - 1;
                     mFocus_tv.setText(zoom + "x");
+                }
+            }
+        });
+
+        mIsapi.getScene(mDeviceInfo.device_serial, new JsonCallback<SceneResponse>() {
+            @Override
+            public void onSuccess(SceneResponse data) {
+                if (data!=null && data.getMountingScenario()!=null){
+                    String mode = data.getMountingScenario().getMode();
+                    String sceneTitle = WJDeviceSceneEnum.getSceneTitle(mode);
+                    mScene_tv.setText(sceneTitle);
                 }
             }
         });
@@ -302,9 +316,35 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
         mDevice_update_fl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-
                 checkDevice();
+            }
+        });
+
+
+        mScene_fl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SelectPop selectPop = new SelectPop(WJDeviceDebugActivity.this, WJDeviceSceneEnum.toArrayString());
+                new XPopup.Builder(WJDeviceDebugActivity.this).asCustom(selectPop).show();
+                selectPop.setListener(new OnItemClickListener<String>() {
+                    @Override
+                    public void onClick(String s, int position) {
+                        WJDeviceSceneEnum[] values = WJDeviceSceneEnum.values();
+                        ISAPI.getInstance().setScene(mDeviceInfo.device_serial, values[position], new JsonCallback<ResponseStatus>() {
+                            @Override
+                            public void onSuccess(ResponseStatus data) {
+                                if (data != null && data.ResponseStatus != null && "1".equals(data.ResponseStatus.statusCode)) {
+                                    mScene_tv.setText(s);
+                                } else {
+                                    Toast.makeText(WJDeviceDebugActivity.this, "切换场景失败", Toast.LENGTH_LONG).show();
+                                }
+                            }
+                        });
+
+
+                    }
+                });
+
             }
         });
     }
@@ -421,12 +461,11 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
     }
 
 
-
-
-
     private void findView() {
         mBack_iv = findViewById(R.id.back_iv);
         mWJPlayView = findViewById(R.id.wj_playview);
+        mScene_fl = findViewById(R.id.scene_fl);
+        mScene_tv = findViewById(R.id.scene_tv);
         mRatio_fl = findViewById(R.id.ratio_fl);
         mRatio_tv = findViewById(R.id.ratio_tv);
         mBitrate_fl = findViewById(R.id.bitrate_fl);

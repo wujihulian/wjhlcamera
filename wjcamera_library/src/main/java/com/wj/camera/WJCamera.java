@@ -63,7 +63,7 @@ public class WJCamera {
 
 
         mClient = new OkHttpClient.Builder()
-                //.addNetworkInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
+                .addNetworkInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
                 .addInterceptor(new SafeGuardInterceptor())
                 .writeTimeout(3, TimeUnit.SECONDS)
                 .connectTimeout(3, TimeUnit.SECONDS)

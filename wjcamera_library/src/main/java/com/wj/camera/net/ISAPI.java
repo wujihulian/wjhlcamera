@@ -3,12 +3,14 @@ package com.wj.camera.net;
 import androidx.annotation.IntRange;
 
 import com.google.gson.Gson;
+import com.wj.camera.Interfac.ISAPIInterface;
 import com.wj.camera.WJCamera;
 import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.callback.XmlCallback;
-import com.wj.camera.config.WJDeviceConfig;
+import com.wj.camera.config.WJDeviceSceneEnum;
 import com.wj.camera.response.ResponseStatus;
 import com.wj.camera.response.RtmpConfig;
+import com.wj.camera.response.SceneResponse;
 import com.wj.camera.response.TwoWayAudio;
 import com.wj.camera.response.VideoConfig;
 import com.wj.camera.response.ZoomResponse;
@@ -34,14 +36,12 @@ import okhttp3.Response;
  * <author> <time> <version> <desc>
  * 作者姓名 修改时间 版本号 描述
  */
-public class ISAPI {
-
+public class ISAPI  {
     private static final String TAG = "ISAPI";
     public static ISAPI isapi;
     private OkHttpClient mClient;
     private String deviceSerial;
     private Gson mGson;
-
     public static ISAPI getInstance() {
         if (isapi == null) {
             isapi = new ISAPI();
@@ -67,7 +67,7 @@ public class ISAPI {
     }
     public void setRtmp(String deviceSerial,RtmpConfig rtmpConfig, JsonCallback<ResponseStatus> callback) {
         RequestBody xmlRequestBody = createXmlRequestBody(rtmpConfig);
-        put(xmlRequestBody,deviceSerial, Api.RTMP, callback);
+        put(xmlRequestBody, Api.RTMP,deviceSerial,callback);
     }
 
     public ResponseStatus setRtmp(String device_serial, RtmpConfig rtmpConfig) {
@@ -213,6 +213,7 @@ public class ISAPI {
         get(url, deviceSerial, callback);
     }
 
+
     private void get(String url, String deviceSerial, JsonCallback callback) {
         Request request = new Request.Builder()
                 .url(url)
@@ -222,7 +223,7 @@ public class ISAPI {
         mClient.newCall(request).enqueue(new XmlCallback(callback));
     }
 
-    public <T> T get(String url, Type type, String device_serial) {
+    private  <T> T get(String url, Type type, String device_serial) {
         Request request = new Request.Builder()
                 .url(url)
                 .addHeader("EZO-AccessToken", WJCamera.getInstance().getAccessToken())
@@ -303,4 +304,20 @@ public class ISAPI {
     public void getDeviceConfig(String deviceSerial, JsonCallback<VideoConfig> jsonCallback){
         get(Api.setting101,deviceSerial, jsonCallback);
     }
+
+
+    public void getScene(String deviceSerial , JsonCallback<SceneResponse> jsonCallback){
+        get(Api.Scene, deviceSerial, jsonCallback);
+    }
+    //切换场景
+    public void setScene(String deviceSerial, WJDeviceSceneEnum indoor, JsonCallback<ResponseStatus>  jsonCallback) {
+        SceneResponse sceneResponse = new SceneResponse();
+        sceneResponse.setMountingScenario(new SceneResponse.MountingScenarioDTO());
+        sceneResponse.getMountingScenario().setMode(indoor.getScene());
+        RequestBody xmlRequestBody = createXmlRequestBody(sceneResponse);
+        put(xmlRequestBody,Api.Scene,deviceSerial,jsonCallback);
+    }
+
+
+
 }
