@@ -11,6 +11,7 @@ import com.videogo.openapi.EZPlayer;
 import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.callback.StringCallbck;
 import com.wj.camera.net.Api;
+import com.wj.camera.net.OkHttpUtils;
 import com.wj.camera.net.SafeGuardInterceptor;
 import com.wj.camera.request.TokenRequest;
 import com.wj.camera.response.AccessToken;
@@ -60,14 +61,7 @@ public class WJCamera {
     }
 
     private void creteaClient() {
-
-
-        mClient = new OkHttpClient.Builder()
-                .addNetworkInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
-                .addInterceptor(new SafeGuardInterceptor())
-                .writeTimeout(3, TimeUnit.SECONDS)
-                .connectTimeout(3, TimeUnit.SECONDS)
-                .readTimeout(3, TimeUnit.SECONDS).build();
+        mClient= OkHttpUtils.getInstance().getOkHttpClient();
     }
 
     public OkHttpClient getClient() {
@@ -185,6 +179,7 @@ public class WJCamera {
      */
     public void login(String accessToken) {
         this.accessToken = accessToken;
+        OkHttpUtils.getInstance().commonHead("EZO-AccessToken", WJCamera.getInstance().getAccessToken());
         EZOpenSDK.getInstance().setAccessToken(accessToken);
     }
 

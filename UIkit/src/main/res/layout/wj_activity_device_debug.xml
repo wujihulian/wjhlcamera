@@ -51,7 +51,8 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
             <FrameLayout
-                android:visibility="gone"
+
+                android:visibility="visible"
                 android:id="@+id/scene_fl"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
@@ -93,6 +94,7 @@
             </FrameLayout>
 
             <FrameLayout
+                android:layout_marginTop="10dp"
                 android:id="@+id/focus_fl"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
@@ -135,8 +137,6 @@
 
 
             <FrameLayout
-                android:layout_marginTop="10dp"
-
                 android:id="@+id/ratio_fl"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"

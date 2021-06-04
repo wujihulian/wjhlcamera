@@ -236,15 +236,8 @@ public class WJCaptureActivity extends AppCompatActivity {
                     public Boolean apply(@io.reactivex.annotations.NonNull DeviceInfo deviceInfo) throws Exception {
                         boolean isApi = false;
                         for (int i = 0; i < 2; i++) {
-                            OkHttpClient mClient = new OkHttpClient.Builder()
-                                    .addNetworkInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
-                                    .addInterceptor(new SafeGuardInterceptor())
-                                    .writeTimeout(2, TimeUnit.SECONDS)
-                                    .connectTimeout(2, TimeUnit.SECONDS)
-                                    .readTimeout(2, TimeUnit.SECONDS).build();
-                            RtmpConfig rtmp = ISAPI.getInstance().getRTMP(deviceInfo.device_serial, mClient);
+                            RtmpConfig rtmp = ISAPI.getInstance().getRTMP(deviceInfo.device_serial);
                             if (rtmp == null || rtmp.getRTMP() == null) {
-
                             } else {
                                 isApi = true;
                                 break;

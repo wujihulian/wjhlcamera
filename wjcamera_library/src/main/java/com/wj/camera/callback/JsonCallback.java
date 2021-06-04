@@ -15,7 +15,6 @@ public abstract class JsonCallback<T> {
 
     public void onError(int code, String msg) {
 
-
     }
 
 }

@@ -3,6 +3,7 @@ package com.wj.uikit.uitl;
 import android.app.Application;
 
 import com.wj.camera.WJCamera;
+import com.wj.camera.net.OkHttpUtils;
 import com.wj.uikit.db.DBHelper;
 
 /**

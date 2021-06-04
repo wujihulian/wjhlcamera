@@ -224,6 +224,7 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
         mRatio_fl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 if (mRatioSelectPop == null) {
                     mRatioSelectPop = new SelectPop(WJDeviceDebugActivity.this, xy);
                     new XPopup.Builder(WJDeviceDebugActivity.this).asCustom(mRatioSelectPop);
@@ -262,7 +263,6 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
                     mBitrateSelectPop.setListener(new OnItemClickListener<String>() {
                         @Override
                         public void onClick(String s, int position) {
-
                             if (mVideoConfig != null) {
                                 mVideoConfig.getStreamingChannel().getVideo().setVbrUpperCap(bitrate[position]);
                                 mIsapi.setVideoConfig(mVideoConfig, new JsonCallback<ResponseStatus>() {
@@ -276,6 +276,17 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
                                     }
                                 });
                             }
+/*                            ISAPI.getInstance().setBitrate(mDeviceInfo.device_serial, bitrate[position], new JsonCallback<ResponseStatus>() {
+                                @Override
+                                public void onSuccess(ResponseStatus data) {
+                                    if (data.ResponseStatus != null && "1".equals(data.ResponseStatus.statusCode)) {
+                                        mBitrate_tv.setText(bitrateTitle[position]);
+                                    } else {
+                                        Toast.makeText(WJDeviceDebugActivity.this, "设置失败", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            });*/
+
                         }
                     });
                 }
@@ -340,8 +351,6 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
                                 }
                             }
                         });
-
-
                     }
                 });
 
