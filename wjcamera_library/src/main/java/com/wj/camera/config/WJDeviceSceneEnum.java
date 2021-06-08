@@ -10,12 +10,12 @@ package com.wj.camera.config;
  * 作者姓名 修改时间 版本号 描述
  */
 public enum WJDeviceSceneEnum {
-    INDOOR("indoor", "电子屏"),
-    OUTDOOR("outdoor", "通用"),
-    DAY("day", "白天"),
-    NIGHT("night", "夜晚"),
+    INDOOR("indoor", "室内"),
+    OUTDOOR("outdoor", "室外"),
+    DAY("day", "白天");
+    //NIGHT("night", "夜晚"),
     //MORNING("morning", "黎明"),
-    NIGHTFALL("nightfall", "黄昏");
+    //NIGHTFALL("nightfall", "黄昏");
 
 
 

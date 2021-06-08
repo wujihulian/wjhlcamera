@@ -11,6 +11,7 @@ import java.util.Map;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
@@ -51,6 +52,11 @@ public abstract class BaseRequest<R extends BaseRequest> {
     public String getFullUrl() {
         return getBaseUrl() + getUrl();
     }
+
+    public HashMap<String, String> getParams() {
+        return params;
+    }
+
 
     public R addHeader(String key, String value) {
         mHeaders.put(key, value);
@@ -114,6 +120,10 @@ public abstract class BaseRequest<R extends BaseRequest> {
     public Response execute() {
         Request.Builder builder = buildRequest();
         for (Map.Entry<String, String> headers : mHeaders.entrySet()) {
+            builder.header(headers.getKey(), headers.getValue());
+        }
+        HashMap<String, String> commonHeads = OkHttpUtils.getInstance().getCommonHeads();
+        for (Map.Entry<String, String> headers : commonHeads.entrySet()) {
             builder.header(headers.getKey(), headers.getValue());
         }
         Call call = OkHttpUtils.getInstance().getOkHttpClient().newCall(builder.build());

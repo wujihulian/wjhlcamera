@@ -159,7 +159,7 @@ public class WJCaptureActivity extends AppCompatActivity {
                                 });
                             } else {
                                 mLoadingPopupView.dismiss();
-
+                                Toast.makeText(WJCaptureActivity.this, result.getBaseException().getErrorCode()+"", Toast.LENGTH_LONG).show();
                                 switch (result.getBaseException().getErrorCode()) {
                                     case 120023:
                                         // TODO: 2018/6/25  设备不在线，未被用户添加 （这里需要网络配置）

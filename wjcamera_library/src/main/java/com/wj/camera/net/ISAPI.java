@@ -1,5 +1,7 @@
 package com.wj.camera.net;
 
+import android.util.Log;
+
 import androidx.annotation.IntRange;
 
 import com.google.gson.Gson;
@@ -20,6 +22,7 @@ import java.util.Objects;
 
 import fr.arnaudguyon.xmltojsonlib.JsonToXml;
 import fr.arnaudguyon.xmltojsonlib.XmlToJson;
+import okhttp3.Call;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -65,12 +68,8 @@ public class ISAPI {
     public void setRtmp(RtmpConfig rtmpConfig, JsonCallback<ResponseStatus> callback) {
         setRtmp(deviceSerial, rtmpConfig, callback);
     }
-
     public void setRtmp(String deviceSerial, RtmpConfig rtmpConfig, JsonCallback<ResponseStatus> callback) {
-
         OkHttpUtils.getInstance().put(ApiNew.RTMP).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(rtmpConfig)).enqueue(new XmlCallback(callback));
-
-
     }
 
     public ResponseStatus setRtmp(String deviceSerial, RtmpConfig rtmpConfig) {
@@ -94,11 +93,7 @@ public class ISAPI {
         OkHttpUtils.getInstance().put(ApiNew.Zoom).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(zoomResponse)).enqueue(new XmlCallback(null));
     }
 
-    public void setPTData(String ptzData, JsonCallback callback) {
-        RequestBody xmlRequestBody = createXmlRequestBody(ptzData);
-        put(xmlRequestBody, Api.PZTData, callback);
 
-    }
 
     //获取RTMP配置
     public void getRTMP(String deviceSerial, JsonCallback<RtmpConfig> callback) {
@@ -140,36 +135,11 @@ public class ISAPI {
 
     //获取RTMP配置
     public RtmpConfig getRTMP(String device_serial) {
-/*        Request request = new Request.Builder()
-                .url(Api.RTMP)
-                .addHeader("EZO-AccessToken", WJCamera.getInstance().getAccessToken())
-                .addHeader("EZO-DeviceSerial", device_serial == null ? deviceSerial : device_serial)
-                .build();*/
-        try {
-           // Response execute = mClient.newCall(request).execute();
-            Response execute=OkHttpUtils.getInstance().get(ApiNew.RTMP).addHeader("EZO-DeviceSerial", device_serial).execute();
-            String string = execute.body().string();
-            String xml = Objects.requireNonNull(string);
-            String json = new XmlToJson.Builder(xml).build().toString();
-            return mGson.fromJson(json, RtmpConfig.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
 
-    }
-
-    //获取RTMP配置
-    public RtmpConfig getRTMP(String device_serial, OkHttpClient client) {
-/*        Request request = new Request.Builder()
-                .url(Api.RTMP)
-                .addHeader("EZO-AccessToken", WJCamera.getInstance().getAccessToken())
-                .addHeader("EZO-DeviceSerial", device_serial == null ? deviceSerial : device_serial)
-                .build();*/
         try {
             Response execute=OkHttpUtils.getInstance().get(ApiNew.RTMP).addHeader("EZO-DeviceSerial", device_serial).execute();
-           // Response execute = client.newCall(request).execute();
             String string = execute.body().string();
+            Log.i(TAG, "getRTMP: "+string);
             String xml = Objects.requireNonNull(string);
             String json = new XmlToJson.Builder(xml).build().toString();
             return mGson.fromJson(json, RtmpConfig.class);
@@ -181,85 +151,21 @@ public class ISAPI {
     }
 
     //获取当前设置 分辨率 码率相关设置
-    public void getVideoConfig(JsonCallback<VideoConfig> callback) {
-        OkHttpUtils.getInstance().get(ApiNew.setting101).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
+    public Call getVideoConfig(JsonCallback<VideoConfig> callback) {
+       return OkHttpUtils.getInstance().get(ApiNew.setting101).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
     }
 
     //设置当前设置 分辨率 码率相关设置
-    public void setVideoConfig(VideoConfig videoConfig, JsonCallback<ResponseStatus> callback) {
-        OkHttpUtils.getInstance().put(ApiNew.setting101).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(videoConfig)).enqueue(new XmlCallback(callback));
+    public Call setVideoConfig(VideoConfig videoConfig, JsonCallback<ResponseStatus> callback) {
+       return OkHttpUtils.getInstance().put(ApiNew.setting101).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(videoConfig)).enqueue(new XmlCallback(callback));
+    }
+    public Call getZoom(JsonCallback<ZoomResponse> jsonCallback) {
+       return getZoom(deviceSerial,jsonCallback);
     }
 
-    private RequestBody createXmlRequestBody(String xml) {
-        MediaType JSON = MediaType.parse("application/xml;charset=utf-8");
-        RequestBody requestBody = RequestBody.create(JSON, xml);
-        return requestBody;
+    public Call getZoom(String deviceSerial, JsonCallback<ZoomResponse> jsonCallback) {
+        return OkHttpUtils.getInstance().get(ApiNew.Zoom).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(jsonCallback));
     }
-
-    private RequestBody createXmlRequestBody(Object object) {
-        MediaType JSON = MediaType.parse("application/xml;charset=utf-8");
-        String jsonString = mGson.toJson(object);
-        JsonToXml xml = new JsonToXml.Builder(jsonString)
-                .build();
-        RequestBody requestBody = RequestBody.create(JSON, xml.toString());
-        return requestBody;
-    }
-
-
-    private void get(String url, JsonCallback callback) {
-        get(url, deviceSerial, callback);
-    }
-
-
-    private void get(String url, String deviceSerial, JsonCallback callback) {
-        Request request = new Request.Builder()
-                .url(url)
-                .addHeader("EZO-AccessToken", WJCamera.getInstance().getAccessToken())
-                .addHeader("EZO-DeviceSerial", deviceSerial)
-                .build();
-        mClient.newCall(request).enqueue(new XmlCallback(callback));
-    }
-
-    private <T> T get(String url, Type type, String device_serial) {
-        Request request = new Request.Builder()
-                .url(url)
-                .addHeader("EZO-AccessToken", WJCamera.getInstance().getAccessToken())
-                .addHeader("EZO-DeviceSerial", device_serial == null ? deviceSerial : device_serial)
-                .build();
-        try {
-            Response execute = mClient.newCall(request).execute();
-            String string = execute.body().string();
-            String xml = Objects.requireNonNull(string);
-            return mGson.fromJson(xml, type);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    private void put(RequestBody requestBody, String url, JsonCallback callback) {
-        put(requestBody, url, deviceSerial, callback);
-    }
-
-    private void put(RequestBody requestBody, String url, String deviceSerial, JsonCallback callback) {
-        Request request = new Request.Builder()
-                .url(url)
-                .put(requestBody)
-                .addHeader("EZO-AccessToken", WJCamera.getInstance().getAccessToken())
-                .addHeader("EZO-DeviceSerial", deviceSerial)
-                .build();
-        mClient.newCall(request).enqueue(new XmlCallback(callback));
-    }
-
-
-    public void getZoom(JsonCallback<ZoomResponse> jsonCallback) {
-        getZoom(deviceSerial,jsonCallback);
-    }
-
-    public void getZoom(String deviceSerial, JsonCallback<ZoomResponse> jsonCallback) {
-        OkHttpUtils.getInstance().get(ApiNew.Zoom).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(jsonCallback));
-    }
-
     //设置码率
     public void setBitrate(String deviceSerial, String bitrate, JsonCallback<ResponseStatus> jsonCallback) {
         OkHttpUtils.getInstance().get(ApiNew.setting101).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(new JsonCallback<VideoConfig>() {
@@ -267,7 +173,7 @@ public class ISAPI {
             public void onSuccess(VideoConfig data) {
                 if (data != null && data.getStreamingChannel() != null && data.getStreamingChannel().getVideo() != null) {
                     data.getStreamingChannel().getVideo().setVbrUpperCap(bitrate);
-                    OkHttpUtils.getInstance().put(ApiNew.setting101, entityToXml(data)).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(jsonCallback));
+                    OkHttpUtils.getInstance().put(ApiNew.setting101).jsons(entityToXml(data)).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(jsonCallback));
                 } else {
                     if (jsonCallback != null) {
                         jsonCallback.onError(1001, "设置码率失败");
@@ -276,7 +182,6 @@ public class ISAPI {
             }
         }));
     }
-
     //设置分辨率
     public void setResolution(String deviceSerial, String[] ratio, JsonCallback<ResponseStatus> jsonCallback) {
         OkHttpUtils.getInstance().get(ApiNew.setting101)
@@ -300,28 +205,27 @@ public class ISAPI {
                     }
                 }));
     }
-
-
     //获取配置信息
-    public void getDeviceConfig(String deviceSerial, JsonCallback<VideoConfig> jsonCallback) {
-        OkHttpUtils.getInstance().get(ApiNew.setting101)
+    public Call getDeviceConfig(String deviceSerial, JsonCallback<VideoConfig> jsonCallback) {
+        return OkHttpUtils.getInstance().get(ApiNew.setting101)
                 .addHeader("EZO-DeviceSerial", deviceSerial)
                 .enqueue(new XmlCallback(jsonCallback));
     }
 
-    public void getScene(String deviceSerial, JsonCallback<SceneResponse> jsonCallback) {
-        OkHttpUtils.getInstance()
+    public Call getScene(String deviceSerial, JsonCallback<SceneResponse> jsonCallback) {
+       return OkHttpUtils.getInstance()
                 .get(ApiNew.Scene)
-                .addHeader("EZO-DeviceSerial", deviceSerial).
-                enqueue(new XmlCallback(jsonCallback));
+                .addHeader("EZO-DeviceSerial", deviceSerial)
+                .enqueue(new XmlCallback(jsonCallback));
     }
 
     //切换场景
-    public void setScene(String deviceSerial, WJDeviceSceneEnum indoor, JsonCallback<ResponseStatus> jsonCallback) {
+    public Call setScene(String deviceSerial, WJDeviceSceneEnum indoor, JsonCallback<ResponseStatus> jsonCallback) {
         SceneResponse sceneResponse = new SceneResponse();
         sceneResponse.setMountingScenario(new SceneResponse.MountingScenarioDTO());
         sceneResponse.getMountingScenario().setMode(indoor.getScene());
-        OkHttpUtils.getInstance().put(ApiNew.Scene, entityToXml(sceneResponse))
+        return OkHttpUtils.getInstance().put(ApiNew.Scene)
+                .jsons(entityToXml(sceneResponse))
                 .addHeader("EZO-DeviceSerial", deviceSerial)
                 .enqueue(new XmlCallback(jsonCallback));
     }

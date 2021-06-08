@@ -497,15 +497,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
         Observable.just(mDeviceInfo).map(new Function<DeviceInfo, DeviceInfo>() {
             @Override
             public DeviceInfo apply(@io.reactivex.annotations.NonNull DeviceInfo deviceInfo) throws Exception {
-                OkHttpClient mClient = new OkHttpClient.Builder()
-                        .addNetworkInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
-                        .addInterceptor(new SafeGuardInterceptor())
-                        .writeTimeout(2, TimeUnit.SECONDS)
-                        .connectTimeout(2, TimeUnit.SECONDS)
-                        .readTimeout(2, TimeUnit.SECONDS).build();
-
-                RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial, mClient);
-                Log.i(TAG, "apply: " + System.currentTimeMillis() + "    rtmp= " + new Gson().toJson(rtmp));
+                RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial);
                 if (rtmp == null || rtmp.getRTMP() == null) {
                     return deviceInfo;
                 }

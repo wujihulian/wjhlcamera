@@ -28,6 +28,7 @@ public class OkHttpUtils {
 
     private OkHttpUtils() {
         mOkHttpClient = (new OkHttpClient()).newBuilder()
+                .addInterceptor(new SafeGuardInterceptor())
                 .addNetworkInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
                 .connectTimeout(3, TimeUnit.SECONDS)
                 .readTimeout(3, TimeUnit.SECONDS)
@@ -70,13 +71,7 @@ public class OkHttpUtils {
     public GetRequest get(String url) {
         return new GetRequest(url);
     }
-
     public PutRequest put(String url) {
         return new PutRequest(url);
     }
-
-    public PutRequest put(String url, String json) {
-        return new PutRequest(url).jsons(json);
-    }
-
 }

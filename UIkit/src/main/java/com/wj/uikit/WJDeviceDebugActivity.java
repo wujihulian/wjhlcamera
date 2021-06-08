@@ -17,7 +17,6 @@ import androidx.annotation.Nullable;
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.interfaces.OnConfirmListener;
 import com.videogo.openapi.EZPlayer;
-import com.wj.camera.Interfac.ISAPIInterface;
 import com.wj.camera.WJCamera;
 import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.config.WJDeviceSceneEnum;
