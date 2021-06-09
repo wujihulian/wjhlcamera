@@ -355,6 +355,19 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
 
             }
         });
+
+        findViewById(R.id.tv_left).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ISAPI.getInstance().focus(mDeviceInfo.device_serial,false);
+            }
+        });
+        findViewById(R.id.tv_right).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ISAPI.getInstance().focus(mDeviceInfo.device_serial,true);
+            }
+        });
     }
 
 

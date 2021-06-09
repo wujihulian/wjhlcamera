@@ -9,6 +9,7 @@ import com.wj.camera.WJCamera;
 import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.callback.XmlCallback;
 import com.wj.camera.config.WJDeviceSceneEnum;
+import com.wj.camera.response.FocusEntity;
 import com.wj.camera.response.ResponseStatus;
 import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.response.SceneResponse;
@@ -18,10 +19,14 @@ import com.wj.camera.response.ZoomResponse;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import fr.arnaudguyon.xmltojsonlib.JsonToXml;
 import fr.arnaudguyon.xmltojsonlib.XmlToJson;
+import io.reactivex.Observable;
+import io.reactivex.functions.BiFunction;
 import okhttp3.Call;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -228,6 +233,27 @@ public class ISAPI {
                 .jsons(entityToXml(sceneResponse))
                 .addHeader("EZO-DeviceSerial", deviceSerial)
                 .enqueue(new XmlCallback(jsonCallback));
+    }
+    public void focus(String deviceSerial,boolean direction){
+        ArrayList<String> objects = new ArrayList<>();
+        if (!direction) {
+            objects.add("-60");
+        }else {
+            objects.add("60");
+        }
+        objects.add("0");
+        Observable<String> listObservable = Observable.fromIterable(objects);
+        Observable<Long> timerObservable = Observable.interval(100, TimeUnit.MILLISECONDS);
+        Observable.zip(listObservable, timerObservable, new BiFunction<String, Long, String>() {
+            @Override
+            public String apply(String s, Long aLong) throws Exception {
+                FocusEntity focusEntity = new FocusEntity();
+                focusEntity.setFocusData(new FocusEntity.FocusDataDTO());
+                focusEntity.getFocusData().setFocus(s);
+                OkHttpUtils.getInstance().put(ApiNew.focus).jsons(entityToXml(focusEntity)).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
+                return s;
+            }
+        }).subscribe();
     }
 
     private String entityToXml(Object obj) {

@@ -1,8 +1,5 @@
 package com.wj.camera.callback;
 
-
-import android.util.Log;
-
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
