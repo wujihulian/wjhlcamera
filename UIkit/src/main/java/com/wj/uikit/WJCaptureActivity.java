@@ -140,10 +140,11 @@ public class WJCaptureActivity extends AppCompatActivity {
                         @Override
                         public void accept(EZProbeDeviceInfoResult result) throws Exception {
                             if (result.getBaseException() == null) {
-                                Log.i(TAG, "onCreate: 查询设备成功 添加设备");
+                                Log.i(TAG, "add device");
                                 DeviceApi.getInstance().addDevie(deviceInfo.device_serial, deviceInfo.device_code, new JsonCallback<BaseDeviceResponse>() {
                                     @Override
                                     public void onSuccess(BaseDeviceResponse data) {
+                                        Log.i(TAG, "onSuccess: add device");
                                         mLoadingPopupView.dismiss();
                                         EventBus.getDefault().post(deviceInfo);
                                         finish();
@@ -154,12 +155,14 @@ public class WJCaptureActivity extends AppCompatActivity {
                                     public void onError(int code, String msg) {
                                         super.onError(code, msg);
                                         mLoadingPopupView.dismiss();
+                                        Log.i(TAG, "onError: "+msg + "-" + code);
                                         Toast.makeText(WJCaptureActivity.this, msg + "-" + code, Toast.LENGTH_LONG).show();
                                     }
                                 });
                             } else {
                                 mLoadingPopupView.dismiss();
-                                Toast.makeText(WJCaptureActivity.this, result.getBaseException().getErrorCode()+"", Toast.LENGTH_LONG).show();
+                                //Toast.makeText(WJCaptureActivity.this, result.getBaseException().getErrorCode()+"", Toast.LENGTH_LONG).show();
+                                Log.i(TAG, "accept: "+ result.getBaseException().getErrorCode());
                                 switch (result.getBaseException().getErrorCode()) {
                                     case 120023:
                                         // TODO: 2018/6/25  设备不在线，未被用户添加 （这里需要网络配置）

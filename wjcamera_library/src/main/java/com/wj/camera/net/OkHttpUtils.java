@@ -29,7 +29,7 @@ public class OkHttpUtils {
     private OkHttpUtils() {
         mOkHttpClient = (new OkHttpClient()).newBuilder()
                 .addInterceptor(new SafeGuardInterceptor())
-                .addNetworkInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
+                //.addNetworkInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
                 .connectTimeout(3, TimeUnit.SECONDS)
                 .readTimeout(3, TimeUnit.SECONDS)
                 .writeTimeout(3, TimeUnit.SECONDS)
