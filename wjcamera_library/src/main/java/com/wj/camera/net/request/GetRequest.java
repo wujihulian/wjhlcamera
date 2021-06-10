@@ -2,6 +2,7 @@ package com.wj.camera.net.request;
 
 
 import okhttp3.Request;
+import okhttp3.RequestBody;
 
 /**
  * FileName: getRequest
@@ -15,6 +16,11 @@ import okhttp3.Request;
 public class GetRequest extends BaseRequest<GetRequest>{
     public GetRequest(String url) {
         super(url);
+    }
+
+    @Override
+    RequestBody createRequestBody() {
+        return null;
     }
 
     @Override

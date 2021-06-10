@@ -1,11 +1,18 @@
 package com.wj.camera.net;
 
+import com.wj.camera.net.map.RepeatKeyHasMap;
 import com.wj.camera.net.request.GetRequest;
+import com.wj.camera.net.request.PostFromRequest;
+import com.wj.camera.net.request.PostJsonRequest;
 import com.wj.camera.net.request.PutRequest;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.Call;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 
@@ -24,10 +31,24 @@ public class OkHttpUtils {
     private String baseUrl;
     private OkHttpClient mOkHttpClient;
     private HashMap<String, String> commonHeads = new HashMap<>();
+    private static List<Interceptor> mInterceptors;
+    private RepeatKeyHasMap<String, Call> mTagHasMap = new RepeatKeyHasMap<>();
 
+    public static void addInterceptor(Interceptor interceptor) {
+        if (mInterceptors == null) {
+            mInterceptors = new ArrayList<>();
+        }
+        mInterceptors.add(interceptor);
+    }
 
     private OkHttpUtils() {
-        mOkHttpClient = (new OkHttpClient()).newBuilder()
+        OkHttpClient.Builder builder = new OkHttpClient().newBuilder();
+        if (mInterceptors != null) {
+            for (Interceptor mInterceptor : mInterceptors) {
+                builder.addInterceptor(mInterceptor);
+            }
+        }
+        mOkHttpClient = builder
                 .addInterceptor(new SafeGuardInterceptor())
                 .addNetworkInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
                 .connectTimeout(3, TimeUnit.SECONDS)
@@ -71,7 +92,30 @@ public class OkHttpUtils {
     public GetRequest get(String url) {
         return new GetRequest(url);
     }
+
     public PutRequest put(String url) {
         return new PutRequest(url);
+    }
+
+    public PostJsonRequest PostJson(String url) {
+        return new PostJsonRequest(url);
+    }
+
+
+    public PostFromRequest postFrom(String url) {
+        return new PostFromRequest(url);
+    }
+
+    public void cancel(String tag) {
+        List<Call> calls = mTagHasMap.get(tag);
+        for (Call call : calls) {
+            call.cancel();
+        }
+        calls.clear();
+        mTagHasMap.remove(tag);
+    }
+
+    public RepeatKeyHasMap<String, Call> getTagHasMap() {
+        return mTagHasMap;
     }
 }

@@ -1,11 +1,14 @@
 package com.wj.camera.net.request;
 
+import android.text.TextUtils;
+
 import com.wj.camera.net.OkHttpUtils;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import okhttp3.Call;
@@ -29,6 +32,12 @@ public abstract class BaseRequest<R extends BaseRequest> {
     private String baseUrl;
     private String url;
     private String json;
+    private String tag;
+    private Call mCall;
+
+    public void setTag(String tag) {
+        this.tag = tag;
+    }
 
     public BaseRequest(String url) {
         this.url = url;
@@ -62,6 +71,7 @@ public abstract class BaseRequest<R extends BaseRequest> {
         mHeaders.put(key, value);
         return (R) this;
     }
+
     public R removeHeader(String key) {
         mHeaders.remove(key);
         return (R) this;
@@ -86,22 +96,48 @@ public abstract class BaseRequest<R extends BaseRequest> {
         return json;
     }
 
+    public HashMap<String, String> getCommonHeads() {
+        return OkHttpUtils.getInstance().getCommonHeads();
+    }
+
+    public HashMap<String, String> getHeaders() {
+        return mHeaders;
+    }
+
+    abstract RequestBody createRequestBody();
+
     abstract Request.Builder buildRequest();
+
+
+    public Call getCall() {
+        return mCall;
+    }
+
+    public String getTag() {
+        return tag;
+    }
 
     public Call enqueue(Callback callback) {
         Request.Builder builder = buildRequest();
-        for (Map.Entry<String, String> headers : mHeaders.entrySet()) {
+        for (Map.Entry<String, String> headers : getHeaders().entrySet()) {
             builder.header(headers.getKey(), headers.getValue());
         }
         HashMap<String, String> commonHeads = OkHttpUtils.getInstance().getCommonHeads();
-        for (Map.Entry<String, String> headers : commonHeads.entrySet()) {
-            builder.header(headers.getKey(), headers.getValue());
+        if (commonHeads != null) {
+            for (Map.Entry<String, String> headers : commonHeads.entrySet()) {
+                builder.header(headers.getKey(), headers.getValue());
+            }
         }
         Call call = OkHttpUtils.getInstance().getOkHttpClient().newCall(builder.build());
+        mCall = call;
 
+        if (!TextUtils.isEmpty(getTag())) {
+            OkHttpUtils.getInstance().getTagHasMap().put(getTag(), getCall());
+        }
         call.enqueue(new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                clearTagCall(getTag());
                 if (callback != null) {
                     callback.onFailure(call, e);
                 }
@@ -109,6 +145,7 @@ public abstract class BaseRequest<R extends BaseRequest> {
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                clearTagCall(getTag());
                 if (callback != null) {
                     callback.onResponse(call, response);
                 }
@@ -117,9 +154,23 @@ public abstract class BaseRequest<R extends BaseRequest> {
         return call;
     }
 
+
+    private void clearTagCall(String tag) {
+        if (!TextUtils.isEmpty(tag)) {
+            List<Call> calls = OkHttpUtils.getInstance().getTagHasMap().get(tag);
+            calls.remove(getCall());
+        }
+    }
+
+    public void cancel(String tag) {
+        OkHttpUtils.getInstance().cancel(tag);
+    }
+
     public Response execute() {
         Request.Builder builder = buildRequest();
-        for (Map.Entry<String, String> headers : mHeaders.entrySet()) {
+
+
+        for (Map.Entry<String, String> headers : getHeaders().entrySet()) {
             builder.header(headers.getKey(), headers.getValue());
         }
         HashMap<String, String> commonHeads = OkHttpUtils.getInstance().getCommonHeads();

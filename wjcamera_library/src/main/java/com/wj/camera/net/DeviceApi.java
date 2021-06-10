@@ -80,6 +80,7 @@ public class DeviceApi {
                 .url(Api.DeviceInfo)
                 .post(formBody)
                 .build();
+
         try {
             Response execute = getClient().newCall(request).execute();
             String string = execute.body().string();

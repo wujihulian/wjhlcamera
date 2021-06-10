@@ -20,10 +20,15 @@ public class PutRequest extends BaseRequest<PutRequest> {
     }
 
     @Override
-    Request.Builder buildRequest() {
+    RequestBody createRequestBody() {
         MediaType mediaType = MediaType.parse("application/xml;charset=utf-8");
         RequestBody requestBody = RequestBody.create(getJson(), mediaType);
-        return new Request.Builder().url(getFullUrl()).put(requestBody);
+        return requestBody;
+    }
+
+    @Override
+    Request.Builder buildRequest() {
+        return new Request.Builder().url(getFullUrl()).put(createRequestBody());
     }
 
 
