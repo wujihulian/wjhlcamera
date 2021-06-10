@@ -108,11 +108,13 @@ public class OkHttpUtils {
 
     public void cancel(String tag) {
         List<Call> calls = mTagHasMap.get(tag);
-        for (Call call : calls) {
-            call.cancel();
+        if (calls!=null) {
+            for (Call call : calls) {
+                call.cancel();
+            }
+            calls.clear();
+            mTagHasMap.remove(tag);
         }
-        calls.clear();
-        mTagHasMap.remove(tag);
     }
 
     public RepeatKeyHasMap<String, Call> getTagHasMap() {
