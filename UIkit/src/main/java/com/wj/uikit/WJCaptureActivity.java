@@ -256,7 +256,7 @@ public class WJCaptureActivity extends AppCompatActivity {
                     public void dispose() {
                         super.dispose();
                         Log.i(TAG, "dispose: ");
-                        capture.onResume();
+                        //capture.onResume();
                     }
 
                     @Override
