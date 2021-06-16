@@ -252,16 +252,23 @@ public class WJCaptureActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(new RxConsumer(this))
                 .subscribe(new LoadingObserver<Boolean>(this) {
-
                     @Override
                     public void dispose() {
                         super.dispose();
+                        Log.i(TAG, "dispose: ");
                         capture.onResume();
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.annotations.NonNull Throwable e) {
+                        super.onError(e);
+                        Log.i(TAG, "onError: "+e.getMessage());
                     }
 
                     @Override
                     public void onNext(@io.reactivex.annotations.NonNull Boolean o) {
                         super.onNext(o);
+                        Log.i(TAG, "onNext: ");
 
                         if (o == true) {
                             EventBus.getDefault().post(deviceInfo);

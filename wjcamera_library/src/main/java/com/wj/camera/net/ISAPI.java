@@ -82,6 +82,9 @@ public class ISAPI {
 
         try {
             Response execute = OkHttpUtils.getInstance().put(ApiNew.RTMP).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(rtmpConfig)).execute();
+            if (execute==null || execute.body()==null){
+                return null;
+            }
             String string = execute.body().string();
             String xml = Objects.requireNonNull(string);
             String json = new XmlToJson.Builder(xml).build().toString();
@@ -144,6 +147,9 @@ public class ISAPI {
 
         try {
             Response execute=OkHttpUtils.getInstance().get(ApiNew.RTMP).addHeader("EZO-DeviceSerial", device_serial).execute();
+            if (execute==null || execute.body()==null){
+                return null;
+            }
             String string = execute.body().string();
             Log.i(TAG, "getRTMP: "+string);
             String xml = Objects.requireNonNull(string);
