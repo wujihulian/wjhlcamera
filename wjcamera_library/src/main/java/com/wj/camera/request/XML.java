@@ -87,8 +87,8 @@ public class XML {
                     "    </Video>\n" +
                     "</StreamingChannel>";
     //调焦
-    public static String PTZDATA_60_F = "<?xml version: \"1.0\" encoding=\"UTF-8\"?><PTZData><zoom>-1</zoom></PTZData>";
-    public static String PTZDATA_60_Z = "<?xml version: \"1.0\" encoding=\"UTF-8\"?><PTZData><zoom>1</zoom></PTZData>";
+    public static String PTZDATA_60_F = "<?xml version: \"1.0\" encoding=\"UTF-8\"?><PTZData><zoom>-60</zoom></PTZData>";
+    public static String PTZDATA_60_Z = "<?xml version: \"1.0\" encoding=\"UTF-8\"?><PTZData><zoom>60</zoom></PTZData>";
     public static String PTZDATA_0 = "<?xml version: \"1.0\" encoding=\"UTF-8\"?><PTZData><zoom>0</zoom></PTZData>";
 
     public static String  Zoom="<?xml version: \"1.0\" encoding=\"UTF-8\"?><PTZData><zoom><ratio>5</ratio></zoom></PTZData>";

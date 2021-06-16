@@ -9,19 +9,25 @@ import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
+import com.google.gson.Gson;
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.interfaces.OnConfirmListener;
 import com.videogo.openapi.EZPlayer;
 import com.wj.camera.WJCamera;
 import com.wj.camera.callback.JsonCallback;
+import com.wj.camera.callback.XmlCallback;
 import com.wj.camera.config.WJDeviceSceneEnum;
+import com.wj.camera.net.ApiNew;
 import com.wj.camera.net.DeviceApi;
 import com.wj.camera.net.ISAPI;
+import com.wj.camera.net.OkHttpUtils;
 import com.wj.camera.net.RxConsumer;
 import com.wj.camera.response.BaseDeviceResponse;
 import com.wj.camera.response.CheckDevcieUpdate;
@@ -40,8 +46,12 @@ import com.wj.uikit.control.DeviceDebugControl;
 import com.wj.uikit.db.DeviceInfo;
 import com.wj.uikit.pop.FocusSelectPop;
 import com.wj.uikit.pop.SelectPop;
+import com.wj.uikit.uitl.OnControlClickListener;
 import com.wj.uikit.view.TouchProgressView;
 
+import java.text.DecimalFormat;
+
+import fr.arnaudguyon.xmltojsonlib.JsonToXml;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
@@ -94,6 +104,8 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
     private CountDownTimer mCountDownTimer;
     private FrameLayout mScene_fl;
     private TextView mScene_tv;
+    private LinearLayout mLl_high;
+    private ImageView mIv_high;
 
 
     @Override
@@ -112,6 +124,7 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
 
 
         initAudio();
+
     }
 
     private void initAudio() {
@@ -211,6 +224,8 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
                             zoomIndex = position;
                             mFocus_tv.setText(s);
                             ISAPI.getInstance().zoom(position + 1);
+
+
                         }
                     });
                     new XPopup.Builder(WJDeviceDebugActivity.this).asCustom(mFocusSelectPop);
@@ -275,17 +290,6 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
                                     }
                                 });
                             }
-/*                            ISAPI.getInstance().setBitrate(mDeviceInfo.device_serial, bitrate[position], new JsonCallback<ResponseStatus>() {
-                                @Override
-                                public void onSuccess(ResponseStatus data) {
-                                    if (data.ResponseStatus != null && "1".equals(data.ResponseStatus.statusCode)) {
-                                        mBitrate_tv.setText(bitrateTitle[position]);
-                                    } else {
-                                        Toast.makeText(WJDeviceDebugActivity.this, "设置失败", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                            });*/
-
                         }
                     });
                 }
@@ -356,18 +360,54 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
             }
         });
 
-        findViewById(R.id.tv_left).setOnClickListener(new View.OnClickListener() {
+        if (mIv_high.getRotation()<=0) {
+
+            mLl_high.setVisibility(View.GONE);
+        }else {
+            mLl_high.setVisibility(View.VISIBLE);
+        }
+
+        findViewById(R.id.fl_high).setOnClickListener(new OnControlClickListener(200) {
             @Override
-            public void onClick(View v) {
+            public void onViewClick(View view) {
+                if (mIv_high.getRotation()<=0) {
+                    mIv_high.setRotation(90);
+                    mLl_high.setVisibility(View.VISIBLE);
+                }else {
+                    mIv_high.setRotation(0);
+                    mLl_high.setVisibility(View.GONE);
+                }
+            }
+        });
+
+
+
+        findViewById(R.id.tv_left).setOnClickListener(new OnControlClickListener() {
+            @Override
+            public void onViewClick(View view) {
                 ISAPI.getInstance().focus(mDeviceInfo.device_serial,false);
             }
         });
-        findViewById(R.id.tv_right).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.tv_right).setOnClickListener(new OnControlClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onViewClick(View v) {
                 ISAPI.getInstance().focus(mDeviceInfo.device_serial,true);
             }
         });
+
+        findViewById(R.id.tv_pzt_left).setOnClickListener(new OnControlClickListener() {
+            @Override
+            public void onViewClick(View v) {
+                ISAPI.getInstance().pztData(mDeviceInfo.device_serial,false);
+            }
+        });
+        findViewById(R.id.tv_pzt_right).setOnClickListener(new OnControlClickListener() {
+            @Override
+            public void onViewClick(View v) {
+                ISAPI.getInstance().pztData(mDeviceInfo.device_serial,true);
+            }
+        });
+
     }
 
 
@@ -499,6 +539,8 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
         mTv_volume = findViewById(R.id.tv_volume);
 
         mDevice_update_fl = findViewById(R.id.device_update_fl);
+        mLl_high = findViewById(R.id.ll_high);
+        mIv_high = findViewById(R.id.iv_high);
     }
 
     /**

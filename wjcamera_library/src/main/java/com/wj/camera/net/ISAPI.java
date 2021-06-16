@@ -9,6 +9,7 @@ import com.wj.camera.WJCamera;
 import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.callback.XmlCallback;
 import com.wj.camera.config.WJDeviceSceneEnum;
+import com.wj.camera.request.XML;
 import com.wj.camera.response.FocusEntity;
 import com.wj.camera.response.ResponseStatus;
 import com.wj.camera.response.RtmpConfig;
@@ -234,6 +235,7 @@ public class ISAPI {
                 .addHeader("EZO-DeviceSerial", deviceSerial)
                 .enqueue(new XmlCallback(jsonCallback));
     }
+    //聚焦
     public void focus(String deviceSerial,boolean direction){
         ArrayList<String> objects = new ArrayList<>();
         if (!direction) {
@@ -251,6 +253,25 @@ public class ISAPI {
                 focusEntity.setFocusData(new FocusEntity.FocusDataDTO());
                 focusEntity.getFocusData().setFocus(s);
                 OkHttpUtils.getInstance().put(ApiNew.focus).jsons(entityToXml(focusEntity)).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
+                return s;
+            }
+        }).subscribe();
+    }
+    //调焦
+    public void pztData(String deviceSerial ,boolean direction){
+        ArrayList<String> objects = new ArrayList<>();
+        if (!direction) {
+            objects.add(XML.PTZDATA_60_F);
+        }else {
+            objects.add(XML.PTZDATA_60_Z);
+        }
+        objects.add(XML.PTZDATA_0);
+        Observable<String> listObservable = Observable.fromIterable(objects);
+        Observable<Long> timerObservable = Observable.interval(100, TimeUnit.MILLISECONDS);
+        Observable.zip(listObservable, timerObservable, new BiFunction<String, Long, String>() {
+            @Override
+            public String apply(String s, Long aLong) throws Exception {
+                OkHttpUtils.getInstance().put(ApiNew.PZTData).jsons(s).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
                 return s;
             }
         }).subscribe();
