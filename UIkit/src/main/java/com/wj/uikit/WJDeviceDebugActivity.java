@@ -381,34 +381,41 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
         });
 
 
-
         findViewById(R.id.tv_left).setOnClickListener(new OnControlClickListener() {
             @Override
             public void onViewClick(View view) {
-                ISAPI.getInstance().focus(mDeviceInfo.device_serial,false);
+               // ISAPI.getInstance().focus(mDeviceInfo.device_serial,false);
+                ISAPI.getInstance().FOCUSCTRL("far");
             }
         });
         findViewById(R.id.tv_right).setOnClickListener(new OnControlClickListener() {
             @Override
             public void onViewClick(View v) {
-                ISAPI.getInstance().focus(mDeviceInfo.device_serial,true);
+                //ISAPI.getInstance().focus(mDeviceInfo.device_serial,true);
+                ISAPI.getInstance().FOCUSCTRL("near");
             }
         });
 
         findViewById(R.id.tv_pzt_left).setOnClickListener(new OnControlClickListener() {
             @Override
             public void onViewClick(View v) {
-                ISAPI.getInstance().pztData(mDeviceInfo.device_serial,false);
+               // ISAPI.getInstance().pztData(mDeviceInfo.device_serial,false);
+
+                ISAPI.getInstance().ZOOMCRTL("tele");
             }
         });
         findViewById(R.id.tv_pzt_right).setOnClickListener(new OnControlClickListener() {
             @Override
             public void onViewClick(View v) {
-                ISAPI.getInstance().pztData(mDeviceInfo.device_serial,true);
+                //ISAPI.getInstance().pztData(mDeviceInfo.device_serial,true);
+
+                ISAPI.getInstance().ZOOMCRTL("wide");
             }
         });
 
     }
+    int focus=1;
+    int zoomCRTL =1;
 
 
     @SuppressLint("CheckResult")

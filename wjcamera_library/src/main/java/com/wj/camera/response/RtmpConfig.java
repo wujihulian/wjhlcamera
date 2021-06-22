@@ -49,6 +49,46 @@ public class RtmpConfig implements Serializable {
         private String URL;
         @JsonProperty("version")
         private String version;
+        @JsonProperty("PrivatelyEnabled")
+        private String PrivatelyEnabled;
+        @JsonProperty("PrivatelyURL")
+        private String PrivatelyURL;
+        @JsonProperty("PlayURL1")
+        private String PlayURL1;
+        @JsonProperty("PlayURL2")
+        private String PlayURL2;
+
+        public String getPrivatelyEnabled() {
+            return PrivatelyEnabled;
+        }
+
+        public void setPrivatelyEnabled(String privatelyEnabled) {
+            PrivatelyEnabled = privatelyEnabled;
+        }
+
+        public String getPrivatelyURL() {
+            return PrivatelyURL;
+        }
+
+        public void setPrivatelyURL(String privatelyURL) {
+            PrivatelyURL = privatelyURL;
+        }
+
+        public String getPlayURL1() {
+            return PlayURL1;
+        }
+
+        public void setPlayURL1(String playURL1) {
+            PlayURL1 = playURL1;
+        }
+
+        public String getPlayURL2() {
+            return PlayURL2;
+        }
+
+        public void setPlayURL2(String playURL2) {
+            PlayURL2 = playURL2;
+        }
 
         public String getEnabled() {
             return enabled;

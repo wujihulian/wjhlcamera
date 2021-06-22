@@ -4,6 +4,7 @@ import android.app.Application;
 
 import androidx.multidex.MultiDex;
 
+import com.wj.uikit.uitl.WJUikit;
 
 
 /**
@@ -20,6 +21,7 @@ public class App  extends Application {
     public void onCreate() {
         super.onCreate();
         MultiDex.install(this);
+
 
     }
 }

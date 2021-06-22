@@ -17,7 +17,6 @@
         android:layout_height="wrap_content"/>
 
     <EditText
-        android:maxLength="32"
         android:layout_marginRight="30dp"
         android:layout_marginLeft="30dp"
         android:id="@+id/content"

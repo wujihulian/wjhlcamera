@@ -3,12 +3,12 @@ package com.wj.uikit.pop;
 import android.content.Context;
 import android.graphics.Color;
 import android.text.Editable;
+import android.text.InputFilter;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
-
 
 import com.lxj.xpopup.core.CenterPopupView;
 import com.wj.uikit.R;
@@ -26,19 +26,34 @@ import com.wj.uikit.adapter.OnItemClickListener;
 public class EditPop extends CenterPopupView {
 
     private OnItemClickListener<String> mOnConfirmListener;
-    private String  mString;
-    private int minLenght=-1;
+    private String mString;
+    private int minLenght = -1;
+    private int maxLenght = 32;
+
     public void setOnConfirmListener(OnItemClickListener<String> onConfirmListener) {
         mOnConfirmListener = onConfirmListener;
     }
-    public EditPop(Context context,String  title){
+
+    public EditPop(Context context, String title) {
         super(context);
-        this.mString=title;
+        this.mString = title;
     }
-    public EditPop(Context context,String  title,int minLenght){
+
+    public EditPop(Context context, String title, int minLenght) {
         super(context);
-        this.mString=title;
-        this.minLenght=minLenght;
+        this.mString = title;
+        this.minLenght = minLenght;
+    }
+
+    public EditPop(Context context, String title, int minLenght, int maxLength) {
+        super(context);
+        this.mString = title;
+        this.minLenght = minLenght;
+        this.maxLenght = maxLength;
+    }
+
+    public void setMaxLenght(int maxLenght) {
+        this.maxLenght = maxLenght;
     }
 
     @Override
@@ -49,12 +64,10 @@ public class EditPop extends CenterPopupView {
     @Override
     protected void onCreate() {
         super.onCreate();
-
         TextView title = findViewById(R.id.title);
         title.setText(mString);
-
         EditText content = findViewById(R.id.content);
-
+        content.setFilters(new InputFilter[]{new InputFilter.LengthFilter(maxLenght)});
         findViewById(R.id.cancel).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -63,7 +76,7 @@ public class EditPop extends CenterPopupView {
         });
 
         TextView confirm = findViewById(R.id.confirm);
-        if (minLenght>=1){
+        if (minLenght >= 1) {
             confirm.setClickable(false);
             confirm.setTextColor(Color.parseColor("#999999"));
 
@@ -75,18 +88,18 @@ public class EditPop extends CenterPopupView {
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                        if (!TextUtils.isEmpty(s)){
-                            if (s.length()>=minLenght){
-                                confirm.setClickable(true);
-                                confirm.setTextColor(Color.parseColor("#FF108EE9"));
-                            }else {
-                                confirm.setClickable(false);
-                                confirm.setTextColor(Color.parseColor("#999999"));
-                            }
-                        }else {
+                    if (!TextUtils.isEmpty(s)) {
+                        if (s.length() >= minLenght) {
+                            confirm.setClickable(true);
+                            confirm.setTextColor(Color.parseColor("#FF108EE9"));
+                        } else {
                             confirm.setClickable(false);
                             confirm.setTextColor(Color.parseColor("#999999"));
                         }
+                    } else {
+                        confirm.setClickable(false);
+                        confirm.setTextColor(Color.parseColor("#999999"));
+                    }
                 }
 
                 @Override
@@ -97,16 +110,11 @@ public class EditPop extends CenterPopupView {
         }
 
 
-
-
-
-
-
         confirm.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mOnConfirmListener!=null){
-                    mOnConfirmListener.onClick(content.getText().toString(),-1);
+                if (mOnConfirmListener != null) {
+                    mOnConfirmListener.onClick(content.getText().toString(), -1);
                 }
                 dismiss();
             }
