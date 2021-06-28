@@ -350,7 +350,7 @@ public class ISAPI {
         return OkHttpUtils.getInstance().put(ApiNew.factoryResetBasic).jsons(XML.PTZDATA_0).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
     }
 
-    //简单恢复
+    //完全恢复
     public Call factoryResetFull(String deviceSerial) {
         return OkHttpUtils.getInstance().put(ApiNew.factoryResetFull).jsons(XML.PTZDATA_0).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
     }

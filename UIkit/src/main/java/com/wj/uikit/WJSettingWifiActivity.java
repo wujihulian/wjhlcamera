@@ -15,7 +15,6 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -23,15 +22,12 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.ap.ezviz.pub.YsApManager;
 import com.ap.ezviz.pub.ap.ApWifiConfigInfo;
 import com.ap.ezviz.pub.ap.FIXED_IP;
-import com.google.gson.Gson;
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.core.BasePopupView;
 import com.lxj.xpopup.impl.LoadingPopupView;
@@ -46,7 +42,6 @@ import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.net.DeviceApi;
 import com.wj.camera.net.ISAPI;
 import com.wj.camera.net.RxConsumer;
-import com.wj.camera.net.SafeGuardInterceptor;
 import com.wj.camera.response.BaseDeviceResponse;
 import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.uitl.WJLogUitl;
@@ -60,18 +55,13 @@ import org.greenrobot.eventbus.EventBus;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
-import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
 
 
 /**
@@ -152,7 +142,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode ==300){
+        if (requestCode == 300) {
             getWifiList();
         }
         if (requestCode == 200) {
@@ -174,10 +164,10 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
         }
 
 
-
     }
+
     public void showGPSContacts() {
-        LocationManager   lm = (LocationManager) this.getSystemService(this.LOCATION_SERVICE);
+        LocationManager lm = (LocationManager) this.getSystemService(this.LOCATION_SERVICE);
         boolean ok = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
         if (ok) {//开了定位服务
             getWifiList();
@@ -197,11 +187,16 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
             public void onTick(long millisUntilFinished) {
                 List<ScanResult> scanResults = mWifiMgr.getScanResults();
                 if (scanResults != null && scanResults.size() >= 1) {
+
+
                     mCountDownTimer.cancel();
                     mLl_to_wifi.setVisibility(View.GONE);
                     mWifiListAdapter = new WifiListAdapter();
                     mWifiListAdapter.setOnItemClickListener(WJSettingWifiActivity.this);
                     List<ScanResult> scanList = getScanList();
+                    for (ScanResult scanResult : scanList) {
+                        WJLogUitl.i(scanResult.toString());
+                    }
                     mWifiListAdapter.setData(scanList);
                     mRecyclerView.setAdapter(mWifiListAdapter);
                 }
@@ -385,13 +380,27 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                 });
     }
 
+
     public List<ScanResult> getScanList() {
+        if (mWifiMgr != null) {
+            List<ScanResult> scanResults = mWifiMgr.getScanResults();
+            ArrayList<ScanResult> newScanResults = new ArrayList<>();
+            for (ScanResult scanResult : scanResults) {
+                if (scanResult.frequency < 5000) {
+                    newScanResults.add(scanResult);
+                }
+            }
+            return newScanResults;
+        }
+        return null;
+    }
+
+/*    public List<ScanResult> getScanList() {
         if (mWifiMgr != null) {
             List<ScanResult> olist = mWifiMgr.getScanResults();
             if (olist != null) {
                 List<ScanResult> nlist = new ArrayList<>();
                 for (int i = 0; i < olist.size(); i++) {
-
                     // 该热点SSID是否已在列表中
                     int position = getItemPosition(nlist, olist.get(i));
                     if (position != -1) { // 已在列表
@@ -415,7 +424,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
             }
         }
         return null;
-    }
+    }*/
 
 
     /**
@@ -436,7 +445,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 100) {
-            WJLogUitl.i(  "onRequestPermissionsResult: ");
+            WJLogUitl.i("onRequestPermissionsResult: ");
             showGPSContacts();
             //getWifiList();
             //registerPermission();
@@ -456,7 +465,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
             }
             ;
         }
-        WJLogUitl.i(  "onClick: " + bssid);
+        WJLogUitl.i("onClick: " + bssid);
 
         startAp(data.SSID, wifiPssword, bssid);
 
@@ -511,7 +520,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                 .fixedIP(FIXED_IP.Companion.getWIRELESS_IPC_YS())  // 设备固定IP。这里针对萤石设备有  192.168.8.1 和 192.168.8.253 两款兼容，可扩展更多的ip
                                 .build();
 
-                        WJLogUitl.i(  "success: " + wifiSsid + " ----- " + wifiPassword);
+                        WJLogUitl.i("success: " + wifiSsid + " ----- " + wifiPassword);
                         YsApManager.INSTANCE.activateWifi(apConfigInfo, new YsApManager.ApActivateCallback() {
                             @Override
                             public void onStartSearch() {
@@ -557,7 +566,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
 
                     @Override
                     public void failed(@NonNull ConnectionErrorCode errorCode) {
-                        WJLogUitl.i(  "failed: " + errorCode.name());
+                        WJLogUitl.i("failed: " + errorCode.name());
                         if (errorCode == ConnectionErrorCode.USER_CANCELLED) {
 
                         } else {
@@ -588,7 +597,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
         if (mLoadingPopupView != null) {
             mLoadingPopupView.setTitle(log);
         }
-        WJLogUitl.i(  "logPrint: " + log);
+        WJLogUitl.i("logPrint: " + log);
     }
 
 
