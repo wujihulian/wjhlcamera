@@ -40,3 +40,6 @@
 -keep class  com.wj.uikit.** { *; }
 #
 
+-keep public class * extends android.view.View{*;}
+
+-keep public class * implements com.kk.taurus.playerbase.player.IPlayer{*;}

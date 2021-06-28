@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import com.videogo.errorlayer.ErrorInfo;
 import com.videogo.openapi.EZConstants;
 import com.videogo.openapi.EZPlayer;
+import com.wj.camera.uitl.WJLogUitl;
 
 
 /**
@@ -111,7 +112,7 @@ class WJSurfaceView extends SurfaceView {
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        Log.i(TAG, "onAttachedToWindow: ");
+        WJLogUitl.i(  "onAttachedToWindow: ");
     }
 
 
@@ -122,7 +123,7 @@ class WJSurfaceView extends SurfaceView {
             if (mPlayStateListener!=null){
                 mPlayStateListener.playState(msg.what, msg);
             }
-            Log.i(TAG, "handleMessage: state "+msg.what);
+            WJLogUitl.i(  "handleMessage: state "+msg.what);
             switch (msg.what) {
 
                 case EZConstants.EZRealPlayConstants.MSG_REALPLAY_PLAY_SUCCESS:
@@ -147,8 +148,8 @@ class WJSurfaceView extends SurfaceView {
                         String[] strings = temp.split(":");
                         mVideoWidth = Integer.parseInt(strings[0]);
                         mVideoHeight = Integer.parseInt(strings[1]);
-                        Log.i(TAG, "handleMessage: " + mVideoWidth);
-                        Log.i(TAG, "handleMessage: " + mVideoHeight);
+                        WJLogUitl.i(  "handleMessage: " + mVideoWidth);
+                        WJLogUitl.i(  "handleMessage: " + mVideoHeight);
                         //解析出视频分辨率
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -187,6 +188,6 @@ class WJSurfaceView extends SurfaceView {
         mHandler.removeCallbacksAndMessages(null);
         mHandler = null;
 
-        Log.i(TAG, "onDetachedFromWindow: ");
+        WJLogUitl.i(  "onDetachedFromWindow: ");
     }
 }

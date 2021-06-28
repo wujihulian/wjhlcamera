@@ -42,6 +42,7 @@ import com.wj.camera.net.RxConsumer;
 import com.wj.camera.net.SafeGuardInterceptor;
 import com.wj.camera.response.BaseDeviceResponse;
 import com.wj.camera.response.RtmpConfig;
+import com.wj.camera.uitl.WJLogUitl;
 import com.wj.camera.view.WJDeviceConfig;
 import com.wj.uikit.adapter.OnItemClickListener;
 import com.wj.uikit.db.DeviceInfo;
@@ -110,7 +111,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
         mEt_ip4.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-                Log.i(TAG, "onFocusChange: " + hasFocus);
+                WJLogUitl.i(  "onFocusChange: " + hasFocus);
                 if (!hasFocus) {
                     String ip = mEt_ip4.getText().toString().trim();
                     String trim = mEt_subnet_mask.getText().toString().trim();
@@ -120,7 +121,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                             String[] split = ip.split("\\.");
                             String s = split[0];
                             Integer integer = Integer.valueOf(s);
-                            Log.i(TAG, "onFocusChange: " + integer);
+                            WJLogUitl.i(  "onFocusChange: " + integer);
                             String subnetMask = null;
                             if (integer >= 1 && integer <= 126) {
                                 subnetMask = "255.0.0.0";
@@ -387,7 +388,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                         apWiredConfigInfo.deviceSN(mDeviceInfo.device_serial)  // 设备序列号，非必要
                                 .activatePwd("Hik" + mDeviceInfo.device_code)  // 激活密码，萤石接入的海康设备规则为 Hik+验证码。这里不传会使用默认 Hik+验证码
                                 .verifyCode(mDeviceInfo.device_code); // 设备验证码，必要
-                        Log.i(TAG, "success: " + new Gson().toJson(apWiredConfigInfo.getApWiredConfigInfo()));
+                        WJLogUitl.i(  "success: " + new Gson().toJson(apWiredConfigInfo.getApWiredConfigInfo()));
                         YsApManager.INSTANCE.activateWired(apWiredConfigInfo.build(), new YsApManager.ApActivateCallback() {
                             @Override
                             public void onStartSearch() {
@@ -433,7 +434,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
 
                     @Override
                     public void failed(@NonNull ConnectionErrorCode errorCode) {
-                        Log.i(TAG, "failed: " + errorCode.name());
+                        WJLogUitl.i(  "failed: " + errorCode.name());
                         if (errorCode == ConnectionErrorCode.USER_CANCELLED) {
 
                         } else {
@@ -542,7 +543,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
         if (mLoadingPopupView != null) {
             mLoadingPopupView.setTitle(log);
         }
-        Log.i(TAG, "logPrint: " + log);
+        WJLogUitl.i(  "logPrint: " + log);
     }
 
     @SuppressLint("CheckResult")
@@ -562,7 +563,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
 
     @SuppressLint("CheckResult")
     public void checkDevice() {
-        Log.i(TAG, "checkDevice: ");
+        WJLogUitl.i(  "checkDevice: ");
         if (mDeviceInfo != null) {
             Observable.just(mDeviceInfo)
                     .map(new Function<DeviceInfo, EZProbeDeviceInfoResult>() {

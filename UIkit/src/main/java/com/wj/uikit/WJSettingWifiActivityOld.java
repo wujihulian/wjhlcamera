@@ -32,6 +32,7 @@ import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.net.DeviceApi;
 import com.wj.camera.net.RxConsumer;
 import com.wj.camera.response.BaseDeviceResponse;
+import com.wj.camera.uitl.WJLogUitl;
 import com.wj.camera.view.WJDeviceConfig;
 import com.wj.uikit.adapter.OnItemClickListener;
 import com.wj.uikit.adapter.WifiListAdapter;
@@ -131,7 +132,7 @@ public class WJSettingWifiActivityOld extends BaseUikitActivity implements OnIte
                     mWifiListAdapter.setOnItemClickListener(WJSettingWifiActivityOld.this);
                     List<ScanResult> scanList = getScanList();
                     for (ScanResult scanResult : scanList) {
-                        //   Log.i(TAG, "onTick: " + scanResult.toString());
+                        //   WJLogUitl.i(  "onTick: " + scanResult.toString());
                     }
                     mWifiListAdapter.setData(scanList);
                     mRecyclerView.setAdapter(mWifiListAdapter);
@@ -163,7 +164,7 @@ public class WJSettingWifiActivityOld extends BaseUikitActivity implements OnIte
 
     @SuppressLint("CheckResult")
     public void checkDevice() {
-        Log.i(TAG, "checkDevice: ");
+        WJLogUitl.i(  "checkDevice: ");
         if (mDeviceInfo != null) {
             Observable.just(mDeviceInfo)
                     .map(new Function<DeviceInfo, EZProbeDeviceInfoResult>() {
@@ -298,7 +299,7 @@ public class WJSettingWifiActivityOld extends BaseUikitActivity implements OnIte
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 100) {
-            Log.i(TAG, "onRequestPermissionsResult: ");
+            WJLogUitl.i(  "onRequestPermissionsResult: ");
             getWifiList();
             //registerPermission();
         }
@@ -307,17 +308,17 @@ public class WJSettingWifiActivityOld extends BaseUikitActivity implements OnIte
     @Override
     public void onClick(String wifiPssword, int position) {
         ScanResult data = mWifiListAdapter.getData(position);
-        Log.i(TAG, "onClick: ");
+        WJLogUitl.i(  "onClick: ");
         if (true) {
             startAp1(data.SSID, wifiPssword);
             return;
         }
 
       /*  if (mMode == 2) {
-            Log.i(TAG, "onClick: 开始ap配网");
+            WJLogUitl.i(  "onClick: 开始ap配网");
             startAp(data.SSID, wifiPssword);
         } else if (mMode == 3) {
-            Log.i(TAG, "onClick: 开始wifi配网");
+            WJLogUitl.i(  "onClick: 开始wifi配网");
             //  startWifi(data.SSID, wifiPssword);
             startAp(data.SSID, wifiPssword);
         } else if (mMode == 1) {
@@ -330,7 +331,7 @@ public class WJSettingWifiActivityOld extends BaseUikitActivity implements OnIte
     public void startAp1(String wifiSsid, String wifiPassword) {
         EZOpenSDK.getInstance().stopAPConfigWifiWithSsid();
 
-        Log.i(TAG, "startAp1: ");
+        WJLogUitl.i(  "startAp1: ");
         String password = "AP" + mDeviceInfo.device_code;
         //"EZVIZ_"+设备序列号
         String ssid = "HAP_" + mDeviceInfo.device_serial;
@@ -338,17 +339,17 @@ public class WJSettingWifiActivityOld extends BaseUikitActivity implements OnIte
         //"EZVIZ_"+设备序列号
         ssid = "EZVIZ_" + mDeviceInfo.device_serial;*/
 
-        //   Log.i(TAG, "startAp1:  " +String.format(" ssid= %s   password =%s ",));
-        Log.i(TAG, "startAp1:" + mDeviceInfo.device_code);
-        Log.i(TAG, "startAp1:" + mDeviceInfo.device_serial);
+        //   WJLogUitl.i(  "startAp1:  " +String.format(" ssid= %s   password =%s ",));
+        WJLogUitl.i(  "startAp1:" + mDeviceInfo.device_code);
+        WJLogUitl.i(  "startAp1:" + mDeviceInfo.device_serial);
         String deviceCode = "Hik" + mDeviceInfo.device_code;
         // String deviceCode = mDeviceInfo.device_code;
-        //  Log.i(TAG, "startAp1:" + deviceCode);
+        //  WJLogUitl.i(  "startAp1:" + deviceCode);
 
         EZOpenSDK.getInstance().startAPConfigWifiWithSsid(wifiSsid, wifiPassword, mDeviceInfo.device_serial, deviceCode, ssid, password, true, new APWifiConfig.APConfigCallback() {
             @Override
             public void onSuccess() {
-                Log.i(TAG, "onSuccess: 成功配网");
+                WJLogUitl.i(  "onSuccess: 成功配网");
                 toast("配网成功");
                 /*EventBus.getDefault().post(mDeviceInfo);
                 finish();*/
@@ -367,7 +368,7 @@ public class WJSettingWifiActivityOld extends BaseUikitActivity implements OnIte
 
             @Override
             public void OnError(int code) {
-                Log.i(TAG, "OnError:" + code);
+                WJLogUitl.i(  "OnError:" + code);
                 EZOpenSDK.getInstance().stopAPConfigWifiWithSsid();
                 switch (code) {
                     case 15:

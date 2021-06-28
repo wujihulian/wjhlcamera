@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -18,7 +17,6 @@ import androidx.annotation.Nullable;
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.interfaces.OnConfirmListener;
 import com.videogo.openapi.EZPlayer;
-import com.wj.camera.WJCamera;
 import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.config.WJDeviceSceneEnum;
 import com.wj.camera.net.DeviceApi;
@@ -35,11 +33,11 @@ import com.wj.camera.response.ZoomResponse;
 import com.wj.camera.uitl.WJLogUitl;
 import com.wj.camera.view.WJDeviceConfig;
 import com.wj.camera.view.WJPlayView;
-import com.wj.camera.view.control.ErrorControl;
-import com.wj.camera.view.control.LoadingControl;
 import com.wj.uikit.adapter.OnItemClickListener;
-import com.wj.uikit.control.DeviceDebugControl;
 import com.wj.uikit.db.DeviceInfo;
+import com.wj.uikit.player.WJRelationAssistUtil;
+import com.wj.uikit.player.WJVideoPlayer;
+import com.wj.uikit.player.event.WJReconnectEvent;
 import com.wj.uikit.pop.FocusSelectPop;
 import com.wj.uikit.pop.SelectPop;
 import com.wj.uikit.uitl.OnControlClickListener;
@@ -62,7 +60,7 @@ import io.reactivex.schedulers.Schedulers;
  * <author> <time> <version> <desc>
  * 作者姓名 修改时间 版本号 描述
  */
-public class WJDeviceDebugActivity extends BaseUikitActivity {
+public class WJDeviceDebugNewActivity extends BaseUikitActivity {
     private String deviceSerial;
     private String deviceCode;
     private String deviceType;
@@ -104,7 +102,7 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.wj_activity_device_debug);
+        setContentView(R.layout.wj_activity_device_debug_new);
 
         getDeviceInfo();
         findView();
@@ -147,7 +145,7 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
                     String videoResolutionWidth = video.getVideoResolutionWidth();
                     String videoResolutionHeight = video.getVideoResolutionHeight();
                     mRatio_tv.setText(String.format("%s*%s", videoResolutionWidth, videoResolutionHeight));
-                    WJLogUitl.i(  "onSuccess: " + mVideoConfig.getStreamingChannel().getVideo().getVbrUpperCap());
+                    WJLogUitl.i("onSuccess: " + mVideoConfig.getStreamingChannel().getVideo().getVbrUpperCap());
                     if (!TextUtils.isEmpty(mVideoConfig.getStreamingChannel().getVideo().getVbrUpperCap())) {
                         Integer value = Integer.valueOf(mVideoConfig.getStreamingChannel().getVideo().getVbrUpperCap());
                         int m = value / 1024;
@@ -180,7 +178,10 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
         });
     }
 
+    private WJVideoPlayer mWjVideoPlayer;
+
     private void initAction() {
+/*
         mPlayer = WJCamera.getInstance().createPlayer(deviceSerial, 1);
         mPlayer.setPlayVerifyCode(deviceCode);
         mWJPlayView.setEZPlayer(mPlayer);
@@ -188,8 +189,24 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
         mWJPlayView.addControl(new ErrorControl(this));
         DeviceDebugControl control = new DeviceDebugControl(this, mDeviceInfo);
         mWJPlayView.addControl(control);
-
+*/
         //   mPlayer.startRealPlay();
+        FrameLayout frameLayout = findViewById(R.id.fl_video);
+        mWjVideoPlayer = new WJVideoPlayer(this);
+        mWjVideoPlayer.init();
+        WJReconnectEvent mWjReconnectEvent = new WJReconnectEvent();
+        mWjReconnectEvent.setDeviceSerial(deviceSerial);
+        mWjVideoPlayer.setData("");
+        mWjVideoPlayer.registerReconnect(mWjReconnectEvent);
+        mWjVideoPlayer.attachContainer(frameLayout);
+        mWjVideoPlayer.getWjControlCover().getWj_full_iv().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                WJRelationAssistUtil.getInstance().switchFull(WJDeviceDebugNewActivity.this, mWjVideoPlayer, frameLayout);
+            }
+        });
+        mWjVideoPlayer.play();
+
     }
 
     int zoom = 1;
@@ -207,7 +224,7 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
             @Override
             public void onClick(View v) {
                 if (mFocusSelectPop == null) {
-                    mFocusSelectPop = new FocusSelectPop(WJDeviceDebugActivity.this);
+                    mFocusSelectPop = new FocusSelectPop(WJDeviceDebugNewActivity.this);
                     mFocusSelectPop.setAtIndex(zoomIndex);
                     mFocusSelectPop.setListener(new OnItemClickListener<String>() {
                         @Override
@@ -219,7 +236,7 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
 
                         }
                     });
-                    new XPopup.Builder(WJDeviceDebugActivity.this).asCustom(mFocusSelectPop);
+                    new XPopup.Builder(WJDeviceDebugNewActivity.this).asCustom(mFocusSelectPop);
                 }
                 mFocusSelectPop.show();
             }
@@ -231,8 +248,8 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
             public void onClick(View v) {
 
                 if (mRatioSelectPop == null) {
-                    mRatioSelectPop = new SelectPop(WJDeviceDebugActivity.this, xy);
-                    new XPopup.Builder(WJDeviceDebugActivity.this).asCustom(mRatioSelectPop);
+                    mRatioSelectPop = new SelectPop(WJDeviceDebugNewActivity.this, xy);
+                    new XPopup.Builder(WJDeviceDebugNewActivity.this).asCustom(mRatioSelectPop);
                     mRatioSelectPop.setListener(new OnItemClickListener<String>() {
                         @Override
                         public void onClick(String s, int position) {
@@ -247,7 +264,7 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
                                         if (data.ResponseStatus != null && "1".equals(data.ResponseStatus.statusCode)) {
                                             mRatio_tv.setText(s);
                                         } else {
-                                            Toast.makeText(WJDeviceDebugActivity.this, "设置失败", Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(WJDeviceDebugNewActivity.this, "设置失败", Toast.LENGTH_SHORT).show();
                                         }
                                     }
                                 });
@@ -263,8 +280,8 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
             @Override
             public void onClick(View v) {
                 if (mBitrateSelectPop == null) {
-                    mBitrateSelectPop = new SelectPop(WJDeviceDebugActivity.this, bitrateTitle);
-                    new XPopup.Builder(WJDeviceDebugActivity.this).asCustom(mBitrateSelectPop);
+                    mBitrateSelectPop = new SelectPop(WJDeviceDebugNewActivity.this, bitrateTitle);
+                    new XPopup.Builder(WJDeviceDebugNewActivity.this).asCustom(mBitrateSelectPop);
                     mBitrateSelectPop.setListener(new OnItemClickListener<String>() {
                         @Override
                         public void onClick(String s, int position) {
@@ -276,7 +293,7 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
                                         if (data.ResponseStatus != null && "1".equals(data.ResponseStatus.statusCode)) {
                                             mBitrate_tv.setText(bitrateTitle[position]);
                                         } else {
-                                            Toast.makeText(WJDeviceDebugActivity.this, "设置失败", Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(WJDeviceDebugNewActivity.this, "设置失败", Toast.LENGTH_SHORT).show();
                                         }
                                     }
                                 });
@@ -329,8 +346,8 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
         mScene_fl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SelectPop selectPop = new SelectPop(WJDeviceDebugActivity.this, WJDeviceSceneEnum.toArrayString());
-                new XPopup.Builder(WJDeviceDebugActivity.this).asCustom(selectPop).show();
+                SelectPop selectPop = new SelectPop(WJDeviceDebugNewActivity.this, WJDeviceSceneEnum.toArrayString());
+                new XPopup.Builder(WJDeviceDebugNewActivity.this).asCustom(selectPop).show();
                 selectPop.setListener(new OnItemClickListener<String>() {
                     @Override
                     public void onClick(String s, int position) {
@@ -341,7 +358,7 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
                                 if (data != null && data.ResponseStatus != null && "1".equals(data.ResponseStatus.statusCode)) {
                                     mScene_tv.setText(s);
                                 } else {
-                                    Toast.makeText(WJDeviceDebugActivity.this, "切换场景失败", Toast.LENGTH_LONG).show();
+                                    Toast.makeText(WJDeviceDebugNewActivity.this, "切换场景失败", Toast.LENGTH_LONG).show();
                                 }
                             }
                         });
@@ -407,7 +424,7 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
         findViewById(R.id.fl_recover).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new XPopup.Builder(WJDeviceDebugActivity.this).asConfirm("重新配网", "你确定设备重新配网？", new OnConfirmListener() {
+                new XPopup.Builder(WJDeviceDebugNewActivity.this).asConfirm("重新配网", "你确定设备重新配网？", new OnConfirmListener() {
                     @Override
                     public void onConfirm() {
                         ISAPI.getInstance().wirelessServer(mDeviceInfo.device_serial);
@@ -419,7 +436,7 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
         findViewById(R.id.fl_reset).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new XPopup.Builder(WJDeviceDebugActivity.this).asConfirm("设备重置", "你确定要重置设备？", new OnConfirmListener() {
+                new XPopup.Builder(WJDeviceDebugNewActivity.this).asConfirm("设备重置", "你确定要重置设备？", new OnConfirmListener() {
                     @Override
                     public void onConfirm() {
                         ISAPI.getInstance().factoryResetFull(deviceSerial);
@@ -451,7 +468,7 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
             }
         }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe(new RxConsumer(WJDeviceDebugActivity.this))
+                .doOnSubscribe(new RxConsumer(WJDeviceDebugNewActivity.this))
                 .subscribe(new Consumer<BaseDeviceResponse<CheckDevcieUpdate>>() {
                     @Override
                     public void accept(BaseDeviceResponse<CheckDevcieUpdate> response) throws Exception {
@@ -484,7 +501,7 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
 
                             if (responseData.getIsNeedUpgrade() == 1) {
                                 // 有新版本
-                                new XPopup.Builder(WJDeviceDebugActivity.this).asConfirm("检测到新版本", responseData.getCurrentVersion() + " 是否升级到 " + responseData.getLatestVersion(), "否", "是", new OnConfirmListener() {
+                                new XPopup.Builder(WJDeviceDebugNewActivity.this).asConfirm("检测到新版本", responseData.getCurrentVersion() + " 是否升级到 " + responseData.getLatestVersion(), "否", "是", new OnConfirmListener() {
                                     @Override
                                     public void onConfirm() {
                                         deviceUpdate();
@@ -494,7 +511,7 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
                             } else {
 
                                 // 最新版
-                                new XPopup.Builder(WJDeviceDebugActivity.this).asConfirm("已经是最新版", responseData.getCurrentVersion(), null, "确定", new OnConfirmListener() {
+                                new XPopup.Builder(WJDeviceDebugNewActivity.this).asConfirm("已经是最新版", responseData.getCurrentVersion(), null, "确定", new OnConfirmListener() {
                                     @Override
                                     public void onConfirm() {
                                         //toUpdateProgress();
@@ -510,7 +527,7 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
     }
 
     private void toUpdateProgress() {
-        Intent intent = new Intent(WJDeviceDebugActivity.this, WJUpdateProgressActivity.class);
+        Intent intent = new Intent(WJDeviceDebugNewActivity.this, WJUpdateProgressActivity.class);
         Bundle extras = new Bundle();
         extras.putSerializable(WJDeviceConfig.DEVICE_INFO, mDeviceInfo);
         intent.putExtras(extras);
@@ -527,14 +544,14 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
             }
         }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe(new RxConsumer(WJDeviceDebugActivity.this))
+                .doOnSubscribe(new RxConsumer(WJDeviceDebugNewActivity.this))
                 .subscribe(new Consumer<BaseDeviceResponse<CheckDevcieUpdate>>() {
                     @Override
                     public void accept(BaseDeviceResponse<CheckDevcieUpdate> checkDevcieUpdateBaseDeviceResponse) throws Exception {
                         if (checkDevcieUpdateBaseDeviceResponse.getCode() == 200) {
                             toUpdateProgress();
                         } else {
-                            Toast.makeText(WJDeviceDebugActivity.this, "网络错误", Toast.LENGTH_LONG).show();
+                            Toast.makeText(WJDeviceDebugNewActivity.this, "网络错误", Toast.LENGTH_LONG).show();
                         }
                     }
                 });
@@ -568,50 +585,28 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
     private void getDeviceInfo() {
         Bundle extras = getIntent().getExtras();
         mDeviceInfo = (DeviceInfo) extras.getSerializable(WJDeviceConfig.DEVICE_INFO);
-        deviceSerial = mDeviceInfo.device_serial;
-        deviceCode = mDeviceInfo.device_code;
-        deviceType = mDeviceInfo.device_type;
-
-
+        deviceSerial = mDeviceInfo.getDevice_serial();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (mPlayer != null) {
-            if (mCountDownTimer != null) {
-                mCountDownTimer.cancel();
-            }
-            mCountDownTimer = new CountDownTimer(500, 500) {
-                @Override
-                public void onTick(long millisUntilFinished) {
 
-                }
-
-                @Override
-                public void onFinish() {
-                    boolean b = mPlayer.startRealPlay();
-                }
-            };
-            mCountDownTimer.start();
-
-        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (mPlayer != null) {
-            mPlayer.stopRealPlay();
-        }
+
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mPlayer != null) {
-            mPlayer.release();
-            mPlayer = null;
+        if (mWjVideoPlayer != null) {
+            mWjVideoPlayer.destroy();
+            mWjVideoPlayer = null;
+            WJRelationAssistUtil.getInstance().destroy();
         }
     }
 

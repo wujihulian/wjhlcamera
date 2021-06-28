@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 
 import com.videogo.openapi.EZConstants;
+import com.wj.camera.uitl.WJLogUitl;
 import com.wj.camera.view.WJDeviceConfig;
 import com.wj.camera.view.control.WJPlayControl;
 import com.wj.uikit.R;
@@ -77,7 +78,7 @@ public class DeviceDebugControl extends WJPlayControl {
         mPlayer_iv.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.i(TAG, "onClick: " + video);
+                WJLogUitl.i(  "onClick: " + video);
                 if (video == 1) {
                     mPlayer_iv.setImageResource(R.mipmap.wj_device_start);
                     video = 0;

@@ -8,6 +8,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.wj.camera.response.BaseDeviceResponse;
 import com.wj.camera.uitl.TypeParameterMatcher;
+import com.wj.camera.uitl.WJLogUitl;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -59,7 +60,7 @@ public abstract class ResponseCallback implements Callback {
     @Override
     public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
         String string = getJson(call, response);
-        Log.i(TAG, "onResponse: "+string);
+        WJLogUitl.i(  "onResponse: "+string);
         if (TextUtils.isEmpty(string) || "{}".equals(string)) {
             Observable.just("1").subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
@@ -73,7 +74,6 @@ public abstract class ResponseCallback implements Callback {
                     });
             return;
         }
-
 
         if (mJsonCallback != null) {
             Type aClass = TypeParameterMatcher.find0(mJsonCallback.getClass());

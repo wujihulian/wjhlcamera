@@ -33,6 +33,7 @@ public class OkHttpUtils {
     private HashMap<String, String> commonHeads = new HashMap<>();
     private static List<Interceptor> mInterceptors;
     private RepeatKeyHasMap<String, Call> mTagHasMap = new RepeatKeyHasMap<>();
+    public static boolean httpLogging = false;//接口請求日志
 
     public static void addInterceptor(Interceptor interceptor) {
         if (mInterceptors == null) {
@@ -48,9 +49,14 @@ public class OkHttpUtils {
                 builder.addInterceptor(mInterceptor);
             }
         }
+        if (httpLogging = true) {
+            HttpLoggingInterceptor mInterceptor = new HttpLoggingInterceptor();
+            mInterceptor.level(HttpLoggingInterceptor.Level.BODY);
+            builder.addNetworkInterceptor(mInterceptor);
+        }
+
         mOkHttpClient = builder
                 .addInterceptor(new SafeGuardInterceptor())
-                .addNetworkInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
                 .connectTimeout(3, TimeUnit.SECONDS)
                 .readTimeout(3, TimeUnit.SECONDS)
                 .writeTimeout(3, TimeUnit.SECONDS)
@@ -108,7 +114,7 @@ public class OkHttpUtils {
 
     public void cancel(String tag) {
         List<Call> calls = mTagHasMap.get(tag);
-        if (calls!=null) {
+        if (calls != null) {
             for (Call call : calls) {
                 call.cancel();
             }

@@ -1,7 +1,5 @@
 package com.wj.camera.net;
 
-import android.util.Log;
-
 import androidx.annotation.IntRange;
 
 import com.google.gson.Gson;
@@ -17,8 +15,10 @@ import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.response.SceneResponse;
 import com.wj.camera.response.TwoWayAudio;
 import com.wj.camera.response.VideoConfig;
+import com.wj.camera.response.WirelessServer;
 import com.wj.camera.response.ZOOMCTRL;
 import com.wj.camera.response.ZoomResponse;
+import com.wj.camera.uitl.WJLogUitl;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -152,7 +152,7 @@ public class ISAPI {
                 return null;
             }
             String string = execute.body().string();
-            Log.i(TAG, "getRTMP: " + string);
+            WJLogUitl.i("getRTMP: " + string);
             String xml = Objects.requireNonNull(string);
             String json = new XmlToJson.Builder(xml).build().toString();
             return mGson.fromJson(json, RtmpConfig.class);
@@ -317,12 +317,12 @@ public class ISAPI {
         }).subscribe();
     }
 
-    public Call ZOOMCRTL(String mode) {
-        return ZOOMCRTL(mode,16);
+    public Call ZOOMCRTL(String deviceSerial, String mode) {
+        return ZOOMCRTL(deviceSerial, mode, 16);
     }
 
     //tele -- /wide ++
-    public Call ZOOMCRTL(String mode, int step) {
+    public Call ZOOMCRTL(String deviceSerial, String mode, int step) {
         ZOOMCTRL zoomCTRL = new ZOOMCTRL();
         ZOOMCTRL.ZOOMMCTRLDTO zoommctrldto = new ZOOMCTRL.ZOOMMCTRLDTO();
         zoommctrldto.setMode(mode);
@@ -331,12 +331,12 @@ public class ISAPI {
         return OkHttpUtils.getInstance().put(ApiNew.ZOOMCTRL).jsons(entityToXml(zoomCTRL)).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
     }
 
-    public Call FOCUSCTRL(String  mode){
-        return FOCUSCTRL(mode,8);
+    public Call FOCUSCTRL(String deviceSerial, String mode) {
+        return FOCUSCTRL(deviceSerial, mode, 8);
     }
 
     //near聚焦+，far聚焦-
-    public Call FOCUSCTRL(String mode, int step) {
+    public Call FOCUSCTRL(String deviceSerial, String mode, int step) {
         FOCUSCTRL focusctrl = new FOCUSCTRL();
         FOCUSCTRL.FOCUSCTRLDTO focusctrldto = new FOCUSCTRL.FOCUSCTRLDTO();
         focusctrldto.setMode(mode);
@@ -344,6 +344,29 @@ public class ISAPI {
         focusctrl.setFOCUSCTRL(focusctrldto);
         return OkHttpUtils.getInstance().put(ApiNew.FOCUSCTRL).jsons(entityToXml(focusctrl)).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
     }
+
+    //简单恢复
+    public Call factoryResetBasic(String deviceSerial) {
+        return OkHttpUtils.getInstance().put(ApiNew.factoryResetBasic).jsons(XML.PTZDATA_0).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
+    }
+
+    //简单恢复
+    public Call factoryResetFull(String deviceSerial) {
+        return OkHttpUtils.getInstance().put(ApiNew.factoryResetFull).jsons(XML.PTZDATA_0).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
+    }
+
+    public void wirelessServer(String deviceSerial) {
+        OkHttpUtils.getInstance().get(ApiNew.wirelessServer).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(new JsonCallback<WirelessServer>() {
+            @Override
+            public void onSuccess(WirelessServer data) {
+                if (data != null && data.getWirelessServer() != null) {
+                    data.getWirelessServer().setWifiApEnabled("true");
+                    OkHttpUtils.getInstance().put(ApiNew.wirelessServer).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(data)).enqueue(null);
+                }
+            }
+        }));
+    }
+
     private String entityToXml(Object obj) {
         String jsonString = mGson.toJson(obj);
         JsonToXml xml = new JsonToXml.Builder(jsonString).build();

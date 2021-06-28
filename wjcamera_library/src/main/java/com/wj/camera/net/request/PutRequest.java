@@ -22,7 +22,7 @@ public class PutRequest extends BaseRequest<PutRequest> {
     @Override
     RequestBody createRequestBody() {
         MediaType mediaType = MediaType.parse("application/xml;charset=utf-8");
-        RequestBody requestBody = RequestBody.create(getJson(), mediaType);
+        RequestBody requestBody = RequestBody.create(getJson()+"", mediaType);
         return requestBody;
     }
 

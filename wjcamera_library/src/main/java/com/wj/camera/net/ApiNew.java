@@ -32,7 +32,12 @@ public interface ApiNew {
     String ZOOMCTRL = "/api/hikvision/ISAPI/Custom/ZOOMCTRL";
     //聚焦
     String FOCUSCTRL = "/api/hikvision/ISAPI/Custom/FOCUS";
-
+    //简单恢复
+    String factoryResetBasic = "/api/hikvision/ISAPI/System/factoryReset?mode=basic";
+    //重置设备
+    String factoryResetFull = "/api/hikvision/ISAPI/System/factoryReset?mode=full";
+    //重新配网
+    String wirelessServer = "/api/hikvision/ISAPI/System/Network/interfaces/2/wirelessServer";
 
     //设备信息
     String DeviceInfo = "/api/lapp/device/info";

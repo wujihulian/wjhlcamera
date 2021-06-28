@@ -12,16 +12,15 @@ import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.callback.StringCallbck;
 import com.wj.camera.net.Api;
 import com.wj.camera.net.OkHttpUtils;
-import com.wj.camera.net.SafeGuardInterceptor;
 import com.wj.camera.request.TokenRequest;
 import com.wj.camera.response.AccessToken;
 import com.wj.camera.uitl.MD5Util;
 import com.wj.camera.uitl.SPUtil;
+import com.wj.camera.uitl.WJLogUitl;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -31,7 +30,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okhttp3.logging.HttpLoggingInterceptor;
 
 /**
  * FileName: WJCamera
@@ -48,6 +46,16 @@ public class WJCamera {
     private String accessToken;
     private OkHttpClient mClient;
     private Application mApplication;
+    private String id;
+    private String key;
+
+    public String getId() {
+        return id;
+    }
+
+    public String getKey() {
+        return key;
+    }
 
     public static WJCamera getInstance() {
         if (wjCamera == null) {
@@ -61,7 +69,7 @@ public class WJCamera {
     }
 
     private void creteaClient() {
-        mClient= OkHttpUtils.getInstance().getOkHttpClient();
+        mClient = OkHttpUtils.getInstance().getOkHttpClient();
     }
 
     public OkHttpClient getClient() {
@@ -110,21 +118,23 @@ public class WJCamera {
     public void init(String appId, String appKey, Application context) {
         EZOpenSDK.showSDKLog(false);
         EZOpenSDK.initLib(context, "aab9716cd40740508e5ad6ecbe5d8a65");
-        mApplication=context;
+        this.id = appId;
+        this.key = appKey;
+        mApplication = context;
 
-        String str = (String) SPUtil.getData(mApplication, "WJAccessToken","");
+        String str = (String) SPUtil.getData(mApplication, "WJAccessToken", "");
         if (!TextUtils.isEmpty(str)) {
             AccessToken accessToken = new Gson().fromJson(str, AccessToken.class);
             Long expireTime = accessToken.getData().getExpireTime();
             if (System.currentTimeMillis() >= expireTime - 86400000) {
             } else {
                 //获取缓存token
-                Log.i(TAG, "get cache " + accessToken.getCode());
+                WJLogUitl.i(  "get cache " + accessToken.getCode());
                 login(accessToken.getData().getAccessToken());
                 return;
             }
         }
-        Log.i(TAG, "init camera");
+        WJLogUitl.i(  "init camera");
         OkHttpClient client = getClient();
         MediaType JSON = MediaType.parse("application/json; charset=utf-8");
         TokenRequest tokenRequest = new TokenRequest();
@@ -142,7 +152,7 @@ public class WJCamera {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 if (e != null) {
-                    Log.i(TAG, "onFailure: " + e.getMessage());
+                    WJLogUitl.i(  "onFailure: " + e.getMessage());
                 }
             }
 
@@ -153,13 +163,13 @@ public class WJCamera {
                     AccessToken accessToken = new Gson().fromJson(string, AccessToken.class);
                     if ("200".equals(accessToken.getCode())) {
                         SPUtil.saveData(mApplication, "WJAccessToken", new Gson().toJson(accessToken));
-                        Log.i(TAG, "WJCamera init succeed");
+                        WJLogUitl.i(  "WJCamera init succeed");
                         login(accessToken.getData().getAccessToken());
                     } else {
-                        Log.i(TAG, "WJCamera init failure " + accessToken.getCode());
+                        WJLogUitl.i(  "WJCamera init failure " + accessToken.getCode());
                     }
                 } catch (Exception e) {
-                    Log.i(TAG, "WJCamera init failure " + e.getMessage());
+                    WJLogUitl.i(  "WJCamera init failure " + e.getMessage());
                     e.printStackTrace();
                 }
 

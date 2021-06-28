@@ -49,6 +49,7 @@ import com.wj.camera.net.RxConsumer;
 import com.wj.camera.net.SafeGuardInterceptor;
 import com.wj.camera.response.BaseDeviceResponse;
 import com.wj.camera.response.RtmpConfig;
+import com.wj.camera.uitl.WJLogUitl;
 import com.wj.camera.view.WJDeviceConfig;
 import com.wj.uikit.adapter.OnItemClickListener;
 import com.wj.uikit.adapter.WifiListAdapter;
@@ -435,7 +436,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 100) {
-            Log.i(TAG, "onRequestPermissionsResult: ");
+            WJLogUitl.i(  "onRequestPermissionsResult: ");
             showGPSContacts();
             //getWifiList();
             //registerPermission();
@@ -455,7 +456,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
             }
             ;
         }
-        Log.i(TAG, "onClick: " + bssid);
+        WJLogUitl.i(  "onClick: " + bssid);
 
         startAp(data.SSID, wifiPssword, bssid);
 
@@ -510,7 +511,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                 .fixedIP(FIXED_IP.Companion.getWIRELESS_IPC_YS())  // 设备固定IP。这里针对萤石设备有  192.168.8.1 和 192.168.8.253 两款兼容，可扩展更多的ip
                                 .build();
 
-                        Log.i(TAG, "success: " + wifiSsid + " ----- " + wifiPassword);
+                        WJLogUitl.i(  "success: " + wifiSsid + " ----- " + wifiPassword);
                         YsApManager.INSTANCE.activateWifi(apConfigInfo, new YsApManager.ApActivateCallback() {
                             @Override
                             public void onStartSearch() {
@@ -556,7 +557,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
 
                     @Override
                     public void failed(@NonNull ConnectionErrorCode errorCode) {
-                        Log.i(TAG, "failed: " + errorCode.name());
+                        WJLogUitl.i(  "failed: " + errorCode.name());
                         if (errorCode == ConnectionErrorCode.USER_CANCELLED) {
 
                         } else {
@@ -587,7 +588,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
         if (mLoadingPopupView != null) {
             mLoadingPopupView.setTitle(log);
         }
-        Log.i(TAG, "logPrint: " + log);
+        WJLogUitl.i(  "logPrint: " + log);
     }
 
 

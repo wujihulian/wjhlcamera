@@ -168,8 +168,6 @@ public abstract class BaseRequest<R extends BaseRequest> {
 
     public Response execute() {
         Request.Builder builder = buildRequest();
-
-
         for (Map.Entry<String, String> headers : getHeaders().entrySet()) {
             builder.header(headers.getKey(), headers.getValue());
         }

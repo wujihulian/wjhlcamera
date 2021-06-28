@@ -20,6 +20,7 @@ import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.net.DeviceApi;
 import com.wj.camera.net.RxConsumer;
 import com.wj.camera.response.BaseDeviceResponse;
+import com.wj.camera.uitl.WJLogUitl;
 import com.wj.camera.view.WJDeviceConfig;
 import com.wj.uikit.db.DeviceInfo;
 
@@ -123,7 +124,7 @@ public class WJNoQRCodeActivity extends BaseUikitActivity {
                         @Override
                         public void accept(EZProbeDeviceInfoResult result) throws Exception {
                             if (result.getBaseException() == null) {
-                                Log.i(TAG, "onCreate: 查询设备成功 添加设备");
+                                WJLogUitl.i(  "onCreate: 查询设备成功 添加设备");
                                 DeviceApi.getInstance().addDevie(deviceInfo.device_serial, deviceInfo.device_code, new JsonCallback<BaseDeviceResponse>() {
                                     @Override
                                     public void onSuccess(BaseDeviceResponse data) {
@@ -143,7 +144,7 @@ public class WJNoQRCodeActivity extends BaseUikitActivity {
                                 });
                             } else {
                                 loadingPopupView.dismiss();
-                                Log.i(TAG, "accept: " + result.getBaseException().getErrorCode());
+                                WJLogUitl.i(  "accept: " + result.getBaseException().getErrorCode());
 
                                 switch (result.getBaseException().getErrorCode()) {
                                     case 120023:

@@ -26,6 +26,7 @@ import com.wj.camera.response.BaseDeviceResponse;
 import com.wj.camera.response.DeviceCameraData;
 import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.uitl.DPUtil;
+import com.wj.camera.uitl.WJLogUitl;
 import com.wj.camera.view.WJDeviceConfig;
 import com.wj.uikit.adapter.OnItemClickListener;
 import com.wj.uikit.adapter.WJDeviceManageAdapter;
@@ -194,10 +195,10 @@ public class WJDeviceManageActivity extends BaseUikitActivity implements View.On
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void addDevice(DeviceInfo deviceInfo) {
         boolean query = DBHelper.getInstance().query(deviceInfo.device_serial);
-        Log.i(TAG, "addDevice: " + query);
+        WJLogUitl.i(  "addDevice: " + query);
         DeviceInfo[] deviceInfos = {deviceInfo};
         if (query == false) {
-            Log.i(TAG, "addDevice: insert");
+            WJLogUitl.i(  "addDevice: insert");
             DBHelper.getInstance().insert(deviceInfo);
         }
         getDeviceData(deviceInfos);

@@ -30,15 +30,10 @@
     </FrameLayout>
 
     <FrameLayout
+        android:id="@+id/fl_video"
         android:layout_width="match_parent"
         android:layout_height="211dp"
         android:background="#000000">
-
-        <com.wj.camera.view.WJPlayView
-            android:id="@+id/wj_playview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#000000" />
     </FrameLayout>
 
     <ScrollView
@@ -456,7 +451,6 @@
                             android:layout_height="wrap_content"/>
                     </LinearLayout>
                 </FrameLayout>
-
 
                 <View
                     android:layout_width="match_parent"

@@ -51,6 +51,9 @@ dependencies {
     api 'com.squareup.okhttp3:logging-interceptor:4.2.2'
 
 
+    api 'cn.jiajunhui:exoplayer:342_2132_019'
+    api 'com.google.android.exoplayer:extension-rtmp:2.10.4'
+
 }
 
 

@@ -13,6 +13,8 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.wj.camera.uitl.WJLogUitl;
+
 /**
  * FileName: TouchProgressView
  * Author: xiongxiang
@@ -156,7 +158,7 @@ public class TouchProgressView extends View {
 
         linePaint.setShader(linearGradient);
 
-        Log.i(TAG, "draw: " + progress);
+        WJLogUitl.i(  "draw: " + progress);
         linePaint.setStyle(Paint.Style.FILL);
         canvas.drawRoundRect(rect, rx, ry, linePaint);
 

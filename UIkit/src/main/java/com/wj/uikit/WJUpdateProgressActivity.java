@@ -89,7 +89,7 @@ public class WJUpdateProgressActivity extends BaseUikitActivity {
                         DeviceUpdateStatus data = deviceUpdateStatusBaseDeviceResponse.getData();
 
                        // Gson gson = new Gson();
-                       // Log.i("getProgress", "accept: " + gson.toJson(data));
+                       // WJLogUitl.i("getProgress", "accept: " + gson.toJson(data));
                         if (data != null) {
                             if (data.getStatus() == 0) {
                                 mWj_progress.setProgressSmooth(data.getProgress());
