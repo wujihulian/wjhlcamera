@@ -47,6 +47,8 @@ public class WJControlCover extends BaseCover {
                 PlayerStateGetter playerStateGetter = getPlayerStateGetter();
                 if (playerStateGetter.getState() == IPlayer.STATE_PAUSED) {
                     requestResume(null);
+                } else if (playerStateGetter.getState() == IPlayer.STATE_IDLE) {
+                    notifyReceiverEvent(WJInterEvent.CODE_PLAY, null);
                 } else {
                     requestPause(null);
                 }
@@ -78,10 +80,11 @@ public class WJControlCover extends BaseCover {
     }
 
     private static final String TAG = "WJControlCover";
+
     @Override
     public void onPlayerEvent(int eventCode, Bundle bundle) {
 
-        WJLogUitl.i(  "onPlayerEvent: "+eventCode);
+        WJLogUitl.i("onPlayerEvent: " + eventCode);
         switch (eventCode) {
             case OnPlayerEventListener.PLAYER_EVENT_ON_STATUS_CHANGE:
                 int status = bundle.getInt(EventKey.INT_DATA);
@@ -96,7 +99,7 @@ public class WJControlCover extends BaseCover {
 
     @Override
     public void onErrorEvent(int eventCode, Bundle bundle) {
-        WJLogUitl.i(  "onErrorEvent: "+eventCode);
+        WJLogUitl.i("onErrorEvent: " + eventCode);
     }
 
     @Override

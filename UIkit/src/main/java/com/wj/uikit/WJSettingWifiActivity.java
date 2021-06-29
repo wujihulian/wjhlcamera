@@ -55,6 +55,8 @@ import org.greenrobot.eventbus.EventBus;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import io.reactivex.Observable;
@@ -390,6 +392,12 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                     newScanResults.add(scanResult);
                 }
             }
+            Collections.sort(newScanResults, new Comparator<ScanResult>() {
+                @Override
+                public int compare(ScanResult o1, ScanResult o2) {
+                    return o2.level - o1.level;
+                }
+            });
             return newScanResults;
         }
         return null;

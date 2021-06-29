@@ -29,9 +29,7 @@ public class WJDeviceFullNewActivivty extends BaseUikitActivity {
         super.onCreate(savedInstanceState);
         mFrameLayout = new FrameLayout(this);
         setContentView(mFrameLayout);
-        WJVideoPlayer wjVideoPlayer = WJRelationAssistUtil.getInstance().getWJVideoPlayer();
-        wjVideoPlayer.getWjControlCover().getWj_full_iv().setVisibility(View.GONE);
-        WJRelationAssistUtil.getInstance().getWJVideoPlayer().attachContainer(mFrameLayout);
+        WJRelationAssistUtil.getInstance().getFullLifecycleCallBack().onCrete(savedInstanceState,mFrameLayout,this);
     }
 
     @Override
@@ -39,18 +37,37 @@ public class WJDeviceFullNewActivivty extends BaseUikitActivity {
         StatusBarUtil.setImmersiveStatusBar(this, true);
         StatusBarUtil.setStatusBarColor(this, Color.TRANSPARENT);
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        WJRelationAssistUtil.getInstance().getFullLifecycleCallBack().onResume();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        WJRelationAssistUtil.getInstance().getFullLifecycleCallBack().onStart();
+    }
+
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        WJRelationAssistUtil.getInstance().getFullLifecycleCallBack().onStop();
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
-        WJRelationAssistUtil.getInstance().getWJVideoPlayer().pause();
+        WJRelationAssistUtil.getInstance().getFullLifecycleCallBack().onPause();
+
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        WJRelationAssistUtil instance = WJRelationAssistUtil.getInstance();
-        instance.getWJVideoPlayer().getWjControlCover().getWj_full_iv().setVisibility(View.VISIBLE);
-        FrameLayout container = instance.getContainer();
-        instance.getWJVideoPlayer().attachContainer(container);
+        WJRelationAssistUtil.getInstance().getFullLifecycleCallBack().onDestroy();
+
     }
 }

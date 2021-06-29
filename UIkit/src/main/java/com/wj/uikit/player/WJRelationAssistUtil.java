@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.widget.FrameLayout;
 
 import com.wj.uikit.WJDeviceFullNewActivivty;
+import com.wj.uikit.player.lifecycle.WJActivityFullLifecycleCallBack;
+import com.wj.uikit.player.lifecycle.WJDefaultFullLifecycleCallBack;
 
 /**
  * FileName: WJRelationAssistUtil
@@ -19,6 +21,7 @@ public class WJRelationAssistUtil {
     public static WJRelationAssistUtil mWJRelationAssistUtil;
     private static WJVideoPlayer mWJVideoPlayer;
     private static FrameLayout mContainer;
+    private static WJActivityFullLifecycleCallBack fullLifecycleCallBack;
 
     public static WJRelationAssistUtil getInstance() {
         if (mWJRelationAssistUtil == null) {
@@ -49,8 +52,16 @@ public class WJRelationAssistUtil {
         context.startActivity(new Intent(context, WJDeviceFullNewActivivty.class));
     }
 
+    public WJActivityFullLifecycleCallBack getFullLifecycleCallBack() {
+        if (fullLifecycleCallBack == null) {
+            return fullLifecycleCallBack = new WJDefaultFullLifecycleCallBack(mWJVideoPlayer, mContainer);
+        }
+        return fullLifecycleCallBack;
+    }
+
     public void destroy() {
         mWJVideoPlayer = null;
         mContainer = null;
+        fullLifecycleCallBack = null;
     }
 }

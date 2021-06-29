@@ -27,6 +27,9 @@ public class WJOnAssistPlayEventHandler extends OnAssistPlayEventHandler {
             case WJInterEvent.CODE_SET_VOLUME_1:
                 assist.setVolume(100, 100);
                 break;
+            case WJInterEvent.CODE_PLAY:
+                assist.play();
+                break;
         }
     }
 }

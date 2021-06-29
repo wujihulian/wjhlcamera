@@ -15,4 +15,5 @@ public interface WJInterEvent extends InterEvent {
 
     int CODE_SET_VOLUME_0 = -66017;
     int CODE_SET_VOLUME_1 = -66018;
+    int CODE_PLAY = -66019;
 }
