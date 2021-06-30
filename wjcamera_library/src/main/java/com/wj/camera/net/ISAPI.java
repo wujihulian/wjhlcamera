@@ -80,7 +80,7 @@ public class ISAPI {
         OkHttpUtils.getInstance().put(ApiNew.RTMP).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(rtmpConfig)).enqueue(new XmlCallback(callback));
     }
 
-    public ResponseStatus setRtmp(String deviceSerial, RtmpConfig rtmpConfig) {
+    public synchronized ResponseStatus setRtmp(String deviceSerial, RtmpConfig rtmpConfig) {
 
         try {
             Response execute = OkHttpUtils.getInstance().put(ApiNew.RTMP).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(rtmpConfig)).execute();
@@ -90,7 +90,7 @@ public class ISAPI {
             String string = execute.body().string();
             String xml = Objects.requireNonNull(string);
             String json = new XmlToJson.Builder(xml).build().toString();
-            return mGson.fromJson(json, ResponseStatus.class);
+            return new Gson().fromJson(json, ResponseStatus.class);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -113,7 +113,6 @@ public class ISAPI {
     //获取RTMP配置
     public void getRTMP(JsonCallback<RtmpConfig> callback) {
         OkHttpUtils.getInstance().get(ApiNew.RTMP).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
-
     }
 
     public void getAudio(JsonCallback<TwoWayAudio> callback) {
@@ -144,18 +143,16 @@ public class ISAPI {
     }
 
     //获取RTMP配置
-    public RtmpConfig getRTMP(String device_serial) {
-
+    public synchronized RtmpConfig getRTMP(String device_serial) {
         try {
             Response execute = OkHttpUtils.getInstance().get(ApiNew.RTMP).addHeader("EZO-DeviceSerial", device_serial).execute();
             if (execute == null || execute.body() == null) {
                 return null;
             }
             String string = execute.body().string();
-            WJLogUitl.i("getRTMP: " + string);
             String xml = Objects.requireNonNull(string);
             String json = new XmlToJson.Builder(xml).build().toString();
-            return mGson.fromJson(json, RtmpConfig.class);
+            return new Gson().fromJson(json, RtmpConfig.class);
         } catch (IOException e) {
             e.printStackTrace();
         }

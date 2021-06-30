@@ -39,7 +39,7 @@ import okhttp3.Response;
 public class WJReconnectEvent extends WJBaseReconnectEvent {
     private AssistPlay mAssistPlay;
     private String mDeviceSerial;
-
+    private int liveReconnectCount = 0;
 
     public void setHost(String host) {
         this.host = host;
@@ -83,9 +83,14 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
 
     @Override
     public void onPlayerEvent(int eventCode, Bundle bundle) {
+        if (PLAYER_EVENT_ON_VIDEO_RENDER_START == eventCode) {
+            liveReconnectCount = 0;
+        }
         if (eventCode == OnPlayerEventListener.PLAYER_EVENT_ON_PLAY_COMPLETE) {
             //播放完成尝试重连业务 有可能地址被更换 有可能没人推流
-            WJLogUitl.i("onPlayerEvent"+eventCode );
+            WJLogUitl.i("onPlayerEvent" + eventCode);
+
+
             reconnection();
         }
     }
@@ -120,10 +125,10 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
                     String privatelyEnabled = rtmp.getPrivatelyEnabled();
                     if (TextUtils.isEmpty(privatelyURL) || TextUtils.isEmpty(playURL2)) {
                         //预览地址为空 或者 预览推流地址为空  需要给设备配置 推流地址 啦流地址
-                        WJLogUitl.i( "apply: 预览地址为空 开始配置预览地址");
+                        WJLogUitl.i("apply: 预览地址为空 开始配置预览地址");
                         configPrivatelyURL(rtmpConfig);
                     } else if (checkPreviewUrl(playURL2)) {
-                        WJLogUitl.i( "apply: 预览地址过期 开始配置预览地址");
+                        WJLogUitl.i("apply: 预览地址过期 开始配置预览地址");
                         configPrivatelyURL(rtmpConfig);
                     } else {
                         ISAPI.getInstance().setRtmp(getDeviceSerial(), rtmpConfig);
@@ -153,12 +158,17 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
                 if ("true".equals(privatelyEnabled)) {
                     if (TextUtils.isEmpty(privatelyURL) || TextUtils.isEmpty(playURL2)) {
                         //预览地址为空 或者 预览推流地址为空  需要给设备配置 推流地址 啦流地址
-                        WJLogUitl.i( "apply: 预览地址为空 开始配置预览地址");
+                        WJLogUitl.i("apply: 预览地址为空 开始配置预览地址");
                         configPrivatelyURL(rtmpConfig);
                     } else if (checkPreviewUrl(playURL2)) {
-                        WJLogUitl.i( "apply: 预览地址过期 开始配置预览地址");
+                        WJLogUitl.i("apply: 预览地址过期 开始配置预览地址");
                         configPrivatelyURL(rtmpConfig);
 
+                    }
+                } else {
+                    if (liveReconnectCount >= 3) {
+                        //直播流重连3次取不到
+                        triggerLiveCheck();
                     }
                 }
                 return rtmpConfig;
@@ -174,6 +184,7 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
                             url = rtmpConfig.getRTMP().getPlayURL2();
                         } else {
                             url = rtmpConfig.getRTMP().getPlayURL1();
+                            liveReconnectCount++;
                         }
 
                         DataSource dataSource = new DataSource();
@@ -185,6 +196,14 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
                         mAssistPlay.play();
                     }
                 });
+    }
+
+    //触发流检测
+    private void triggerLiveCheck() {
+        GetRequest getRequest = OkHttpUtils.getInstance().get("/api/course/cameraDevicePreviewState?deviceCode=" + getDeviceSerial());
+        getRequest.setBaseUrl(getHost());
+        getRequest.addHeader("token", getToken()).execute();
+        liveReconnectCount = 0;
     }
 
 
@@ -205,7 +224,7 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
                         String hex = split2[1];
                         long time = Long.valueOf(hex, 16);
                         long currentTimeMillis = System.currentTimeMillis() / 1000;
-                        WJLogUitl.i( "checkPreviewUrl: 剩余时间 " + (time - currentTimeMillis));
+                        WJLogUitl.i("checkPreviewUrl: 剩余时间 " + (time - currentTimeMillis));
                         if (time <= currentTimeMillis) {
                             WJLogUitl.i("拉流地址过期");
                             return true;

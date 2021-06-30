@@ -59,6 +59,10 @@ public class WJRelationAssistUtil {
         return fullLifecycleCallBack;
     }
 
+    public  void setFullLifecycleCallBack(WJActivityFullLifecycleCallBack fullLifecycleCallBack) {
+        WJRelationAssistUtil.fullLifecycleCallBack = fullLifecycleCallBack;
+    }
+
     public void destroy() {
         mWJVideoPlayer = null;
         mContainer = null;

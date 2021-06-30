@@ -103,7 +103,7 @@ public class OkHttpUtils {
         return new PutRequest(url);
     }
 
-    public PostJsonRequest PostJson(String url) {
+    public PostJsonRequest postJson(String url) {
         return new PostJsonRequest(url);
     }
 
