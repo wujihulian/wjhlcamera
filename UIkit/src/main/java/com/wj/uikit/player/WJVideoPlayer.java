@@ -67,6 +67,10 @@ public class WJVideoPlayer extends WJBasePlayer {
         });
     }
 
+    public WJReconnectEvent getWJReconnectEvent() {
+        return mWJReconnectEvent;
+    }
+
     public void setData(String url) {
         DataSource dataSource = new DataSource(url);
         dataSource.setData(url);

@@ -351,7 +351,7 @@ public class ISAPI {
     public Call factoryResetFull(String deviceSerial) {
         return OkHttpUtils.getInstance().put(ApiNew.factoryResetFull).jsons(XML.PTZDATA_0).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
     }
-
+    //
     public void wirelessServer(String deviceSerial) {
         OkHttpUtils.getInstance().get(ApiNew.wirelessServer).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(new JsonCallback<WirelessServer>() {
             @Override

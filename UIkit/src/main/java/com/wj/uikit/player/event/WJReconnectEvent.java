@@ -154,7 +154,6 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
                 String playURL1 = rtmp.getPlayURL1();
                 String privatelyEnabled = rtmp.getPrivatelyEnabled();
 
-
                 if ("true".equals(privatelyEnabled)) {
                     if (TextUtils.isEmpty(privatelyURL) || TextUtils.isEmpty(playURL2)) {
                         //预览地址为空 或者 预览推流地址为空  需要给设备配置 推流地址 啦流地址
@@ -166,14 +165,14 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
 
                     }
                 } else {
-                    if (liveReconnectCount >= 3) {
+                    if (liveReconnectCount >= 2) {
                         //直播流重连3次取不到
                         triggerLiveCheck();
                     }
                 }
                 return rtmpConfig;
             }
-        }).subscribeOn(Schedulers.newThread())
+        }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<RtmpConfig>() {
                     @Override
@@ -186,7 +185,6 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
                             url = rtmpConfig.getRTMP().getPlayURL1();
                             liveReconnectCount++;
                         }
-
                         DataSource dataSource = new DataSource();
                         dataSource.setData(url);
                         if (mAssistPlay.isPlaying()) {
