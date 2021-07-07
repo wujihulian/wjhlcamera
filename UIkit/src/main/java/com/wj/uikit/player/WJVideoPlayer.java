@@ -75,7 +75,6 @@ public class WJVideoPlayer extends WJBasePlayer {
 
     public void setData(String url) {
         DataSource dataSource = new DataSource(url);
-        dataSource.setData(url);
         setDataSource(dataSource);
     }
 

@@ -214,16 +214,17 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                 if (data != null && data.getRTMP() != null) {
                     String url = "";
                     if ("false".equals(data.getRTMP().getPrivatelyEnabled())) {
-                        url = data.getRTMP().getPlayURL1();
+                        url = data.getRTMP().getPlayURL1() ;
                     } else {
-                        url = data.getRTMP().getPlayURL2();
+                        url = data.getRTMP().getPlayURL2() ;
                     }
                /*     if (!TextUtils.isEmpty(url)) {
                         url = url.replace("https:", "webrtc:").replace(".flv", "");
                     }*/
-                    WJLogUitl.i(url);
-                    mWjVideoPlayer.setData(url);
-                    mWjVideoPlayer.play();
+                    if (mWjVideoPlayer != null) {
+                        mWjVideoPlayer.setData(url+"");
+                        mWjVideoPlayer.play();
+                    }
                 }
 
             }
