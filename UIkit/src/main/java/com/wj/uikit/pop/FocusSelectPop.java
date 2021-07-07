@@ -3,6 +3,7 @@ package com.wj.uikit.pop;
 import android.content.Context;
 import android.graphics.Color;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -10,10 +11,15 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.lxj.xpopup.core.BottomPopupView;
+import com.lxj.xpopup.util.XPopupUtils;
+import com.wj.camera.net.ISAPI;
+import com.wj.camera.uitl.DPUtil;
 import com.wj.uikit.R;
 import com.wj.uikit.adapter.BaseRecyclerViewAdapter;
 import com.wj.uikit.adapter.OnItemClickListener;
 import com.wj.uikit.adapter.ViewHolder;
+import com.wj.uikit.status.StatusBarUtil;
+import com.wj.uikit.uitl.OnControlClickListener;
 
 /**
  * FileName: FocusSelectPop
@@ -31,6 +37,7 @@ public class FocusSelectPop extends BottomPopupView {
     public OnItemClickListener<String> mListener;
     public int atIndex = -1;
     private FocusSelectAdapter mSelectAdapter;
+    private String device_serial;
 
     public FocusSelectPop(@NonNull Context context) {
         super(context);
@@ -52,11 +59,34 @@ public class FocusSelectPop extends BottomPopupView {
     @Override
     protected void onCreate() {
         super.onCreate();
+        ViewGroup.LayoutParams layoutParams = bottomPopupContainer.getLayoutParams();
+      //  layoutParams.height= XPopupUtils.getWindowHeight(getContext())- DPUtil.dip2px(getContext(),259) - XPopupUtils.getStatusBarHeight();
+        bottomPopupContainer.setLayoutParams(layoutParams);
         mRecyclerView = findViewById(R.id.recyclerView);
         GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), 5);
         mRecyclerView.setLayoutManager(gridLayoutManager);
         mSelectAdapter = new FocusSelectAdapter();
         mRecyclerView.setAdapter(mSelectAdapter);
+
+        findViewById(R.id.wj_tv_left).setOnClickListener(new OnControlClickListener() {
+            @Override
+            public void onViewClick(View view) {
+                ISAPI.getInstance().ZOOMCRTL(device_serial, "tele");
+            }
+        });
+        findViewById(R.id.wj_tv_right).setOnClickListener(new OnControlClickListener() {
+
+            @Override
+            public void onViewClick(View view) {
+                ISAPI.getInstance().ZOOMCRTL(device_serial, "wide");
+            }
+        });
+
+
+    }
+
+    public void setDeviceSerial(String device_serial) {
+        this.device_serial = device_serial;
     }
 
     public class FocusSelectAdapter extends BaseRecyclerViewAdapter<String> {

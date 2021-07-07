@@ -1,6 +1,7 @@
 package com.ap.ezviz.pub.biz
 
 import android.text.TextUtils
+import android.util.Log
 import com.ap.ezviz.pub.ap.APWiredConfigInfo
 import com.ap.ezviz.pub.ap.ApWifiConfigInfo
 import com.ap.ezviz.pub.ap.ApErrorCode
@@ -39,12 +40,17 @@ class WiFiSettingBiz {
             return
         }*/
 
+
         val observable = Observable.fromCallable {
             return@fromCallable APHttpClient.getWifiList(apWifiConfigInfo.ipPort!!)
         }.map {
             if(it == null) {
                 throw Exception("has no response")
             }
+            //錯誤日志
+            /*var apConfigLog = APHttpClient.getApConfigLog(apWifiConfigInfo.ipPort!!)
+            Log.i(TAG, "apConfigLog: "+apConfigLog?.body()?.string())
+*/
 
             val content = it.body()?.string()
             if(content.isNullOrBlank()){

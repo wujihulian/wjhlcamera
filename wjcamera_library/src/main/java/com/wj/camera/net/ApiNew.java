@@ -38,6 +38,7 @@ public interface ApiNew {
     String factoryResetFull = "/api/hikvision/ISAPI/System/factoryReset?mode=full";
     //重新配网
     String wirelessServer = "/api/hikvision/ISAPI/System/Network/interfaces/2/wirelessServer";
+    String netConfigResult ="/api/hikvision/ISAPI/PreNetwork/NetConfigResult?format=json";
 
     //设备信息
     String DeviceInfo = "/api/lapp/device/info";

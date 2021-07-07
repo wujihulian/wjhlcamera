@@ -19,6 +19,7 @@ import com.lxj.xpopup.interfaces.OnConfirmListener;
 import com.videogo.openapi.EZPlayer;
 import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.config.WJDeviceSceneEnum;
+import com.wj.camera.config.WJRateTypeEnum;
 import com.wj.camera.net.DeviceApi;
 import com.wj.camera.net.ISAPI;
 import com.wj.camera.net.RxConsumer;
@@ -26,6 +27,7 @@ import com.wj.camera.response.BaseDeviceResponse;
 import com.wj.camera.response.CheckDevcieUpdate;
 import com.wj.camera.response.DeviceUpdateStatus;
 import com.wj.camera.response.ResponseStatus;
+import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.response.SceneResponse;
 import com.wj.camera.response.TwoWayAudio;
 import com.wj.camera.response.VideoConfig;
@@ -42,6 +44,8 @@ import com.wj.uikit.pop.FocusSelectPop;
 import com.wj.uikit.pop.SelectPop;
 import com.wj.uikit.uitl.OnControlClickListener;
 import com.wj.uikit.view.TouchProgressView;
+
+import java.util.concurrent.Callable;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -78,6 +82,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
     private VideoConfig mVideoConfig;
     private ImageView mBack_iv;
     private SelectPop mBitrateSelectPop;
+    private SelectPop mBitrateTypeSelectPop;
     private ImageView mFull_iv1;
     private EZPlayer mPlayer;
     private DeviceInfo mDeviceInfo;
@@ -97,7 +102,8 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
     private TextView mScene_tv;
     private LinearLayout mLl_high;
     private ImageView mIv_high;
-
+    private FrameLayout mBitrate_type_fl;
+    private TextView mBitrate_type_tv;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -107,14 +113,10 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
         getDeviceInfo();
         findView();
         initClick();
-
         initAction();
-        //  startAp();
         getData();
-
-
         initAudio();
-
+        isLatestVersion();
     }
 
     private void initAudio() {
@@ -145,12 +147,22 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                     String videoResolutionWidth = video.getVideoResolutionWidth();
                     String videoResolutionHeight = video.getVideoResolutionHeight();
                     mRatio_tv.setText(String.format("%s*%s", videoResolutionWidth, videoResolutionHeight));
-                    WJLogUitl.i("onSuccess: " + mVideoConfig.getStreamingChannel().getVideo().getVbrUpperCap());
-                    if (!TextUtils.isEmpty(mVideoConfig.getStreamingChannel().getVideo().getVbrUpperCap())) {
-                        Integer value = Integer.valueOf(mVideoConfig.getStreamingChannel().getVideo().getVbrUpperCap());
+                    String videoQualityControlType = mVideoConfig.getStreamingChannel().getVideo().getVideoQualityControlType();
+                    String rate = "";
+                    if (WJRateTypeEnum.VBR.getRate().equalsIgnoreCase(videoQualityControlType)) {
+                        rate = mVideoConfig.getStreamingChannel().getVideo().getVbrUpperCap();
+                        mBitrate_type_tv.setText(WJRateTypeEnum.VBR.getTitle());
+                    } else if (WJRateTypeEnum.CBR.getRate().equalsIgnoreCase(videoQualityControlType)) {
+                        rate = mVideoConfig.getStreamingChannel().getVideo().getConstantBitRate();
+                        mBitrate_type_tv.setText(WJRateTypeEnum.CBR.getTitle());
+                    }
+                    WJLogUitl.i("onSuccess: " + rate);
+                    if (!TextUtils.isEmpty(rate)) {
+                        Integer value = Integer.valueOf(rate);
                         int m = value / 1024;
                         mBitrate_tv.setText(String.format("%sM", m));
                     }
+
                 }
             }
         });
@@ -181,22 +193,12 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
     private WJVideoPlayer mWjVideoPlayer;
 
     private void initAction() {
-/*
-        mPlayer = WJCamera.getInstance().createPlayer(deviceSerial, 1);
-        mPlayer.setPlayVerifyCode(deviceCode);
-        mWJPlayView.setEZPlayer(mPlayer);
-        mWJPlayView.addControl(new LoadingControl(this));
-        mWJPlayView.addControl(new ErrorControl(this));
-        DeviceDebugControl control = new DeviceDebugControl(this, mDeviceInfo);
-        mWJPlayView.addControl(control);
-*/
-        //   mPlayer.startRealPlay();
         FrameLayout frameLayout = findViewById(R.id.fl_video);
         mWjVideoPlayer = new WJVideoPlayer(this);
         mWjVideoPlayer.init();
         WJReconnectEvent mWjReconnectEvent = new WJReconnectEvent();
         mWjReconnectEvent.setDeviceSerial(deviceSerial);
-        mWjVideoPlayer.setData("");
+        // mWjVideoPlayer.setData("");
         mWjVideoPlayer.registerReconnect(mWjReconnectEvent);
         mWjVideoPlayer.attachContainer(frameLayout);
         mWjVideoPlayer.getWjControlCover().getWj_full_iv().setOnClickListener(new View.OnClickListener() {
@@ -205,8 +207,27 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                 WJRelationAssistUtil.getInstance().switchFull(WJDeviceDebugNewActivity.this, mWjVideoPlayer, frameLayout);
             }
         });
-        mWjVideoPlayer.play();
+        //  mWjVideoPlayer.play();
+        ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial, new JsonCallback<RtmpConfig>() {
+            @Override
+            public void onSuccess(RtmpConfig data) {
+                if (data != null && data.getRTMP() != null) {
+                    String url = "";
+                    if ("false".equals(data.getRTMP().getPrivatelyEnabled())) {
+                        url = data.getRTMP().getPlayURL1();
+                    } else {
+                        url = data.getRTMP().getPlayURL2();
+                    }
+               /*     if (!TextUtils.isEmpty(url)) {
+                        url = url.replace("https:", "webrtc:").replace(".flv", "");
+                    }*/
+                    WJLogUitl.i(url);
+                    mWjVideoPlayer.setData(url);
+                    mWjVideoPlayer.play();
+                }
 
+            }
+        });
     }
 
     int zoom = 1;
@@ -226,6 +247,8 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                 if (mFocusSelectPop == null) {
                     mFocusSelectPop = new FocusSelectPop(WJDeviceDebugNewActivity.this);
                     mFocusSelectPop.setAtIndex(zoomIndex);
+                    mFocusSelectPop.setDeviceSerial(mDeviceInfo.device_serial);
+
                     mFocusSelectPop.setListener(new OnItemClickListener<String>() {
                         @Override
                         public void onClick(String s, int position) {
@@ -236,7 +259,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
 
                         }
                     });
-                    new XPopup.Builder(WJDeviceDebugNewActivity.this).asCustom(mFocusSelectPop);
+                    new XPopup.Builder(WJDeviceDebugNewActivity.this).hasShadowBg(false).asCustom(mFocusSelectPop);
                 }
                 mFocusSelectPop.show();
             }
@@ -287,6 +310,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                         public void onClick(String s, int position) {
                             if (mVideoConfig != null) {
                                 mVideoConfig.getStreamingChannel().getVideo().setVbrUpperCap(bitrate[position]);
+                                mVideoConfig.getStreamingChannel().getVideo().setConstantBitRate(bitrate[position]);
                                 mIsapi.setVideoConfig(mVideoConfig, new JsonCallback<ResponseStatus>() {
                                     @Override
                                     public void onSuccess(ResponseStatus data) {
@@ -302,6 +326,42 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                     });
                 }
                 mBitrateSelectPop.show();
+            }
+        });
+        mBitrate_type_fl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mBitrateTypeSelectPop == null) {
+
+                    mBitrateTypeSelectPop = new SelectPop(WJDeviceDebugNewActivity.this, WJRateTypeEnum.VBR.getTitle(), WJRateTypeEnum.CBR.getTitle());
+                    new XPopup.Builder(WJDeviceDebugNewActivity.this).asCustom(mBitrateTypeSelectPop);
+                    mBitrateTypeSelectPop.setListener(new OnItemClickListener<String>() {
+                        @Override
+                        public void onClick(String s, int position) {
+                            if (mVideoConfig != null) {
+                                if (WJRateTypeEnum.CBR.getTitle().equals(s)) {
+                                    //定码率
+                                    mVideoConfig.getStreamingChannel().getVideo().setVideoQualityControlType(WJRateTypeEnum.CBR.getRate());
+                                } else if (WJRateTypeEnum.VBR.getTitle().equals(s)) {
+                                    //变码率
+                                    mVideoConfig.getStreamingChannel().getVideo().setVideoQualityControlType(WJRateTypeEnum.VBR.getRate());
+                                }
+                                ISAPI.getInstance().setVideoConfig(mVideoConfig, new JsonCallback<ResponseStatus>() {
+                                    @Override
+                                    public void onSuccess(ResponseStatus data) {
+                                        if (data.ResponseStatus != null && "1".equals(data.ResponseStatus.statusCode)) {
+                                            mBitrate_type_tv.setText(s);
+                                        } else {
+                                            Toast.makeText(WJDeviceDebugNewActivity.this, "设置失败", Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+                mBitrateTypeSelectPop.show();
+
             }
         });
 
@@ -447,6 +507,44 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
 
     }
 
+    //检查是不是最新版
+    @SuppressLint("CheckResult")
+    private void isLatestVersion() {
+        Observable.fromCallable(new Callable<BaseDeviceResponse<CheckDevcieUpdate>>() {
+            @Override
+            public BaseDeviceResponse<CheckDevcieUpdate> call() throws Exception {
+                BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(mDeviceInfo.device_serial);
+        /*        BaseDeviceResponse<DeviceUpdateStatus> deviceUpdateStatus = DeviceApi.getInstance().deviceUpdateStatus(mDeviceInfo.device_serial);
+                if (deviceResponse.getData() != null && deviceUpdateStatus != null) {
+                    deviceResponse.getData().mDeviceResponse = deviceUpdateStatus.getData();
+                }*/
+                return deviceResponse;
+            }
+        }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe(new RxConsumer(WJDeviceDebugNewActivity.this))
+                .subscribe(new Consumer<BaseDeviceResponse<CheckDevcieUpdate>>() {
+                    @Override
+                    public void accept(BaseDeviceResponse<CheckDevcieUpdate> response) throws Exception {
+                        if (response.getCode() == 200 && response.getData() != null) {
+                            CheckDevcieUpdate responseData = response.getData();
+                            if (responseData.getIsNeedUpgrade() == 1) {
+                                // 有新版本
+                                new XPopup.Builder(WJDeviceDebugNewActivity.this).asConfirm("检测到新版本", responseData.getCurrentVersion() + " 是否升级到 " + responseData.getLatestVersion(), "否", "是", new OnConfirmListener() {
+                                    @Override
+                                    public void onConfirm() {
+                                        deviceUpdate();
+                                    }
+                                }, null, false, 0).show();
+                            }
+
+
+                        }
+                    }
+                });
+    }
+
+
     @SuppressLint("CheckResult")
     private void checkDevice() {
         if (mDisposable != null) {
@@ -459,7 +557,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
         mDisposable = Observable.just(mDeviceInfo).map(new Function<DeviceInfo, BaseDeviceResponse<CheckDevcieUpdate>>() {
             @Override
             public BaseDeviceResponse<CheckDevcieUpdate> apply(@NonNull DeviceInfo deviceInfo) throws Exception {
-                BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(deviceInfo.device_serial);
+                BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(mDeviceInfo.device_serial);
                 BaseDeviceResponse<DeviceUpdateStatus> deviceUpdateStatus = DeviceApi.getInstance().deviceUpdateStatus(mDeviceInfo.device_serial);
                 if (deviceResponse.getData() != null && deviceUpdateStatus != null) {
                     deviceResponse.getData().mDeviceResponse = deviceUpdateStatus.getData();
@@ -567,6 +665,9 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
         mRatio_tv = findViewById(R.id.ratio_tv);
         mBitrate_fl = findViewById(R.id.bitrate_fl);
         mBitrate_tv = findViewById(R.id.bitrate_tv);
+
+        mBitrate_type_fl = findViewById(R.id.bitrate_type_fl);
+        mBitrate_type_tv = findViewById(R.id.bitrate_type_tv);
         mFull_iv1 = findViewById(R.id.full_iv);
         mFocus_fl = findViewById(R.id.focus_fl);
         mFocus_tv = findViewById(R.id.focus_tv);

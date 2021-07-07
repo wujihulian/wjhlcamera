@@ -189,5 +189,6 @@ public abstract class WJBasePlayer implements AssistPlay {
     @Override
     public void destroy() {
         mAssist.destroy();
+        mAssist=null;
     }
 }

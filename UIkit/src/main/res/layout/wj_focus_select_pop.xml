@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@drawable/wj_shadow_lt_rt_bg"
     android:orientation="vertical">
 
     <androidx.recyclerview.widget.RecyclerView
@@ -9,4 +10,44 @@
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
-</FrameLayout>
+
+    <LinearLayout
+        android:elevation="10dp"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/wj_angle_gray_25"
+        android:layout_gravity="center_horizontal"
+        android:layout_width="144dp"
+        android:layout_height="44dp">
+
+
+        <TextView
+            android:id="@+id/wj_tv_left"
+            android:clickable="true"
+            android:focusable="true"
+            android:textColor="@drawable/wj_textcolor_selector_gray_white"
+            android:background="@drawable/wj_bg_selector_left"
+            android:textSize="30sp"
+            android:layout_weight="1"
+            android:text="－"
+            android:gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"/>
+        <View
+            android:background="#30999999"
+            android:layout_gravity="center_vertical"
+            android:layout_width="1dp"
+            android:layout_height="22dp"/>
+        <TextView
+            android:id="@+id/wj_tv_right"
+            android:clickable="true"
+            android:focusable="true"
+            android:textColor="@drawable/wj_textcolor_selector_gray_white"
+            android:background="@drawable/wj_bg_selector_right"
+            android:textSize="30sp"
+            android:gravity="center"
+            android:layout_weight="1"
+            android:text="＋"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"/>
+    </LinearLayout>
+</LinearLayout>

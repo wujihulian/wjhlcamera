@@ -3,6 +3,7 @@ package com.wj.uikit.player.event;
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.kk.taurus.playerbase.assist.AssistPlay;
@@ -79,6 +80,7 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
     @Override
     public void onErrorEvent(int eventCode, Bundle bundle) {
         reconnection();
+
     }
 
     @Override
@@ -89,9 +91,8 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
         if (eventCode == OnPlayerEventListener.PLAYER_EVENT_ON_PLAY_COMPLETE) {
             //播放完成尝试重连业务 有可能地址被更换 有可能没人推流
             WJLogUitl.i("onPlayerEvent" + eventCode);
-
-
             reconnection();
+
         }
     }
 
@@ -113,6 +114,9 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
                 if (rtmp == null) {
                     return false;
                 }
+            /*    if (TextUtils.isEmpty(rtmp.getPrivatelyEnabled())) {
+                    return false;
+                }*/
                 //设备未开启  开启预览功能
                 if ("false".equals(rtmp.getEnabled())) {
                     rtmpConfig.getRTMP().setEnabled("true");
@@ -120,9 +124,6 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
                     //确定预览地址
                     String playURL2 = rtmp.getPlayURL2();
                     String privatelyURL = rtmp.getPrivatelyURL();
-                    String url = rtmp.getURL();
-                    String playURL1 = rtmp.getPlayURL1();
-                    String privatelyEnabled = rtmp.getPrivatelyEnabled();
                     if (TextUtils.isEmpty(privatelyURL) || TextUtils.isEmpty(playURL2)) {
                         //预览地址为空 或者 预览推流地址为空  需要给设备配置 推流地址 啦流地址
                         WJLogUitl.i("apply: 预览地址为空 开始配置预览地址");
@@ -135,9 +136,9 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
                     }
                 }
                 //直播状态 并且没有直播预览地址
-                if ("false".equals(rtmp.getPrivatelyEnabled()) && TextUtils.isEmpty(rtmp.getPlayURL1())) {
+           /*     if ("false".equals(rtmp.getPrivatelyEnabled()) && TextUtils.isEmpty(rtmp.getPlayURL1())) {
                     return false;
-                }
+                }*/
                 return true;
             }
         }).map(new Function<RtmpConfig, RtmpConfig>() {
@@ -162,10 +163,9 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
                     } else if (checkPreviewUrl(playURL2)) {
                         WJLogUitl.i("apply: 预览地址过期 开始配置预览地址");
                         configPrivatelyURL(rtmpConfig);
-
                     }
                 } else {
-                    if (liveReconnectCount >= 2) {
+                    if (liveReconnectCount >= 2 || TextUtils.isEmpty(playURL1)) {
                         //直播流重连3次取不到
                         triggerLiveCheck();
                     }
@@ -185,8 +185,13 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
                             url = rtmpConfig.getRTMP().getPlayURL1();
                             liveReconnectCount++;
                         }
+                   /*     if (!TextUtils.isEmpty(url)) {
+                            url = url.replace("https:", "webrtc:").replace(".flv", "");
+                        }*/
                         DataSource dataSource = new DataSource();
                         dataSource.setData(url);
+
+                        WJLogUitl.i(url);
                         if (mAssistPlay.isPlaying()) {
                             mAssistPlay.stop();
                         }
@@ -196,6 +201,7 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
                 });
     }
 
+    private static final String TAG = "WJReconnectEvent";
     //触发流检测
     private void triggerLiveCheck() {
         GetRequest getRequest = OkHttpUtils.getInstance().get("/api/course/cameraDevicePreviewState?deviceCode=" + getDeviceSerial());
@@ -210,16 +216,17 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
         if (TextUtils.isEmpty(previewUrl)) {
             return true;
         }
-
         String[] split = previewUrl.split("\\?");
         if (split.length >= 1) {
             for (String s : split) {
                 String[] split1 = s.split("&");
                 for (String s1 : split1) {
+                    WJLogUitl.i(s1);
                     String[] split2 = s1.split("=");
                     String s2 = split2[0];
                     if ("txTime".equals(s2)) {
                         String hex = split2[1];
+                        WJLogUitl.i(hex);
                         long time = Long.valueOf(hex, 16);
                         long currentTimeMillis = System.currentTimeMillis() / 1000;
                         WJLogUitl.i("checkPreviewUrl: 剩余时间 " + (time - currentTimeMillis));

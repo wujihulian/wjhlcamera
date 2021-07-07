@@ -3,12 +3,15 @@ package com.wj.uikit.player;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
 
 import com.kk.taurus.playerbase.entity.DataSource;
 import com.kk.taurus.playerbase.event.OnErrorEventListener;
 import com.kk.taurus.playerbase.event.OnPlayerEventListener;
 import com.kk.taurus.playerbase.receiver.ReceiverGroup;
 import com.kk.taurus.playerbase.render.AspectRatio;
+import com.wj.camera.uitl.WJLogUitl;
 import com.wj.uikit.player.cover.WJControlCover;
 import com.wj.uikit.player.cover.WJLoadingCover;
 import com.wj.uikit.player.event.WJReconnectEvent;
@@ -31,7 +34,6 @@ public class WJVideoPlayer extends WJBasePlayer {
     private WJReconnectEvent mWJReconnectEvent;
 
 
-
     @Override
     public void init() {
         mAssist.getSuperContainer().setBackgroundColor(Color.BLACK);
@@ -52,16 +54,16 @@ public class WJVideoPlayer extends WJBasePlayer {
         mAssist.setOnErrorEventListener(new OnErrorEventListener() {
             @Override
             public void onErrorEvent(int eventCode, Bundle bundle) {
-                if (mWJReconnectEvent!=null){
-                    mWJReconnectEvent.onErrorEvent(eventCode,bundle);
+                if (mWJReconnectEvent != null) {
+                    mWJReconnectEvent.onErrorEvent(eventCode, bundle);
                 }
             }
         });
         mAssist.setOnPlayerEventListener(new OnPlayerEventListener() {
             @Override
             public void onPlayerEvent(int eventCode, Bundle bundle) {
-                if (mWJReconnectEvent!=null){
-                    mWJReconnectEvent.onPlayerEvent(eventCode,bundle);
+                if (mWJReconnectEvent != null) {
+                    mWJReconnectEvent.onPlayerEvent(eventCode, bundle);
                 }
             }
         });
@@ -84,6 +86,7 @@ public class WJVideoPlayer extends WJBasePlayer {
     @Override
     public void destroy() {
         super.destroy();
+        mWJReconnectEvent = null;
 
     }
 }

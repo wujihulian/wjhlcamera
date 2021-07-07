@@ -13,7 +13,7 @@ import android.view.View;
  */
 public abstract class OnControlClickListener implements View.OnClickListener {
     private long lastTime = 0;
-    private long controlTime = 2000;
+    private long controlTime = 1000;
 
     public OnControlClickListener() {
 

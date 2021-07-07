@@ -351,7 +351,7 @@ public class ISAPI {
     public Call factoryResetFull(String deviceSerial) {
         return OkHttpUtils.getInstance().put(ApiNew.factoryResetFull).jsons(XML.PTZDATA_0).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
     }
-    //
+    //重新配网
     public void wirelessServer(String deviceSerial) {
         OkHttpUtils.getInstance().get(ApiNew.wirelessServer).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(new JsonCallback<WirelessServer>() {
             @Override
@@ -362,6 +362,11 @@ public class ISAPI {
                 }
             }
         }));
+    }
+    //获取配网错误日志
+    public void getApConfigLog(String deviceSerial , JsonCallback jsonCallback){
+
+
     }
 
     private String entityToXml(Object obj) {

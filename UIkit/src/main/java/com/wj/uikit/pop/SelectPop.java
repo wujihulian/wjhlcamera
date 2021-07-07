@@ -30,7 +30,7 @@ public class SelectPop extends BottomPopupView {
     public SelectPop(@NonNull Context context) {
         super(context);
     }
-    public SelectPop(@NonNull Context context, String[] strings) {
+    public SelectPop(@NonNull Context context, String... strings) {
         super(context);
         this.mStrings = strings;
     }

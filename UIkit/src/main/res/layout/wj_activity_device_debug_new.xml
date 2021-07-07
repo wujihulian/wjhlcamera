@@ -111,10 +111,11 @@
                         android:textSize="14dp" />
 
                     <TextView
+                        android:visibility="visible"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:text="(粗调)"
+                        android:text="(拉远近)"
                         android:textColor="#999999"
                         android:textSize="14dp" />
                 </LinearLayout>
@@ -141,6 +142,71 @@
                         android:layout_height="10dp"
                         android:layout_marginLeft="6dp"
                         android:src="@mipmap/wj_device_right" />
+                </LinearLayout>
+            </FrameLayout>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
+                android:alpha="0.1"
+                android:background="#FF000000" />
+
+            <FrameLayout
+                android:visibility="visible"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:background="#ffffff"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="15dp"
+                    android:text="聚焦"
+                    android:textColor="#FF333333"
+                    android:textSize="14dp" />
+                <TextView
+                    android:visibility="visible"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="(对焦距)"
+                    android:textColor="#999999"
+                    android:textSize="14dp" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_marginRight="15dp"
+                    android:layout_gravity="right|center_vertical"
+                    android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:textColor="@drawable/wj_textcolor_selector"
+                        android:id="@+id/tv_left"
+                        android:padding="5dp"
+                        android:textSize="25sp"
+                        android:text="－"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+                    <TextView
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:textColor="@drawable/wj_textcolor_selector"
+                        android:id="@+id/tv_right"
+                        android:padding="5dp"
+                        android:textSize="25sp"
+                        android:text="＋"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
                 </LinearLayout>
             </FrameLayout>
 
@@ -190,7 +256,54 @@
                         android:src="@mipmap/wj_device_right" />
                 </LinearLayout>
             </FrameLayout>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:layout_marginLeft="15dp"
+                android:layout_marginRight="15dp"
+                android:alpha="0.1"
+                android:background="#FF000000" />
 
+            <FrameLayout
+                android:id="@+id/bitrate_type_fl"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:background="#ffffff"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="15dp"
+                    android:text="码率类型"
+                    android:textColor="#FF333333"
+                    android:textSize="14dp" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right|center_vertical"
+                    android:layout_marginRight="15dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/bitrate_type_tv"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textColor="#999999"
+                        android:textSize="13dp" />
+
+                    <ImageView
+                        android:layout_width="5dp"
+                        android:layout_height="10dp"
+                        android:layout_marginLeft="6dp"
+                        android:src="@mipmap/wj_device_right" />
+                </LinearLayout>
+
+            </FrameLayout>
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
@@ -239,6 +352,8 @@
                 </LinearLayout>
 
             </FrameLayout>
+
+
 
             <FrameLayout
                 android:background="#ffffff"
@@ -295,6 +410,10 @@
                         android:textSize="13dp" />
                 </FrameLayout>
             </FrameLayout>
+
+
+
+
             <FrameLayout
                 android:id="@+id/fl_high"
                 android:layout_marginTop="10dp"
@@ -340,6 +459,7 @@
                 android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
+
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="0.5dp"
@@ -348,56 +468,7 @@
                     android:alpha="0.1"
                     android:background="#FF000000" />
                 <FrameLayout
-                    android:visibility="visible"
-                    android:layout_width="match_parent"
-                    android:layout_height="40dp"
-                    android:background="#ffffff"
-                    android:orientation="horizontal">
-
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginLeft="15dp"
-                        android:text="聚焦"
-                        android:textColor="#FF333333"
-                        android:textSize="14dp" />
-
-                    <LinearLayout
-                        android:layout_marginRight="15dp"
-                        android:layout_gravity="right|center_vertical"
-                        android:orientation="horizontal"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content">
-
-                        <TextView
-                            android:textColor="#999999"
-                            android:id="@+id/tv_left"
-                            android:padding="5dp"
-                            android:textSize="25sp"
-                            android:text="－"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
-                        <TextView
-                            android:textColor="#999999"
-                            android:id="@+id/tv_right"
-                            android:padding="5dp"
-                            android:textSize="25sp"
-                            android:text="＋"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
-                    </LinearLayout>
-                </FrameLayout>
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="0.5dp"
-                    android:layout_marginLeft="15dp"
-                    android:layout_marginRight="15dp"
-                    android:alpha="0.1"
-                    android:background="#FF000000" />
-                <FrameLayout
-                    android:visibility="visible"
+                    android:visibility="gone"
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
                     android:background="#ffffff"
@@ -434,7 +505,9 @@
                         android:layout_height="wrap_content">
 
                         <TextView
-                            android:textColor="#999999"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:textColor="@drawable/wj_textcolor_selector"
                             android:id="@+id/tv_pzt_left"
                             android:padding="5dp"
                             android:textSize="25sp"
@@ -442,7 +515,9 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"/>
                         <TextView
-                            android:textColor="#999999"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:textColor="@drawable/wj_textcolor_selector"
                             android:id="@+id/tv_pzt_right"
                             android:padding="5dp"
                             android:textSize="25sp"

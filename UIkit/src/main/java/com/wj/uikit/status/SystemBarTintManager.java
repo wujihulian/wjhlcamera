@@ -2,6 +2,7 @@ package com.wj.uikit.status;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Build;
 import android.view.Gravity;
@@ -79,6 +80,7 @@ public class SystemBarTintManager {
         }
         return statusBarHeight;
     }
+
 
     /**
      * 显示状态栏

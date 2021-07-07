@@ -10,5 +10,4 @@ package com.wj.uikit.config;
  * 作者姓名 修改时间 版本号 描述
  */
 public interface WJUikitConfig {
-    public static String serial="serial";
 }

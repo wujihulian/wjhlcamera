@@ -1,0 +1,66 @@
+
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 边 -->
+    <item>
+        <shape android:shape="rectangle">
+            <padding
+
+                android:top="2dp" />
+            <solid android:color="#00CCCCCC" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <padding
+
+
+                android:top="2dp" />
+            <solid android:color="#10CCCCCC" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <padding
+
+
+                android:top="2dp" />
+            <solid android:color="#20CCCCCC" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <padding
+
+
+                android:top="2dp" />
+            <solid android:color="#30CCCCCC" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <padding
+                android:top="2dp" />
+            <solid android:color="#50CCCCCC" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+    <!-- 中心背景 -->
+    <item>
+        <shape android:shape="rectangle"
+           >
+            <!-- 实心 -->
+            <solid android:color="#ffffff" />
+            <corners
+                android:topLeftRadius="10dp"
+                android:topRightRadius="10dp"
+             />
+            <padding
+                android:top="10dp"
+                />
+        </shape>
+    </item>
+</layer-list>
