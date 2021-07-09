@@ -38,7 +38,11 @@ public interface ApiNew {
     String factoryResetFull = "/api/hikvision/ISAPI/System/factoryReset?mode=full";
     //重新配网
     String wirelessServer = "/api/hikvision/ISAPI/System/Network/interfaces/2/wirelessServer";
-    String netConfigResult ="/api/hikvision/ISAPI/PreNetwork/NetConfigResult?format=json";
+
+    String netConfigResult = "/api/hikvision/ISAPI/PreNetwork/NetConfigResult?format=json";
+
+    //获取网络信息
+    String networkInterface = "/api/hikvision/ISAPI/System/Network/interfaces?security=1&iv=a03feccd76998360da76076f16a87a81";
 
     //设备信息
     String DeviceInfo = "/api/lapp/device/info";

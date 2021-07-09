@@ -41,6 +41,7 @@ import com.wj.camera.net.ISAPI;
 import com.wj.camera.net.RxConsumer;
 import com.wj.camera.net.SafeGuardInterceptor;
 import com.wj.camera.response.BaseDeviceResponse;
+import com.wj.camera.response.NetworkInterface;
 import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.uitl.WJLogUitl;
 import com.wj.camera.view.WJDeviceConfig;
@@ -52,6 +53,7 @@ import com.wj.uikit.uitl.WJActivityControl;
 import org.greenrobot.eventbus.EventBus;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
@@ -422,6 +424,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                             @Override
                             public void onFailed(int code, @NotNull String msg, @org.jetbrains.annotations.Nullable Throwable exception) {
                                 String format = String.format("配置 失败：code=%s , msg=%s ", code + "", msg + "");
+                                WJLogUitl.i(  "logPrint: " + format);
                                 if (mLoadingPopupView!=null){
                                     mLoadingPopupView.dismiss();
                                 }
@@ -528,10 +531,11 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                             }
                         } else {
                             clear();
-                            EventBus.getDefault().post(mDeviceInfo);
+                            post(mDeviceInfo);
+                            /*EventBus.getDefault().post(mDeviceInfo);
                             Toast.makeText(WJSettingWiredActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
                             WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
-                            finish();
+                            finish();*/
                         }
                     }
                 });
@@ -607,12 +611,13 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                                             mLoadingPopupView.dismiss();
                                         }
                                         clear();
-                                        EventBus.getDefault().post(mDeviceInfo);
+                                        post(mDeviceInfo);
+                                     /*   EventBus.getDefault().post(mDeviceInfo);
                                         Toast.makeText(WJSettingWiredActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
 
                                         WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
 
-                                        finish();
+                                        finish();*/
                                     }
 
                                     @Override
@@ -654,7 +659,37 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                     });
         }
     }
+    public void post(DeviceInfo deviceInfo){
+        deviceInfo.setNetworkMode("1");
+        ISAPI.getInstance().getNetworkInterface(deviceInfo.device_serial, new JsonCallback<NetworkInterface>() {
+            @Override
+            public void onError(int code, String msg) {
+                super.onError(code, msg);
+                EventBus.getDefault().post(mDeviceInfo);
+                Toast.makeText(WJSettingWiredActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
+                WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
+                finish();
+            }
 
+            @Override
+            public void onSuccess(NetworkInterface data) {
+                if (data!=null){
+                    NetworkInterface.NetworkInterfaceListDTO networkInterfaceList = data.getNetworkInterfaceList();
+                    if (networkInterfaceList!=null){
+                        List<NetworkInterface.NetworkInterfaceListDTO.NetworkInterfaceDTO> networkInterface = networkInterfaceList.getNetworkInterface();
+                        if (networkInterface!=null && networkInterface.size()>=2) {
+                            deviceInfo.setIpAaddress(networkInterface.get(1).getIPAddress().getIpAddress());
+                        }
+                    }
+                }
+                EventBus.getDefault().post(mDeviceInfo);
+                Toast.makeText(WJSettingWiredActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
+                WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
+                finish();
+            }
+        });
+
+    }
     public void showWiredHint() {
         new XPopup.Builder(this).asConfirm("有线网络连接失败", "1.请检查网线是否已插好 \n2.请检查输入的IP地址是否正确", new OnConfirmListener() {
             @Override

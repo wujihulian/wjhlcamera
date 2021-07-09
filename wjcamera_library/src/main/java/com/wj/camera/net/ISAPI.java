@@ -10,6 +10,7 @@ import com.wj.camera.config.WJDeviceSceneEnum;
 import com.wj.camera.request.XML;
 import com.wj.camera.response.FOCUSCTRL;
 import com.wj.camera.response.FocusEntity;
+import com.wj.camera.response.NetworkInterface;
 import com.wj.camera.response.ResponseStatus;
 import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.response.SceneResponse;
@@ -18,7 +19,6 @@ import com.wj.camera.response.VideoConfig;
 import com.wj.camera.response.WirelessServer;
 import com.wj.camera.response.ZOOMCTRL;
 import com.wj.camera.response.ZoomResponse;
-import com.wj.camera.uitl.WJLogUitl;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -351,6 +351,7 @@ public class ISAPI {
     public Call factoryResetFull(String deviceSerial) {
         return OkHttpUtils.getInstance().put(ApiNew.factoryResetFull).jsons(XML.PTZDATA_0).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
     }
+
     //重新配网
     public void wirelessServer(String deviceSerial) {
         OkHttpUtils.getInstance().get(ApiNew.wirelessServer).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(new JsonCallback<WirelessServer>() {
@@ -363,8 +364,15 @@ public class ISAPI {
             }
         }));
     }
+
+    //获取网络信息
+    public void getNetworkInterface(String deviceSerial, JsonCallback<NetworkInterface> jsonCallback) {
+        OkHttpUtils.getInstance().get(ApiNew.networkInterface).addHeader("EZO-DeviceSerial", deviceSerial)
+                .enqueue(new XmlCallback(jsonCallback));
+    }
+
     //获取配网错误日志
-    public void getApConfigLog(String deviceSerial , JsonCallback jsonCallback){
+    public void getApConfigLog(String deviceSerial, JsonCallback jsonCallback) {
 
 
     }

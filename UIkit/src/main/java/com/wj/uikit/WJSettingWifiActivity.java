@@ -43,6 +43,7 @@ import com.wj.camera.net.DeviceApi;
 import com.wj.camera.net.ISAPI;
 import com.wj.camera.net.RxConsumer;
 import com.wj.camera.response.BaseDeviceResponse;
+import com.wj.camera.response.NetworkInterface;
 import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.uitl.WJLogUitl;
 import com.wj.camera.view.WJDeviceConfig;
@@ -260,11 +261,12 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                             mLoadingPopupView.dismiss();
                                         }
                                         clear();
-                                        EventBus.getDefault().post(mDeviceInfo);
+                                        post(mDeviceInfo);
+                                        /*EventBus.getDefault().post(mDeviceInfo);
                                         Toast.makeText(WJSettingWifiActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
                                         WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
 
-                                        finish();
+                                        finish();*/
                                     }
 
                                     @Override
@@ -284,10 +286,11 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                 if (errorCode == 120020) {
                                     clear();
                                     //设备已在线
-                                    EventBus.getDefault().post(mDeviceInfo);
+                                    post(mDeviceInfo);
+                                /*    EventBus.getDefault().post(mDeviceInfo);
                                     Toast.makeText(WJSettingWifiActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
                                     WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
-                                    finish();
+                                    finish();*/
                                 } else {
                                     if (startApTime + 1000 * 100 <= System.currentTimeMillis()) {
                                         if (mLoadingPopupView != null) {
@@ -373,10 +376,11 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                             }
                         } else {
                             clear();
-                            EventBus.getDefault().post(mDeviceInfo);
+                            post(deviceInfo);
+                        /*    EventBus.getDefault().post(mDeviceInfo);
                             Toast.makeText(WJSettingWifiActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
                             WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
-                            finish();
+                            finish();*/
                         }
                     }
                 });
@@ -401,50 +405,6 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
             return newScanResults;
         }
         return null;
-    }
-
-/*    public List<ScanResult> getScanList() {
-        if (mWifiMgr != null) {
-            List<ScanResult> olist = mWifiMgr.getScanResults();
-            if (olist != null) {
-                List<ScanResult> nlist = new ArrayList<>();
-                for (int i = 0; i < olist.size(); i++) {
-                    // 该热点SSID是否已在列表中
-                    int position = getItemPosition(nlist, olist.get(i));
-                    if (position != -1) { // 已在列表
-                        // 相同SSID热点，取信号强的
-                        if (nlist.get(position).level < olist.get(i).level) {
-                            nlist.remove(position);
-                            nlist.add(position, olist.get(i));
-                        }
-                    } else {
-                        //过滤隐藏的网络
-                        nlist.add(olist.get(i));
-                    }
-                }
-                Collections.sort(nlist, new Comparator<ScanResult>() {
-                    @Override
-                    public int compare(ScanResult o1, ScanResult o2) {
-                        return o2.level - o1.level;
-                    }
-                });
-                return nlist;
-            }
-        }
-        return null;
-    }*/
-
-
-    /**
-     * 返回item在list中的坐标
-     */
-    private int getItemPosition(List<ScanResult> list, ScanResult item) {
-        for (int i = 0; i < list.size(); i++) {
-            if (item.SSID.equals(list.get(i).SSID)) {
-                return i;
-            }
-        }
-        return -1;
     }
 
 
@@ -496,8 +456,10 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
     }
 
     private long startApTime;
+    private String ssid;
 
     public void startAp(String wifiSsid, String wifiPassword, String bssid) {
+        this.ssid = wifiSsid;
         String password = "AP" + mDeviceInfo.device_code;
         //"EZVIZ_"+设备序列号
         String ssid = "HAP_" + mDeviceInfo.device_serial;
@@ -608,6 +570,41 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
         WJLogUitl.i("logPrint: " + log);
     }
 
+
+    public void post(DeviceInfo deviceInfo) {
+        deviceInfo.setNetworkMode("2");
+        deviceInfo.setSsid(ssid);
+        ISAPI.getInstance().getNetworkInterface(deviceInfo.device_serial, new JsonCallback<NetworkInterface>() {
+            @Override
+            public void onError(int code, String msg) {
+                super.onError(code, msg);
+                EventBus.getDefault().post(mDeviceInfo);
+                Toast.makeText(WJSettingWifiActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
+                WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
+                finish();
+            }
+
+            @Override
+            public void onSuccess(NetworkInterface data) {
+
+                if (data != null) {
+                    NetworkInterface.NetworkInterfaceListDTO networkInterfaceList = data.getNetworkInterfaceList();
+                    if (networkInterfaceList != null) {
+                        List<NetworkInterface.NetworkInterfaceListDTO.NetworkInterfaceDTO> networkInterface = networkInterfaceList.getNetworkInterface();
+                        if (networkInterface != null && networkInterface.size() >= 2) {
+                            deviceInfo.setIpAaddress(networkInterface.get(1).getIPAddress().getIpAddress());
+                        }
+                    }
+                }
+                EventBus.getDefault().post(mDeviceInfo);
+                Toast.makeText(WJSettingWifiActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
+                WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
+
+                finish();
+            }
+        });
+
+    }
 
     @SuppressLint("CheckResult")
     protected void toast(String text) {

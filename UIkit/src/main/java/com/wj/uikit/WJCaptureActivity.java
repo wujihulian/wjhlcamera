@@ -30,6 +30,7 @@ import com.wj.camera.net.ISAPI;
 import com.wj.camera.net.RxConsumer;
 import com.wj.camera.net.SafeGuardInterceptor;
 import com.wj.camera.response.BaseDeviceResponse;
+import com.wj.camera.response.NetworkInterface;
 import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.uitl.WJLogUitl;
 import com.wj.camera.view.WJDeviceConfig;
@@ -40,6 +41,7 @@ import com.wj.uikit.uitl.OnContinuousClick;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
@@ -147,8 +149,9 @@ public class WJCaptureActivity extends AppCompatActivity {
                                     public void onSuccess(BaseDeviceResponse data) {
                                         WJLogUitl.i(  "onSuccess: add device");
                                         mLoadingPopupView.dismiss();
-                                        EventBus.getDefault().post(deviceInfo);
-                                        finish();
+                                        post(deviceInfo);
+                                        //EventBus.getDefault().post(deviceInfo);
+                                        //finish();
 
                                     }
 
@@ -272,8 +275,9 @@ public class WJCaptureActivity extends AppCompatActivity {
                         WJLogUitl.i(  "onNext: ");
 
                         if (o == true) {
-                            EventBus.getDefault().post(deviceInfo);
-                            finish();
+                            post(deviceInfo);
+                            /*EventBus.getDefault().post(deviceInfo);
+                            finish();*/
                         } else {
                             Intent intent = new Intent(WJCaptureActivity.this, WJSettingModeActivity.class);
                             Bundle bundle = new Bundle();
@@ -330,6 +334,33 @@ public class WJCaptureActivity extends AppCompatActivity {
         decoratedBarcodeView.setStatusText("");
         return decoratedBarcodeView;
     }
+    public void post(DeviceInfo deviceInfo){
+        ISAPI.getInstance().getNetworkInterface(deviceInfo.device_serial, new JsonCallback<NetworkInterface>() {
+            @Override
+            public void onError(int code, String msg) {
+                super.onError(code, msg);
+                EventBus.getDefault().post(deviceInfo);
+                finish();
+            }
+
+            @Override
+            public void onSuccess(NetworkInterface data) {
+                if (data != null) {
+                    NetworkInterface.NetworkInterfaceListDTO networkInterfaceList = data.getNetworkInterfaceList();
+                    if (networkInterfaceList != null) {
+                        List<NetworkInterface.NetworkInterfaceListDTO.NetworkInterfaceDTO> networkInterface = networkInterfaceList.getNetworkInterface();
+                        if (networkInterface != null && networkInterface.size() >= 2) {
+                            deviceInfo.setIpAaddress(networkInterface.get(1).getIPAddress().getIpAddress());
+                        }
+                    }
+                }
+                EventBus.getDefault().post(deviceInfo);
+                finish();
+            }
+        });
+
+    }
+
 
     @Override
     protected void onResume() {
