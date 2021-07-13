@@ -15,6 +15,7 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -28,6 +29,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.ap.ezviz.pub.YsApManager;
 import com.ap.ezviz.pub.ap.ApWifiConfigInfo;
 import com.ap.ezviz.pub.ap.FIXED_IP;
+import com.ap.ezviz.pub.http.APHttpClient;
+import com.google.gson.Gson;
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.core.BasePopupView;
 import com.lxj.xpopup.impl.LoadingPopupView;
@@ -43,6 +46,7 @@ import com.wj.camera.net.DeviceApi;
 import com.wj.camera.net.ISAPI;
 import com.wj.camera.net.RxConsumer;
 import com.wj.camera.response.BaseDeviceResponse;
+import com.wj.camera.response.NetConfig;
 import com.wj.camera.response.NetworkInterface;
 import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.uitl.WJLogUitl;
@@ -59,12 +63,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
+import okhttp3.Response;
 
 
 /**
@@ -92,6 +98,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
     private int mDeviceCode;
     private TextView mTv_to_wifi;
     private LinearLayout mLl_to_wifi;
+    private ApWifiConfigInfo mApConfigInfo;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -198,7 +205,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                     mWifiListAdapter.setOnItemClickListener(WJSettingWifiActivity.this);
                     List<ScanResult> scanList = getScanList();
                     for (ScanResult scanResult : scanList) {
-                        WJLogUitl.i(scanResult.toString());
+                        WJLogUitl.i("保留2.4G网络 ：" + scanResult.toString());
                     }
                     mWifiListAdapter.setData(scanList);
                     mRecyclerView.setAdapter(mWifiListAdapter);
@@ -296,7 +303,8 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                         if (mLoadingPopupView != null) {
                                             mLoadingPopupView.dismiss();
                                         }
-                                        showWiredHint();
+                                        //showWiredHint();
+                                        configTimeout();
                                     } else {
                                         handler.sendEmptyMessageDelayed(SEND_CHECK_DEVICE_MSG, 2000L);
                                     }
@@ -370,7 +378,9 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                 if (mLoadingPopupView != null) {
                                     mLoadingPopupView.dismiss();
                                 }
-                                showWiredHint();
+                                //showWiredHint();
+                                //配网超时
+                                configTimeout();
                             } else {
                                 handler.sendEmptyMessageDelayed(SEND_CHECK_ISAPI, 1000L);
                             }
@@ -386,12 +396,24 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                 });
     }
 
+    //配网超时
+    private void configTimeout() {
+        new XPopup.Builder(this).asConfirm("注册超时", "是否重新连接设备热点并查看错误报告", new OnConfirmListener() {
+            @Override
+            public void onConfirm() {
+                getApConfigLog();
+            }
+        }).show();
+
+    }
+
 
     public List<ScanResult> getScanList() {
         if (mWifiMgr != null) {
             List<ScanResult> scanResults = mWifiMgr.getScanResults();
             ArrayList<ScanResult> newScanResults = new ArrayList<>();
             for (ScanResult scanResult : scanResults) {
+                WJLogUitl.i("所有网络 :" + scanResult.toString());
                 if (scanResult.frequency < 5000) {
                     newScanResults.add(scanResult);
                 }
@@ -464,12 +486,15 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
         //"EZVIZ_"+设备序列号
         String ssid = "HAP_" + mDeviceInfo.device_serial;
         removeWifiConfig(ssid);
+        WJLogUitl.i("准备连接设备热点 :" + ssid + "  : " + mDeviceInfo.device_code);
         WifiUtils.withContext(getApplicationContext())
                 .connectWith(ssid, password)
                 .setTimeout(15000)
                 .onConnectionResult(new ConnectionSuccessListener() {
                     @Override
                     public void success() {
+                        WJLogUitl.i("连接设备热点成功 :" + ssid);
+
                         mLoadingPopupView = new XPopup.Builder(WJSettingWifiActivity.this).dismissOnTouchOutside(false).setPopupCallback(new SimpleCallback() {
                             @Override
                             public void onDismiss(BasePopupView popupView) {
@@ -482,7 +507,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                         mLoadingPopupView.show();
 
 
-                        ApWifiConfigInfo apConfigInfo = new ApWifiConfigInfo.Builder()
+                        mApConfigInfo = new ApWifiConfigInfo.Builder()
                                 .deviceSN(mDeviceInfo.device_serial)  // 设备序列号，非必要
                                 .activatePwd("Hik" + mDeviceInfo.device_code)  // 激活密码，萤石接入的海康设备规则为 Hik+验证码。这里不传会使用默认 Hik+验证码
                                 .verifyCode(mDeviceInfo.device_code)  // 设备验证码，必要
@@ -490,8 +515,8 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                 .fixedIP(FIXED_IP.Companion.getWIRELESS_IPC_YS())  // 设备固定IP。这里针对萤石设备有  192.168.8.1 和 192.168.8.253 两款兼容，可扩展更多的ip
                                 .build();
 
-                        WJLogUitl.i("success: " + wifiSsid + " ----- " + wifiPassword);
-                        YsApManager.INSTANCE.activateWifi(apConfigInfo, new YsApManager.ApActivateCallback() {
+                        WJLogUitl.i("设备准备连接指定wifi: " + wifiSsid + " ----- " + wifiPassword);
+                        YsApManager.INSTANCE.activateWifi(mApConfigInfo, new YsApManager.ApActivateCallback() {
                             @Override
                             public void onStartSearch() {
                                 logPrint("第一步：正在搜索并获取设备信息");
@@ -536,11 +561,11 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
 
                     @Override
                     public void failed(@NonNull ConnectionErrorCode errorCode) {
-                        WJLogUitl.i("failed: " + errorCode.name());
+                        WJLogUitl.i("连接设备热点失败 :" + errorCode.name());
                         if (errorCode == ConnectionErrorCode.USER_CANCELLED) {
 
                         } else {
-                            new XPopup.Builder(WJSettingWifiActivity.this)
+                          /*  new XPopup.Builder(WJSettingWifiActivity.this)
                                     .asConfirm("设备无法正常进入配网模式",
                                             "1.请检查设备是否通电\n2.通电后设备指示灯是否进入白灯闪烁状态",
                                             "取消",
@@ -554,7 +579,17 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                             null,
                                             false,
                                             0
-                                    ).show();
+                                    ).show();*/
+
+                            new XPopup.Builder(WJSettingWifiActivity.this).asConfirm(
+                                    "提示", "查找设备热点失败,请尝试重试设备并重新扫码配网"
+                                    , null,
+                                    "确定",
+                                    null,
+                                    null,
+                                    true,
+                                    0)
+                                    .show();
                         }
                         //  Toast.makeText(WJSettingWifiActivity.this, "找不到设备", Toast.LENGTH_SHORT).show();
                     }
@@ -630,4 +665,77 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
         }).show();
     }
 
+
+    @SuppressLint("CheckResult")
+    private void getApConfigLog() {
+        String password = "AP" + mDeviceInfo.device_code;
+        //"EZVIZ_"+设备序列号
+        String ssid = "HAP_" + mDeviceInfo.device_serial;
+        removeWifiConfig(ssid);
+        WifiUtils.withContext(getApplicationContext())
+                .connectWith(ssid, password)
+                .setTimeout(15000)
+                .onConnectionResult(new ConnectionSuccessListener() {
+                    @Override
+                    public void success() {
+                        Observable.fromCallable(new Callable<Response>() {
+                            @Override
+                            public Response call() throws Exception {
+                                Response apConfigLog = APHttpClient.INSTANCE.getApConfigLog(mApConfigInfo.getIpPort());
+                                return apConfigLog;
+                            }
+                        }).subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(new Consumer<Response>() {
+                                    @Override
+                                    public void accept(Response s) throws Exception {
+                                        String string = s.body().string();
+                                        String errorMsg = "未知错误";
+                                        if (!TextUtils.isEmpty(string)) {
+                                            NetConfig netConfig = new Gson().fromJson(string, NetConfig.class);
+                                            if (netConfig.getNetConfig() != null) {
+                                                WJLogUitl.i(netConfig.getNetConfig().getResult());
+                                                if (!TextUtils.isEmpty(netConfig.getNetConfig().getResult())) {
+                                                    if (netConfig.getNetConfig().getResult().equals("passwd error")) {
+                                                        errorMsg = "密码错误";
+                                                    } else if (netConfig.getNetConfig().getResult().equals("no operation")) {
+                                                        errorMsg = "暂无错误信息";
+                                                    } else if (netConfig.getNetConfig().getResult().equals("unknown error")) {
+                                                        errorMsg = "未知错误";
+                                                    } else {
+                                                        errorMsg = netConfig.getNetConfig().getResult();
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        new XPopup.Builder(WJSettingWifiActivity.this).asConfirm("错误报告", errorMsg
+                                                , null,
+                                                "确定",
+                                                null,
+                                                null,
+                                                true,
+                                                0)
+                                                .show();
+                                    }
+                                });
+                    }
+
+                    @Override
+                    public void failed(@NonNull ConnectionErrorCode errorCode) {
+                        if (errorCode == ConnectionErrorCode.USER_CANCELLED) {
+
+                        } else {
+                            new XPopup.Builder(WJSettingWifiActivity.this).asConfirm(
+                                    "提示", "查找设备热点失败,请尝试重试设备并重新扫码配网"
+                                    , null,
+                                    "确定",
+                                    null,
+                                    null,
+                                    true,
+                                    0)
+                                    .show();
+                        }
+                    }
+                }).start();
+    }
 }

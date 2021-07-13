@@ -196,7 +196,7 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
                             mAssistPlay.stop();
                         }
                         mAssistPlay.setDataSource(dataSource);
-                        mAssistPlay.play();
+                        mAssistPlay.play(true);
                     }
                 });
     }

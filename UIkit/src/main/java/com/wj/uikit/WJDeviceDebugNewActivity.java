@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -44,6 +45,10 @@ import com.wj.uikit.pop.FocusSelectPop;
 import com.wj.uikit.pop.SelectPop;
 import com.wj.uikit.uitl.OnControlClickListener;
 import com.wj.uikit.view.TouchProgressView;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.concurrent.Callable;
 
@@ -104,12 +109,13 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
     private ImageView mIv_high;
     private FrameLayout mBitrate_type_fl;
     private TextView mBitrate_type_tv;
+    private FrameLayout mFrameLayout;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.wj_activity_device_debug_new);
-
+        EventBus.getDefault().register(this);
         getDeviceInfo();
         findView();
         initClick();
@@ -117,6 +123,13 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
         getData();
         initAudio();
         isLatestVersion();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void addDevice(DeviceInfo deviceInfo) {
+        initAction();
+        getData();
+        initAudio();
     }
 
     private void initAudio() {
@@ -193,38 +206,51 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
     private WJVideoPlayer mWjVideoPlayer;
 
     private void initAction() {
-        FrameLayout frameLayout = findViewById(R.id.fl_video);
-        mWjVideoPlayer = new WJVideoPlayer(this);
-        mWjVideoPlayer.init();
-        WJReconnectEvent mWjReconnectEvent = new WJReconnectEvent();
-        mWjReconnectEvent.setDeviceSerial(deviceSerial);
-        // mWjVideoPlayer.setData("");
-        mWjVideoPlayer.registerReconnect(mWjReconnectEvent);
-        mWjVideoPlayer.attachContainer(frameLayout);
-        mWjVideoPlayer.getWjControlCover().getWj_full_iv().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                WJRelationAssistUtil.getInstance().switchFull(WJDeviceDebugNewActivity.this, mWjVideoPlayer, frameLayout);
-            }
-        });
+
+        if (mWjVideoPlayer == null) {
+            mWjVideoPlayer = new WJVideoPlayer(this);
+            mWjVideoPlayer.init();
+            WJReconnectEvent mWjReconnectEvent = new WJReconnectEvent();
+            mWjReconnectEvent.setDeviceSerial(deviceSerial);
+            // mWjVideoPlayer.setData("");
+            mWjVideoPlayer.registerReconnect(mWjReconnectEvent);
+            mWjVideoPlayer.attachContainer(mFrameLayout);
+            mWjVideoPlayer.getWjControlCover().getWj_full_iv().setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    WJRelationAssistUtil.getInstance().switchFull(WJDeviceDebugNewActivity.this, mWjVideoPlayer, mFrameLayout);
+                }
+            });
+        }
+        TextView wj_device_update_tv = findViewById(R.id.wj_device_update_tv);
+
         //  mWjVideoPlayer.play();
         ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial, new JsonCallback<RtmpConfig>() {
+            @Override
+            public void onError(int code, String msg) {
+                super.onError(code, msg);
+                wj_device_update_tv.setText("(离线)");
+            }
+
             @Override
             public void onSuccess(RtmpConfig data) {
                 if (data != null && data.getRTMP() != null) {
                     String url = "";
                     if ("false".equals(data.getRTMP().getPrivatelyEnabled())) {
-                        url = data.getRTMP().getPlayURL1() ;
+                        url = data.getRTMP().getPlayURL1();
                     } else {
-                        url = data.getRTMP().getPlayURL2() ;
+                        url = data.getRTMP().getPlayURL2();
                     }
                /*     if (!TextUtils.isEmpty(url)) {
                         url = url.replace("https:", "webrtc:").replace(".flv", "");
                     }*/
                     if (mWjVideoPlayer != null) {
-                        mWjVideoPlayer.setData(url+"");
+                        mWjVideoPlayer.setData(url + "");
                         mWjVideoPlayer.play();
                     }
+                    wj_device_update_tv.setText("(在线)");
+                } else {
+                    wj_device_update_tv.setText("(离线)");
                 }
 
             }
@@ -489,6 +515,12 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                     @Override
                     public void onConfirm() {
                         ISAPI.getInstance().wirelessServer(mDeviceInfo.device_serial);
+                        Intent intent = new Intent(WJDeviceDebugNewActivity.this, WJSettingWifiActivity.class);
+                        Bundle bundle = new Bundle();
+                        bundle.putSerializable(WJDeviceConfig.DEVICE_INFO, mDeviceInfo);
+                        bundle.putInt(WJDeviceConfig.DEVICE_CODE, 120020);
+                        intent.putExtras(bundle);
+                        startActivity(intent);
                     }
                 }).show();
             }
@@ -497,7 +529,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
         findViewById(R.id.fl_reset).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new XPopup.Builder(WJDeviceDebugNewActivity.this).asConfirm("设备重置", "你确定要重置设备？", new OnConfirmListener() {
+                new XPopup.Builder(WJDeviceDebugNewActivity.this).asConfirm("设备重置", "重置完成，请重新扫码配网？", new OnConfirmListener() {
                     @Override
                     public void onConfirm() {
                         ISAPI.getInstance().factoryResetFull(deviceSerial);
@@ -679,6 +711,9 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
         mDevice_update_fl = findViewById(R.id.device_update_fl);
         mLl_high = findViewById(R.id.ll_high);
         mIv_high = findViewById(R.id.iv_high);
+
+        mFrameLayout = findViewById(R.id.fl_video);
+
     }
 
     /**
@@ -710,6 +745,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
             mWjVideoPlayer = null;
             WJRelationAssistUtil.getInstance().destroy();
         }
+        EventBus.getDefault().unregister(this);
     }
 
 }

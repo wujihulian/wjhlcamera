@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -147,7 +146,7 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
                     String videoResolutionWidth = video.getVideoResolutionWidth();
                     String videoResolutionHeight = video.getVideoResolutionHeight();
                     mRatio_tv.setText(String.format("%s*%s", videoResolutionWidth, videoResolutionHeight));
-                    WJLogUitl.i(  "onSuccess: " + mVideoConfig.getStreamingChannel().getVideo().getVbrUpperCap());
+                    WJLogUitl.i("onSuccess: " + mVideoConfig.getStreamingChannel().getVideo().getVbrUpperCap());
                     if (!TextUtils.isEmpty(mVideoConfig.getStreamingChannel().getVideo().getVbrUpperCap())) {
                         Integer value = Integer.valueOf(mVideoConfig.getStreamingChannel().getVideo().getVbrUpperCap());
                         int m = value / 1024;
@@ -419,7 +418,7 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
         findViewById(R.id.fl_reset).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new XPopup.Builder(WJDeviceDebugActivity.this).asConfirm("设备重置", "你确定要重置设备？", new OnConfirmListener() {
+                new XPopup.Builder(WJDeviceDebugActivity.this).asConfirm("设备重置", "重置完成，请重新扫码配网", new OnConfirmListener() {
                     @Override
                     public void onConfirm() {
                         ISAPI.getInstance().factoryResetFull(deviceSerial);
