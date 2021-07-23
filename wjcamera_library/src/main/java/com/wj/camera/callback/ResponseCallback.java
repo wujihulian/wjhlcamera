@@ -42,6 +42,7 @@ public abstract class ResponseCallback implements Callback {
     @SuppressLint("CheckResult")
     @Override
     public void onFailure(@NotNull Call call, @NotNull IOException e) {
+        WJLogUitl.i(e.getMessage()+"");
         Observable.just("1").subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<Object>() {

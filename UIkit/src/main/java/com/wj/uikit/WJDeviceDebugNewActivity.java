@@ -208,11 +208,12 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
     private void initAction() {
 
         if (mWjVideoPlayer == null) {
+
             mWjVideoPlayer = new WJVideoPlayer(this);
             mWjVideoPlayer.init();
             WJReconnectEvent mWjReconnectEvent = new WJReconnectEvent();
             mWjReconnectEvent.setDeviceSerial(deviceSerial);
-            // mWjVideoPlayer.setData("");
+            mWjVideoPlayer.setData("");
             mWjVideoPlayer.registerReconnect(mWjReconnectEvent);
             mWjVideoPlayer.attachContainer(mFrameLayout);
             mWjVideoPlayer.getWjControlCover().getWj_full_iv().setOnClickListener(new View.OnClickListener() {
@@ -230,6 +231,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
             public void onError(int code, String msg) {
                 super.onError(code, msg);
                 wj_device_update_tv.setText("(离线)");
+
             }
 
             @Override
@@ -547,10 +549,10 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
             @Override
             public BaseDeviceResponse<CheckDevcieUpdate> call() throws Exception {
                 BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(mDeviceInfo.device_serial);
-        /*        BaseDeviceResponse<DeviceUpdateStatus> deviceUpdateStatus = DeviceApi.getInstance().deviceUpdateStatus(mDeviceInfo.device_serial);
+                BaseDeviceResponse<DeviceUpdateStatus> deviceUpdateStatus = DeviceApi.getInstance().deviceUpdateStatus(mDeviceInfo.device_serial);
                 if (deviceResponse.getData() != null && deviceUpdateStatus != null) {
                     deviceResponse.getData().mDeviceResponse = deviceUpdateStatus.getData();
-                }*/
+                }
                 return deviceResponse;
             }
         }).subscribeOn(Schedulers.io())
@@ -561,7 +563,30 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                     public void accept(BaseDeviceResponse<CheckDevcieUpdate> response) throws Exception {
                         if (response.getCode() == 200 && response.getData() != null) {
                             CheckDevcieUpdate responseData = response.getData();
-                            if (responseData.getIsNeedUpgrade() == 1) {
+                            if (responseData.getIsUpgrading() == 1) {
+                                //设备正在升级
+                                //toUpdateProgress();
+                                return;
+                            }
+
+                            if (response.getData().mDeviceResponse != null) {
+                                int progress = response.getData().mDeviceResponse.getProgress();
+                                int status = response.getData().mDeviceResponse.getStatus();
+                                if (status == 0) {
+                                    //toUpdateProgress();
+                                    return;
+                                } else if (status == 2) {
+                                    if (progress == 100) {
+                                        //toUpdateProgress();
+                                        return;
+                                    }
+                                }
+                            }
+                            String latestVersion = response.getData().getLatestVersion();
+                            String currentVersion = response.getData().getCurrentVersion();
+
+
+                            if (responseData.getIsNeedUpgrade() == 1 && !(currentVersion.equals(latestVersion)) ) {
                                 // 有新版本
                                 new XPopup.Builder(WJDeviceDebugNewActivity.this).asConfirm("检测到新版本", responseData.getCurrentVersion() + " 是否升级到 " + responseData.getLatestVersion(), "否", "是", new OnConfirmListener() {
                                     @Override
@@ -629,8 +654,9 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                                 }
                             }
 
-
-                            if (responseData.getIsNeedUpgrade() == 1) {
+                            String latestVersion = response.getData().getLatestVersion();
+                            String currentVersion = response.getData().getCurrentVersion();
+                            if (responseData.getIsNeedUpgrade() == 1 && !(currentVersion.equals(latestVersion))) {
                                 // 有新版本
                                 new XPopup.Builder(WJDeviceDebugNewActivity.this).asConfirm("检测到新版本", responseData.getCurrentVersion() + " 是否升级到 " + responseData.getLatestVersion(), "否", "是", new OnConfirmListener() {
                                     @Override

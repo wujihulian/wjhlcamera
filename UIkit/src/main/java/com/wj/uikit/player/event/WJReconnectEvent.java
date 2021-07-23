@@ -3,7 +3,6 @@ package com.wj.uikit.player.event;
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.google.gson.Gson;
 import com.kk.taurus.playerbase.assist.AssistPlay;
@@ -112,11 +111,9 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
             public boolean test(@NonNull RtmpConfig rtmpConfig) throws Exception {
                 RtmpConfig.RTMPDTO rtmp = rtmpConfig.getRTMP();
                 if (rtmp == null) {
-                    return false;
+                    return true;
                 }
-            /*    if (TextUtils.isEmpty(rtmp.getPrivatelyEnabled())) {
-                    return false;
-                }*/
+
                 //设备未开启  开启预览功能
                 if ("false".equals(rtmp.getEnabled())) {
                     rtmpConfig.getRTMP().setEnabled("true");
@@ -147,6 +144,10 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
                 if (TextUtils.isEmpty(getHost())) {
                     return rtmpConfig;
                 }
+                if (rtmpConfig.getRTMP() == null) {
+                    return rtmpConfig;
+                }
+
                 //确定预览地址
                 RtmpConfig.RTMPDTO rtmp = rtmpConfig.getRTMP();
                 String playURL2 = rtmp.getPlayURL2();
@@ -177,6 +178,11 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
                 .subscribe(new Consumer<RtmpConfig>() {
                     @Override
                     public void accept(RtmpConfig rtmpConfig) throws Exception {
+                        if (rtmpConfig.getRTMP() == null) {
+                            mAssistPlay.play(true);
+                            return;
+                        }
+
                         String privatelyEnabled = rtmpConfig.getRTMP().getPrivatelyEnabled();
                         String url;
                         if ("true".equals(privatelyEnabled)) {
@@ -202,6 +208,7 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
     }
 
     private static final String TAG = "WJReconnectEvent";
+
     //触发流检测
     private void triggerLiveCheck() {
         GetRequest getRequest = OkHttpUtils.getInstance().get("/api/course/cameraDevicePreviewState?deviceCode=" + getDeviceSerial());

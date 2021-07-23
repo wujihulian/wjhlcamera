@@ -28,7 +28,7 @@ public class WJLoadingCover extends BaseCover {
     protected void onCoverAttachedToWindow() {
         super.onCoverAttachedToWindow();
         PlayerStateGetter playerStateGetter = getPlayerStateGetter();
-        if(playerStateGetter!=null && isInPlaybackState(playerStateGetter)){
+        if (playerStateGetter != null && isInPlaybackState(playerStateGetter)) {
             setLoadingState(playerStateGetter.isBuffering());
         }
     }
@@ -42,23 +42,25 @@ public class WJLoadingCover extends BaseCover {
     protected View onCreateCoverView(Context context) {
         return View.inflate(context, R.layout.wj_layout_loading_cover, null);
     }
-    private boolean isInPlaybackState(PlayerStateGetter playerStateGetter){
+
+    private boolean isInPlaybackState(PlayerStateGetter playerStateGetter) {
         int state = playerStateGetter.getState();
-        return state!= IPlayer.STATE_END
-                && state!= IPlayer.STATE_ERROR
-                && state!= IPlayer.STATE_IDLE
-                && state!= IPlayer.STATE_INITIALIZED
-                && state!= IPlayer.STATE_STOPPED;
+        return state != IPlayer.STATE_END
+                && state != IPlayer.STATE_ERROR
+                && state != IPlayer.STATE_IDLE
+                && state != IPlayer.STATE_INITIALIZED
+                && state != IPlayer.STATE_STOPPED;
     }
 
 
     @Override
     public void onPlayerEvent(int eventCode, Bundle bundle) {
-        switch (eventCode){
+        switch (eventCode) {
             case OnPlayerEventListener.PLAYER_EVENT_ON_BUFFERING_START:
             case OnPlayerEventListener.PLAYER_EVENT_ON_DATA_SOURCE_SET:
             case OnPlayerEventListener.PLAYER_EVENT_ON_PROVIDER_DATA_START:
             case OnPlayerEventListener.PLAYER_EVENT_ON_SEEK_TO:
+            case OnPlayerEventListener.PLAYER_EVENT_ON_SURFACE_UPDATE:
                 setLoadingState(true);
                 break;
 
@@ -71,13 +73,14 @@ public class WJLoadingCover extends BaseCover {
                 break;
         }
     }
-    private void setLoadingState(boolean show){
-        setCoverVisibility(show?View.VISIBLE:View.GONE);
+
+    private void setLoadingState(boolean show) {
+        setCoverVisibility(show ? View.VISIBLE : View.GONE);
     }
 
     @Override
     public void onErrorEvent(int eventCode, Bundle bundle) {
-            setLoadingState(false);
+        setLoadingState(false);
     }
 
     @Override
