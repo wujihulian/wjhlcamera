@@ -82,16 +82,29 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
 
     }
 
+    private int updateCount = 0;
+
     @Override
     public void onPlayerEvent(int eventCode, Bundle bundle) {
         if (PLAYER_EVENT_ON_VIDEO_RENDER_START == eventCode) {
             liveReconnectCount = 0;
+            //mAssistPlay.play(true);
+        }
+
+        if (PLAYER_EVENT_ON_TIMER_UPDATE == eventCode) {
+            if (mAssistPlay.getCurrentPosition() == 0) {
+                updateCount++;
+                if (updateCount >= 10) {
+                    updateCount = 0;
+                    mAssistPlay.play(true);
+                }
+            } else {
+                updateCount = 0;
+            }
         }
         if (eventCode == OnPlayerEventListener.PLAYER_EVENT_ON_PLAY_COMPLETE) {
             //播放完成尝试重连业务 有可能地址被更换 有可能没人推流
-            WJLogUitl.i("onPlayerEvent" + eventCode);
             reconnection();
-
         }
     }
 

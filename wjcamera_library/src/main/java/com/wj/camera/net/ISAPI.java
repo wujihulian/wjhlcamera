@@ -1,5 +1,7 @@
 package com.wj.camera.net;
 
+import android.util.Log;
+
 import androidx.annotation.IntRange;
 
 import com.google.gson.Gson;
@@ -19,6 +21,7 @@ import com.wj.camera.response.VideoConfig;
 import com.wj.camera.response.WirelessServer;
 import com.wj.camera.response.ZOOMCTRL;
 import com.wj.camera.response.ZoomResponse;
+import com.wj.camera.uitl.WJLogUitl;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -370,10 +373,11 @@ public class ISAPI {
         OkHttpUtils.getInstance().get(ApiNew.networkInterface).addHeader("EZO-DeviceSerial", deviceSerial)
                 .enqueue(new XmlCallback(jsonCallback));
     }
-
+    public void onepushFoucsStart(String deviceSerial){
+        OkHttpUtils.getInstance().put(ApiNew.onepushfoucsStart).addHeader("EZO-DeviceSerial", deviceSerial).jsons(XML.PTZDATA_0).enqueue(null);
+    }
     //获取配网错误日志
     public void getApConfigLog(String deviceSerial, JsonCallback jsonCallback) {
-
 
     }
 

@@ -2,6 +2,7 @@ package com.wj.uikit.player;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 
@@ -28,6 +29,7 @@ import com.kk.taurus.playerbase.render.IRender;
 import com.kk.taurus.playerbase.render.RenderSurfaceView;
 import com.kk.taurus.playerbase.render.RenderTextureView;
 import com.kk.taurus.playerbase.widget.SuperContainer;
+import com.wj.camera.uitl.WJLogUitl;
 
 /**
  * FileName: WJRelationAssist
@@ -167,6 +169,8 @@ public class WJRelationAssist implements AssistPlay {
                     mVideoHeight = bundle.getInt(EventKey.INT_ARG2);
                     mVideoSarNum = bundle.getInt(EventKey.INT_ARG3);
                     mVideoSarDen = bundle.getInt(EventKey.INT_ARG4);
+
+
                     if(mRender!=null){
                         mRender.updateVideoSize(mVideoWidth, mVideoHeight);
                         mRender.setVideoSampleAspectRatio(mVideoSarNum, mVideoSarDen);
@@ -222,6 +226,8 @@ public class WJRelationAssist implements AssistPlay {
             new OnReceiverEventListener() {
                 @Override
                 public void onReceiverEvent(int eventCode, Bundle bundle) {
+                    WJLogUitl.i("OnReceiverEventListener  eventCode  = "+eventCode);
+
                     if(eventCode == InterEvent.CODE_REQUEST_NOTIFY_TIMER){
                         mPlayer.setUseTimerProxy(true);
                     }else if(eventCode == InterEvent.CODE_REQUEST_STOP_TIMER){

@@ -11,6 +11,7 @@ import com.kk.taurus.playerbase.event.OnErrorEventListener;
 import com.kk.taurus.playerbase.event.OnPlayerEventListener;
 import com.kk.taurus.playerbase.receiver.ReceiverGroup;
 import com.kk.taurus.playerbase.render.AspectRatio;
+import com.kk.taurus.playerbase.render.IRender;
 import com.wj.camera.uitl.WJLogUitl;
 import com.wj.uikit.player.cover.WJControlCover;
 import com.wj.uikit.player.cover.WJLoadingCover;

@@ -43,6 +43,8 @@ public interface ApiNew {
 
     //获取网络信息
     String networkInterface = "/api/hikvision/ISAPI/System/Network/interfaces?security=1&iv=a03feccd76998360da76076f16a87a81";
+    //一键聚焦
+    String onepushfoucsStart= "/api/hikvision/ISAPI/PTZCtrl/channels/1/onepushfoucs/start";
 
     //设备信息
     String DeviceInfo = "/api/lapp/device/info";

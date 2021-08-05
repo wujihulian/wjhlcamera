@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -216,6 +215,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
             mWjVideoPlayer.setData("");
             mWjVideoPlayer.registerReconnect(mWjReconnectEvent);
             mWjVideoPlayer.attachContainer(mFrameLayout);
+
             mWjVideoPlayer.getWjControlCover().getWj_full_iv().setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -540,6 +540,15 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
             }
         });
 
+
+        findViewById(R.id.tv_auto_focus).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //一键聚焦
+                ISAPI.getInstance().onepushFoucsStart(mDeviceInfo.device_serial);
+            }
+        });
+
     }
 
     //检查是不是最新版
@@ -586,7 +595,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                             String currentVersion = response.getData().getCurrentVersion();
 
 
-                            if (responseData.getIsNeedUpgrade() == 1 && !(currentVersion.equals(latestVersion)) ) {
+                            if (responseData.getIsNeedUpgrade() == 1 && !(currentVersion.equals(latestVersion))) {
                                 // 有新版本
                                 new XPopup.Builder(WJDeviceDebugNewActivity.this).asConfirm("检测到新版本", responseData.getCurrentVersion() + " 是否升级到 " + responseData.getLatestVersion(), "否", "是", new OnConfirmListener() {
                                     @Override
