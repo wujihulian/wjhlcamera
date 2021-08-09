@@ -40,6 +40,7 @@ import com.wj.uikit.db.DeviceInfo;
 import com.wj.uikit.player.WJRelationAssistUtil;
 import com.wj.uikit.player.WJVideoPlayer;
 import com.wj.uikit.player.event.WJReconnectEvent;
+import com.wj.uikit.player.interfac.OnVolumeChangeListener;
 import com.wj.uikit.pop.FocusSelectPop;
 import com.wj.uikit.pop.SelectPop;
 import com.wj.uikit.uitl.OnControlClickListener;
@@ -212,6 +213,9 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
             mWjVideoPlayer.init();
             WJReconnectEvent mWjReconnectEvent = new WJReconnectEvent();
             mWjReconnectEvent.setDeviceSerial(deviceSerial);
+
+            mWjVideoPlayer.getGestureCover().setDeviceSerial(deviceSerial);
+            mWjVideoPlayer.getGestureCover().setGesture(true);
             mWjVideoPlayer.setData("");
             mWjVideoPlayer.registerReconnect(mWjReconnectEvent);
             mWjVideoPlayer.attachContainer(mFrameLayout);
@@ -220,6 +224,12 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                 @Override
                 public void onClick(View v) {
                     WJRelationAssistUtil.getInstance().switchFull(WJDeviceDebugNewActivity.this, mWjVideoPlayer, mFrameLayout);
+                }
+            });
+            mWjVideoPlayer.getGestureCover().setOnVolumeChangeListener(new OnVolumeChangeListener() {
+                @Override
+                public void volumeChange(int volume) {
+                    mTp_volume.setProgress(volume);
                 }
             });
         }

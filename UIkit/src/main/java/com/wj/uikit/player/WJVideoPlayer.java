@@ -14,6 +14,7 @@ import com.kk.taurus.playerbase.render.AspectRatio;
 import com.kk.taurus.playerbase.render.IRender;
 import com.wj.camera.uitl.WJLogUitl;
 import com.wj.uikit.player.cover.WJControlCover;
+import com.wj.uikit.player.cover.WJGestureCover;
 import com.wj.uikit.player.cover.WJLoadingCover;
 import com.wj.uikit.player.event.WJReconnectEvent;
 import com.wj.uikit.player.handler.WJOnAssistPlayEventHandler;
@@ -42,6 +43,7 @@ public class WJVideoPlayer extends WJBasePlayer {
         ReceiverGroup receiverGroup = new ReceiverGroup();
         receiverGroup.addReceiver("WJLoadingCover", new WJLoadingCover(getContext()));
         receiverGroup.addReceiver("WJControlCover", new WJControlCover(getContext()));
+        receiverGroup.addReceiver("WJGestureCover", new WJGestureCover(getContext()));
         mAssist.setVolume(0, 0);
         mAssist.setAspectRatio(AspectRatio.AspectRatio_MATCH_PARENT);
         mAssist.setReceiverGroup(receiverGroup);
@@ -81,6 +83,11 @@ public class WJVideoPlayer extends WJBasePlayer {
 
     public WJControlCover getWjControlCover() {
         return mAssist.getReceiverGroup().getReceiver("WJControlCover");
+    }
+    private WJGestureCover mGestureCover;
+
+    public WJGestureCover getGestureCover() {
+        return mAssist.getReceiverGroup().getReceiver("WJGestureCover");
     }
 
     @Override

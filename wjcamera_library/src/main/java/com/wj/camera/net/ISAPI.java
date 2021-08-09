@@ -121,6 +121,10 @@ public class ISAPI {
     public void getAudio(JsonCallback<TwoWayAudio> callback) {
         OkHttpUtils.getInstance().get(ApiNew.Audio).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
     }
+    public void getAudio(String deviceSerial,JsonCallback<TwoWayAudio> callback) {
+        OkHttpUtils.getInstance().get(ApiNew.Audio).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
+    }
+
 
     public void setAuido(TwoWayAudio twoWayAudio, JsonCallback<ResponseStatus> callback) {
         OkHttpUtils.getInstance().put(ApiNew.Audio).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(twoWayAudio)).enqueue(new XmlCallback(callback));
