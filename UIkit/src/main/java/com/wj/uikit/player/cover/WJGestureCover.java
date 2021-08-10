@@ -1,8 +1,10 @@
 package com.wj.uikit.player.cover;
 
 import android.content.Context;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -16,6 +18,7 @@ import com.wj.camera.net.ISAPI;
 import com.wj.camera.response.TwoWayAudio;
 import com.wj.uikit.R;
 import com.wj.uikit.player.interfac.OnVolumeChangeListener;
+import com.wj.uikit.view.VolumeProgressView;
 
 /**
  * FileName: WJGestureCover
@@ -35,13 +38,14 @@ public class WJGestureCover extends BaseCover implements OnTouchGestureListener 
     private boolean mHorizontalSlide;
     private boolean firstTouch;
     private boolean horizontalSlide;
-    private int mMaxVolume = 100;
+    private int mMaxVolume;
     public String mDeviceSerial;
     private int volume = 0;
     private boolean isGesture = false;
     private OnVolumeChangeListener  mOnVolumeChangeListener;
+    private VolumeProgressView mVp;
 
-
+    private AudioManager audioManager;
     public void setOnVolumeChangeListener(OnVolumeChangeListener onVolumeChangeListener) {
         mOnVolumeChangeListener = onVolumeChangeListener;
     }
@@ -77,6 +81,14 @@ public class WJGestureCover extends BaseCover implements OnTouchGestureListener 
     }
 
 
+    private void initAudioManager(Context context) {
+        audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        if (audioManager != null) {
+            mMaxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+            Log.i(TAG, "initAudioManager: "+mMaxVolume);
+        }
+    }
+
     public WJGestureCover(Context context) {
         super(context);
     }
@@ -102,9 +114,11 @@ public class WJGestureCover extends BaseCover implements OnTouchGestureListener 
     @Override
     public void onReceiverBind() {
         super.onReceiverBind();
+        initAudioManager(getContext());
         mVolumeBox = findViewById(R.id.wj_cover_player_gesture_operation_volume_box);
         mVolumeIcon = findViewById(R.id.wj_cover_player_gesture_operation_volume_icon);
         mVolumeText = findViewById(R.id.wj_cover_player_gesture_operation_volume_text);
+        mVp = findViewById(R.id.vp);
     }
 
     @Override
@@ -143,6 +157,7 @@ public class WJGestureCover extends BaseCover implements OnTouchGestureListener 
     public void onDown(MotionEvent event) {
         mHorizontalSlide = false;
         firstTouch = true;
+        volume = getVolume();
     }
 
     @Override
@@ -163,9 +178,8 @@ public class WJGestureCover extends BaseCover implements OnTouchGestureListener 
         } else {
             if (Math.abs(deltaY) > mHeight)
                 return;
-            onVerticalSlide(deltaY / (mHeight * 5));
+            onVerticalSlide(deltaY / 300);
         }
-        int action = e1.getAction();
     }
 
 
@@ -177,15 +191,15 @@ public class WJGestureCover extends BaseCover implements OnTouchGestureListener 
         else if (index < 0)
             index = 0;
         // 变更进度条
-        volume = index;
-        String s = volume + "%";
-        if (volume == 0) {
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, index, 0);
+        int i = (int) (index * 1.0 / mMaxVolume * 100);
+        String s = i + "%";
+        if (i == 0) {
             s = "OFF";
         }
-        // 显示
-        setVolumeIcon(volume == 0 ? R.mipmap.wj_ic_volume_off_white : R.mipmap.wj_ic_volume_up_white);
         setVolumeBoxState(true);
         setVolumeText(s);
+        mVp.setProgress(i);
 
     }
 
@@ -208,7 +222,8 @@ public class WJGestureCover extends BaseCover implements OnTouchGestureListener 
     }
 
 
-    private int getVolume() {
+    private int getVolume(){
+        volume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
         if (volume < 0)
             volume = 0;
         return volume;
@@ -224,7 +239,6 @@ public class WJGestureCover extends BaseCover implements OnTouchGestureListener 
             return;
         }
         setVolumeBoxState(false);
-        ISAPI.getInstance().setVolume(getDeviceSerial(), volume);
         if (getOnVolumeChangeListener()!=null){
             getOnVolumeChangeListener().volumeChange(volume);
         }

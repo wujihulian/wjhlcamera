@@ -437,11 +437,12 @@
                     android:layout_marginTop="40dp">
 
                     <ImageView
+                        android:id="@+id/iv_volume"
                         android:layout_width="17dp"
                         android:layout_height="19dp"
                         android:layout_gravity="center_vertical"
                         android:layout_marginLeft="15dp"
-                        android:src="@mipmap/wj_volume" />
+                        android:src="@mipmap/wj_volume_on" />
 
                     <com.wj.uikit.view.TouchProgressView
                         android:id="@+id/tp_volume"

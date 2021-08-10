@@ -70,6 +70,18 @@ public class WJControlCover extends BaseCover {
         });
     }
 
+
+    public void setAudio(boolean audio) {
+        this.audio = audio;
+        if (audio) {
+            notifyReceiverEvent(WJInterEvent.CODE_SET_VOLUME_0, null);
+            mWj_mic_iv.setImageResource(R.mipmap.wj_device_mic_close);
+        } else {
+            notifyReceiverEvent(WJInterEvent.CODE_SET_VOLUME_1, null);
+            mWj_mic_iv.setImageResource(R.mipmap.wj_device_mic_open);
+        }
+    }
+
     @Override
     protected View onCreateCoverView(Context context) {
         return View.inflate(context, R.layout.wj_layout_control_cover, null);

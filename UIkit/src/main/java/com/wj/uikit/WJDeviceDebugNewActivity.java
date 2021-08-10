@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -110,6 +111,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
     private FrameLayout mBitrate_type_fl;
     private TextView mBitrate_type_tv;
     private FrameLayout mFrameLayout;
+    private ImageView mIv_volume;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -140,10 +142,21 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                 if (mTwoWayAudio != null && mTwoWayAudio.getTwoWayAudioChannel() != null) {
                     mTv_volume.setText(mTwoWayAudio.getTwoWayAudioChannel().getSpeakerVolume() + "");
                     mTp_volume.setProgress(Integer.valueOf(mTwoWayAudio.getTwoWayAudioChannel().getSpeakerVolume()));
+
+                    volumeChange();
+
                 }
             }
         });
 
+    }
+
+    private void  volumeChange(){
+        if (mTp_volume.getProgress()==0){
+            mIv_volume.setImageResource(R.mipmap.wj_volume_off);
+        }else {
+            mIv_volume.setImageResource(R.mipmap.wj_volume_on);
+        }
     }
 
 
@@ -229,7 +242,18 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
             mWjVideoPlayer.getGestureCover().setOnVolumeChangeListener(new OnVolumeChangeListener() {
                 @Override
                 public void volumeChange(int volume) {
-                    mTp_volume.setProgress(volume);
+                    //mTp_volume.setProgress(volume);
+       /*             float v=volume/100f;
+
+                    Log.i(TAG, "volumeChange: "+v);
+                    mWjVideoPlayer.setVolume(v,v);
+                    if (volume>0){
+                        mWjVideoPlayer.getWjControlCover().setAudio(false);
+                    }else {
+                        mWjVideoPlayer.getWjControlCover().setAudio(true);
+                    }*/
+
+
                 }
             });
         }
@@ -409,6 +433,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
             @Override
             public void onProgressChanged(View view, int progress) {
                 mTv_volume.setText(progress + "");
+                volumeChange();
             }
 
             @Override
@@ -423,7 +448,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                                 mIsapi.setAuido(mTwoWayAudio, new JsonCallback<ResponseStatus>() {
                                     @Override
                                     public void onSuccess(ResponseStatus data) {
-
+                                        volumeChange();
                                     }
                                 });
                             }
@@ -556,6 +581,20 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
             public void onClick(View v) {
                 //一键聚焦
                 ISAPI.getInstance().onepushFoucsStart(mDeviceInfo.device_serial);
+            }
+        });
+
+
+        mIv_volume.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mTp_volume.getProgress()==0) {
+                    ISAPI.getInstance().setVolume(mDeviceInfo.device_serial,0);
+                    mTp_volume.setProgress(50);
+                }else {
+                    ISAPI.getInstance().setVolume(mDeviceInfo.device_serial,50);
+                    mTp_volume.setProgress(0);
+                }
             }
         });
 
@@ -752,6 +791,8 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
 
         mTp_volume = findViewById(R.id.tp_volume);
         mTv_volume = findViewById(R.id.tv_volume);
+        mIv_volume = findViewById(R.id.iv_volume);
+
 
         mDevice_update_fl = findViewById(R.id.device_update_fl);
         mLl_high = findViewById(R.id.ll_high);

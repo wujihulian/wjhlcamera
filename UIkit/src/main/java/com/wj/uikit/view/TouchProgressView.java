@@ -74,6 +74,10 @@ public class TouchProgressView extends View {
 
     }
 
+    public int getProgress() {
+        return progress;
+    }
+
     /**
      * 设置进度变化监听器
      *
