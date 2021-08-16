@@ -28,7 +28,6 @@ import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.net.DeviceApi;
 import com.wj.camera.net.ISAPI;
 import com.wj.camera.net.RxConsumer;
-import com.wj.camera.net.SafeGuardInterceptor;
 import com.wj.camera.response.BaseDeviceResponse;
 import com.wj.camera.response.NetworkInterface;
 import com.wj.camera.response.RtmpConfig;
@@ -42,15 +41,12 @@ import org.greenrobot.eventbus.EventBus;
 
 import java.io.UnsupportedEncodingException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
-import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
 
 /**
  * FileName: WJCaptureActivity
@@ -116,7 +112,7 @@ public class WJCaptureActivity extends AppCompatActivity {
 
     @SuppressLint("CheckResult")
     public void checkDevice(String content) {
-        WJLogUitl.i(  "checkDevice: " + content);
+        WJLogUitl.i("checkDevice: " + content);
         DeviceInfo deviceInfo = parse(content);
         if (deviceInfo != null) {
             mLoadingPopupView = new XPopup.Builder(this).asLoading();
@@ -143,11 +139,11 @@ public class WJCaptureActivity extends AppCompatActivity {
                         @Override
                         public void accept(EZProbeDeviceInfoResult result) throws Exception {
                             if (result.getBaseException() == null) {
-                                WJLogUitl.i(  "add device");
+                                WJLogUitl.i("add device");
                                 DeviceApi.getInstance().addDevie(deviceInfo.device_serial, deviceInfo.device_code, new JsonCallback<BaseDeviceResponse>() {
                                     @Override
                                     public void onSuccess(BaseDeviceResponse data) {
-                                        WJLogUitl.i(  "onSuccess: add device");
+                                        WJLogUitl.i("onSuccess: add device");
                                         mLoadingPopupView.dismiss();
                                         post(deviceInfo);
                                         //EventBus.getDefault().post(deviceInfo);
@@ -159,14 +155,14 @@ public class WJCaptureActivity extends AppCompatActivity {
                                     public void onError(int code, String msg) {
                                         super.onError(code, msg);
                                         mLoadingPopupView.dismiss();
-                                        WJLogUitl.i(  "onError: "+msg + "-" + code);
+                                        WJLogUitl.i("onError: " + msg + "-" + code);
                                         Toast.makeText(WJCaptureActivity.this, msg + "-" + code, Toast.LENGTH_LONG).show();
                                     }
                                 });
                             } else {
                                 mLoadingPopupView.dismiss();
                                 //Toast.makeText(WJCaptureActivity.this, result.getBaseException().getErrorCode()+"", Toast.LENGTH_LONG).show();
-                                WJLogUitl.i(  "accept: "+ result.getBaseException().getErrorCode());
+                                WJLogUitl.i("accept: " + result.getBaseException().getErrorCode());
                                 switch (result.getBaseException().getErrorCode()) {
                                     case 120023:
                                         // TODO: 2018/6/25  设备不在线，未被用户添加 （这里需要网络配置）
@@ -215,7 +211,7 @@ public class WJCaptureActivity extends AppCompatActivity {
 
                                         break;
                                     default:
-                                        WJLogUitl.i(  "accept: " + result.getBaseException().getErrorCode());
+                                        WJLogUitl.i("accept: " + result.getBaseException().getErrorCode());
                              /*           Toast.makeText(WJCaptureActivity.this, "Request failed = "
                                                 + result.getBaseException().getErrorCode() + " msg=" + result.getBaseException().getErrorInfo().description, Toast
                                                 .LENGTH_LONG).show();*/
@@ -259,20 +255,20 @@ public class WJCaptureActivity extends AppCompatActivity {
                     @Override
                     public void dispose() {
                         super.dispose();
-                        WJLogUitl.i(  "dispose: ");
+                        WJLogUitl.i("dispose: ");
                         //capture.onResume();
                     }
 
                     @Override
                     public void onError(@io.reactivex.annotations.NonNull Throwable e) {
                         super.onError(e);
-                        WJLogUitl.i(  "onError: "+e.getMessage());
+                        WJLogUitl.i("onError: " + e.getMessage());
                     }
 
                     @Override
                     public void onNext(@io.reactivex.annotations.NonNull Boolean o) {
                         super.onNext(o);
-                        WJLogUitl.i(  "onNext: ");
+                        WJLogUitl.i("onNext: ");
 
                         if (o == true) {
                             post(deviceInfo);
@@ -294,13 +290,13 @@ public class WJCaptureActivity extends AppCompatActivity {
 
 
     protected DeviceInfo parse(String content) {
-        WJLogUitl.i(  "parse: " + content);
+        WJLogUitl.i("parse: " + content);
         byte[] byteArray = content.getBytes();
         StringBuffer stringBuffer = new StringBuffer();
         for (int i = 0; i < byteArray.length; i++) {
             try {
                 String res = new String(new byte[]{byteArray[i]}, "UTF-8");
-                WJLogUitl.i(  "parse: " + res);
+                WJLogUitl.i("parse: " + res);
                 if (byteArray[i] == 13) {
                     stringBuffer.append("&");
                 } else {
@@ -311,7 +307,7 @@ public class WJCaptureActivity extends AppCompatActivity {
             }
         }
         String[] split = stringBuffer.toString().split("&");
-        WJLogUitl.i(  "parse: " + new Gson().toJson(split));
+        WJLogUitl.i("parse: " + new Gson().toJson(split));
         if (split != null && split.length >= 4) {
             DeviceInfo deviceInfo = new DeviceInfo();
             deviceInfo.device_factory = split[0];
@@ -320,7 +316,7 @@ public class WJCaptureActivity extends AppCompatActivity {
             deviceInfo.device_type = split[3];
             String[] arr2 = deviceInfo.device_type.split(" ");
             deviceInfo.device_type = arr2[0];
-            WJLogUitl.i(  "parse: " + new Gson().toJson(deviceInfo));
+            WJLogUitl.i("parse: " + new Gson().toJson(deviceInfo));
             return deviceInfo;
         }
         Toast.makeText(WJCaptureActivity.this, "parse: 解析失败", Toast.LENGTH_LONG).show();
@@ -334,7 +330,8 @@ public class WJCaptureActivity extends AppCompatActivity {
         decoratedBarcodeView.setStatusText("");
         return decoratedBarcodeView;
     }
-    public void post(DeviceInfo deviceInfo){
+
+    public void post(DeviceInfo deviceInfo) {
         ISAPI.getInstance().getNetworkInterface(deviceInfo.device_serial, new JsonCallback<NetworkInterface>() {
             @Override
             public void onError(int code, String msg) {
@@ -351,6 +348,15 @@ public class WJCaptureActivity extends AppCompatActivity {
                         List<NetworkInterface.NetworkInterfaceListDTO.NetworkInterfaceDTO> networkInterface = networkInterfaceList.getNetworkInterface();
                         if (networkInterface != null && networkInterface.size() >= 2) {
                             deviceInfo.setIpAaddress(networkInterface.get(1).getIPAddress().getIpAddress());
+                            String wifi = networkInterface.get(1).getIPAddress().getIpAddress();
+                            String wired = networkInterface.get(0).getIPAddress().getIpAddress();
+                            if ("192.168.8.1".equals(wifi)){
+                                deviceInfo.setIpAaddress(wired);
+                                deviceInfo.setNetworkMode("1");
+                            }else {
+                                deviceInfo.setIpAaddress(wifi);
+                                deviceInfo.setNetworkMode("2");
+                            }
                         }
                     }
                 }
