@@ -78,11 +78,13 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
 
     @Override
     public void onErrorEvent(int eventCode, Bundle bundle) {
+        WJLogUitl.d("onErrorEvent" + eventCode);
         reconnection();
 
     }
 
     private int updateCount = 0;
+    private int currentPosition = 0;
 
     @Override
     public void onPlayerEvent(int eventCode, Bundle bundle) {
@@ -92,13 +94,15 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
         }
 
         if (PLAYER_EVENT_ON_TIMER_UPDATE == eventCode) {
-            if (mAssistPlay.getCurrentPosition() == 0) {
+            WJLogUitl.d("getCurrentPosition" + currentPosition);
+            if (currentPosition == mAssistPlay.getCurrentPosition()) {
                 updateCount++;
-                if (updateCount >= 10) {
+                if (updateCount >= 4) {
                     updateCount = 0;
                     mAssistPlay.play(true);
                 }
             } else {
+                currentPosition = mAssistPlay.getCurrentPosition();
                 updateCount = 0;
             }
         }
@@ -110,6 +114,7 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
 
     @SuppressLint("CheckResult")
     private void reconnection() {
+        WJLogUitl.d("reconnection");
         Observable.timer(2, TimeUnit.SECONDS).map(new Function<Long, RtmpConfig>() {
             @Override
             public RtmpConfig apply(@NonNull Long aLong) throws Exception {

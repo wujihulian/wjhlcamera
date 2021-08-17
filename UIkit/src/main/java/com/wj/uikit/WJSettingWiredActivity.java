@@ -48,6 +48,8 @@ import com.wj.camera.view.WJDeviceConfig;
 import com.wj.uikit.adapter.OnItemClickListener;
 import com.wj.uikit.db.DeviceInfo;
 import com.wj.uikit.pop.SelectPop;
+import com.wj.uikit.uitl.OnContinuousClick;
+import com.wj.uikit.uitl.OnControlClickListener;
 import com.wj.uikit.uitl.WJActivityControl;
 
 import org.greenrobot.eventbus.EventBus;
@@ -150,16 +152,14 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
             }
         });
 
-
-        findViewById(R.id.tv_wired).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.tv_wired).setOnClickListener(new OnControlClickListener(3000) {
             @Override
-            public void onClick(View v) {
+            public void onViewClick(View view) {
                 if (registerPermission() == true) {
                     checkConfig();
                 }
             }
         });
-
         mFl_ip.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

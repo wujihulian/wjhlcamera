@@ -628,6 +628,8 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                         List<NetworkInterface.NetworkInterfaceListDTO.NetworkInterfaceDTO> networkInterface = networkInterfaceList.getNetworkInterface();
                         if (networkInterface != null && networkInterface.size() >= 2) {
                             deviceInfo.setIpAaddress(networkInterface.get(1).getIPAddress().getIpAddress());
+
+
                         }
                     }
                 }
