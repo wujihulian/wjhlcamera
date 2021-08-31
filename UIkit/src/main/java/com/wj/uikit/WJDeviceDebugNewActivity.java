@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -17,6 +16,7 @@ import androidx.annotation.Nullable;
 
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.interfaces.OnConfirmListener;
+import com.tencent.live2.impl.V2TXLivePlayerImpl;
 import com.videogo.openapi.EZPlayer;
 import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.config.WJDeviceSceneEnum;
@@ -41,9 +41,12 @@ import com.wj.uikit.db.DeviceInfo;
 import com.wj.uikit.player.WJRelationAssistUtil;
 import com.wj.uikit.player.WJVideoPlayer;
 import com.wj.uikit.player.event.WJReconnectEvent;
+import com.wj.uikit.player.event.WJReconnectEventConfig;
 import com.wj.uikit.player.interfac.OnVolumeChangeListener;
 import com.wj.uikit.pop.FocusSelectPop;
 import com.wj.uikit.pop.SelectPop;
+import com.wj.uikit.tx.TXVideoPlayer;
+import com.wj.uikit.tx.cover.TXControlCover;
 import com.wj.uikit.uitl.OnControlClickListener;
 import com.wj.uikit.view.TouchProgressView;
 
@@ -112,6 +115,8 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
     private TextView mBitrate_type_tv;
     private FrameLayout mFrameLayout;
     private ImageView mIv_volume;
+    private V2TXLivePlayerImpl mLivePlayer;
+    private TXVideoPlayer mTxVideoPlayer;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -121,15 +126,57 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
         getDeviceInfo();
         findView();
         initClick();
-        initAction();
+        initVideoPlay();
         getData();
         initAudio();
         isLatestVersion();
     }
 
+    private void initVideoPlay() {
+        if (WJReconnectEventConfig.isWebRtc) {
+            initWebrtc();
+        } else {
+            initAction();
+        }
+    }
+
+    private void initWebrtc() {
+        FrameLayout frameLayout = findViewById(R.id.fl);
+        frameLayout.setVisibility(View.VISIBLE);
+        mTxVideoPlayer = new TXVideoPlayer(this);
+        mTxVideoPlayer.getReconnectCover().setDeviceSerial(mDeviceInfo.device_serial);
+        mTxVideoPlayer.attachContainer(frameLayout);
+        ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial, new JsonCallback<RtmpConfig>() {
+            @Override
+            public void onSuccess(RtmpConfig data) {
+                if (data != null) {
+                    RtmpConfig.RTMPDTO rtmp = data.getRTMP();
+                    if (rtmp != null) {
+                        String url;
+                        if ("true".equals(rtmp.getPrivatelyEnabled())) {
+                            url = rtmp.getPlayURL2();
+                        } else {
+                            url = rtmp.getPlayURL1();
+                        }
+                        url = WJReconnectEventConfig.transformUrl(url);
+                        WJLogUitl.d(url);
+                        mTxVideoPlayer.startPlay(url);
+                    }
+                }
+            }
+        });
+        TXControlCover txControlCover = (TXControlCover) mTxVideoPlayer.getReceiver("TXControlCover");
+        txControlCover.getWj_full_iv().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                WJTXDeviceFullActivity.start(WJDeviceDebugNewActivity.this, mDeviceInfo);
+            }
+        });
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void addDevice(DeviceInfo deviceInfo) {
-        initAction();
+        //initAction();
         getData();
         initAudio();
     }
@@ -151,10 +198,10 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
 
     }
 
-    private void  volumeChange(){
-        if (mTp_volume.getProgress()==0){
+    private void volumeChange() {
+        if (mTp_volume.getProgress() == 0) {
             mIv_volume.setImageResource(R.mipmap.wj_volume_off);
-        }else {
+        } else {
             mIv_volume.setImageResource(R.mipmap.wj_volume_on);
         }
     }
@@ -219,7 +266,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
     private WJVideoPlayer mWjVideoPlayer;
 
     private void initAction() {
-
+        mFrameLayout.setVisibility(View.VISIBLE);
         if (mWjVideoPlayer == null) {
 
             mWjVideoPlayer = new WJVideoPlayer(this);
@@ -588,11 +635,11 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
         mIv_volume.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mTp_volume.getProgress()==0) {
-                    ISAPI.getInstance().setVolume(mDeviceInfo.device_serial,0);
+                if (mTp_volume.getProgress() == 0) {
+                    ISAPI.getInstance().setVolume(mDeviceInfo.device_serial, 0);
                     mTp_volume.setProgress(50);
-                }else {
-                    ISAPI.getInstance().setVolume(mDeviceInfo.device_serial,50);
+                } else {
+                    ISAPI.getInstance().setVolume(mDeviceInfo.device_serial, 50);
                     mTp_volume.setProgress(0);
                 }
             }
@@ -814,13 +861,17 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
+        if (mTxVideoPlayer != null) {
+            mTxVideoPlayer.startPlay();
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-
+        if (mTxVideoPlayer != null) {
+            mTxVideoPlayer.stop();
+        }
     }
 
     @Override
@@ -831,6 +882,11 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
             mWjVideoPlayer = null;
             WJRelationAssistUtil.getInstance().destroy();
         }
+        if (mTxVideoPlayer != null) {
+            mTxVideoPlayer.destroy();
+            mTxVideoPlayer = null;
+        }
+
         EventBus.getDefault().unregister(this);
     }
 

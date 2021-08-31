@@ -5,6 +5,9 @@
     android:fitsSystemWindows="true"
     android:orientation="vertical">
 
+
+
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="48dp"
@@ -28,8 +31,18 @@
             android:textSize="17dp" />
 
     </FrameLayout>
+    <FrameLayout
+        android:visibility="gone"
+        android:background="#000000"
+        android:id="@+id/fl"
+        android:layout_width="match_parent"
+        android:layout_height="200dp" >
+
+    </FrameLayout>
+
 
     <FrameLayout
+        android:visibility="gone"
         android:id="@+id/fl_video"
         android:layout_width="match_parent"
         android:layout_height="211dp"

@@ -54,6 +54,7 @@ dependencies {
     api 'cn.jiajunhui:exoplayer:342_2132_019'
     api 'com.google.android.exoplayer:extension-rtmp:2.10.4'
     //api "com.tencent.liteav:LiteAVSDK_Professional:latest.release"
+    api "com.tencent.liteav:LiteAVSDK_Professional:latest.release"
 
 }
 

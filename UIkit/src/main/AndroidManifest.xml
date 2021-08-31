@@ -43,6 +43,10 @@
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:screenOrientation="landscape"
             android:name=".WJDeviceFullNewActivivty"/>
+        <activity
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:screenOrientation="landscape"
+            android:name=".WJTXDeviceFullActivity"/>
 
         <activity
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"

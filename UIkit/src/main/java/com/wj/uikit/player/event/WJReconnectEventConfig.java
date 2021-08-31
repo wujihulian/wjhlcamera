@@ -1,5 +1,7 @@
 package com.wj.uikit.player.event;
 
+import android.text.TextUtils;
+
 /**
  * FileName: ReconnectEventConfig
  * Author: xiongxiang
@@ -12,4 +14,16 @@ package com.wj.uikit.player.event;
 public class WJReconnectEventConfig {
     public static String token;
     public static String host;
+    public static boolean isWebRtc = false;
+
+
+    public static String transformUrl(String url) {
+        if (isWebRtc) {
+            if (!TextUtils.isEmpty(url)) {
+                return url.replace("https", "webrtc").replace(".flv", "");
+            }
+            return url;
+        }
+        return url;
+    }
 }
