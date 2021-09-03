@@ -165,6 +165,13 @@ public class TXReconnectCover extends TXBaseCover {
                             url = rtmpConfig.getRTMP().getPlayURL1();
 
                         }
+
+                        if (TextUtils.isEmpty(url)){
+                            liveReconnectCount++;
+                            reconnection();
+                            return;
+                        }
+
                         liveReconnectCount++;
                         url = WJReconnectEventConfig.transformUrl(url);
                         WJLogUitl.i(url);
