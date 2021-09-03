@@ -2,6 +2,8 @@ package com.wj.uikit;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -694,7 +696,8 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                         String string = s.body().string();
                                         String errorMsg = "未知错误";
                                         if (!TextUtils.isEmpty(string)) {
-                                            NetConfig netConfig = new Gson().fromJson(string, NetConfig.class);
+                                            errorMsg=string;
+                                           /* NetConfig netConfig = new Gson().fromJson(string, NetConfig.class);
                                             if (netConfig.getNetConfig() != null) {
                                                 WJLogUitl.i(netConfig.getNetConfig().getResult());
                                                 if (!TextUtils.isEmpty(netConfig.getNetConfig().getResult())) {
@@ -708,12 +711,23 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                                         errorMsg = netConfig.getNetConfig().getResult();
                                                     }
                                                 }
-                                            }
+                                            }*/
                                         }
+                                        String finalErrorMsg = errorMsg;
                                         new XPopup.Builder(WJSettingWifiActivity.this).asConfirm("错误报告", errorMsg
-                                                , null,
-                                                "确定",
-                                                null,
+                                                , "取消",
+                                                "复制",
+                                                new OnConfirmListener() {
+                                                    @Override
+                                                    public void onConfirm() {
+                                                        ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                                                        // 创建普通字符型ClipData
+                                                        ClipData mClipData = ClipData.newPlainText("Label", finalErrorMsg);
+                                                        // 将ClipData内容放到系统剪贴板里。
+                                                        cm.setPrimaryClip(mClipData);
+                                                        Toast.makeText(WJSettingWifiActivity.this,"复制成功",Toast.LENGTH_LONG).show();
+                                                    }
+                                                },
                                                 null,
                                                 true,
                                                 0)

@@ -160,7 +160,9 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                         }
                         url = WJReconnectEventConfig.transformUrl(url);
                         WJLogUitl.d(url);
-                        mTxVideoPlayer.startPlay(url);
+                        if (mTxVideoPlayer!=null){
+                            mTxVideoPlayer.startPlay(url);
+                        }
                     }
                 }
             }

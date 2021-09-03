@@ -68,7 +68,7 @@ public class TXReconnectCover extends TXBaseCover {
                 }
                 break;
         }
-    }
+    }   
 
     @Override
     public void onStatisticsUpdate(V2TXLivePlayer player, V2TXLiveDef.V2TXLivePlayerStatistics statistics) {
@@ -157,7 +157,10 @@ public class TXReconnectCover extends TXBaseCover {
                 .subscribe(new Consumer<RtmpConfig>() {
                     @Override
                     public void accept(RtmpConfig rtmpConfig) throws Exception {
-
+                        if (rtmpConfig==null|| rtmpConfig.getRTMP()==null){
+                            startPlay("");
+                            return;
+                        }
 
                         String privatelyEnabled = rtmpConfig.getRTMP().getPrivatelyEnabled();
                         String url;
