@@ -53,8 +53,20 @@ dependencies {
 
     api 'cn.jiajunhui:exoplayer:342_2132_019'
     api 'com.google.android.exoplayer:extension-rtmp:2.10.4'
-    //api "com.tencent.liteav:LiteAVSDK_Professional:latest.release"
+
+
+
     api "com.tencent.liteav:LiteAVSDK_Professional:latest.release"
+    /**
+     *
+     * 写了 要专业版或企业版，没看到专业版的购买地址，或者有无开源库可以播放的 我们先测试下
+     *
+     * -------------------
+     *
+     * https://cloud.tencent.com/document/product/454/7873  专业版、基础版、企业版，这里都有
+     *
+     */
+    //api "com.tencent.liteav:LiteAVSDK_Professional:9.1.10565"
 
 }
 

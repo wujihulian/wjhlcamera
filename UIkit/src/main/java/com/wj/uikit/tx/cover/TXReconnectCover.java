@@ -77,7 +77,7 @@ public class TXReconnectCover extends TXBaseCover {
     }
 
     @SuppressLint("CheckResult")
-    private void reconnection() {
+    public void reconnection() {
         WJLogUitl.d("reconnection");
         Observable.timer(2, TimeUnit.SECONDS).map(new Function<Long, RtmpConfig>() {
             @Override

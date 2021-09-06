@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.interfaces.OnConfirmListener;
+import com.tencent.live2.V2TXLiveCode;
 import com.tencent.live2.impl.V2TXLivePlayerImpl;
 import com.videogo.openapi.EZPlayer;
 import com.wj.camera.callback.JsonCallback;
@@ -161,7 +162,12 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                         url = WJReconnectEventConfig.transformUrl(url);
                         WJLogUitl.d(url);
                         if (mTxVideoPlayer!=null){
-                            mTxVideoPlayer.startPlay(url);
+                            int startCode = mTxVideoPlayer.startPlay(url);
+                            if (startCode== V2TXLiveCode.V2TXLIVE_OK){
+
+                            }else {
+                                mTxVideoPlayer.getReconnectCover().reconnection();
+                            }
                         }
                     }
                 }
@@ -601,7 +607,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                     @Override
                     public void onConfirm() {
                         ISAPI.getInstance().wirelessServer(mDeviceInfo.device_serial);
-                        Intent intent = new Intent(WJDeviceDebugNewActivity.this, WJSettingWifiActivity.class);
+                        Intent intent = new Intent(WJDeviceDebugNewActivity.this, WJSettingModeActivity.class);
                         Bundle bundle = new Bundle();
                         bundle.putSerializable(WJDeviceConfig.DEVICE_INFO, mDeviceInfo);
                         bundle.putInt(WJDeviceConfig.DEVICE_CODE, 120020);

@@ -1,17 +1,12 @@
 package com.wj.uikit.tx.bs;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.os.Bundle;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.tencent.live2.V2TXLiveDef;
-import com.tencent.live2.V2TXLivePlayer;
-import com.tencent.live2.V2TXLivePlayerObserver;
 import com.tencent.live2.impl.V2TXLivePlayerImpl;
-import com.wj.camera.uitl.WJLogUitl;
 
 
 /**
@@ -78,7 +73,7 @@ public abstract class TXBasePlay {
     }
 
     public void attachContainer(ViewGroup container) {
-        if (mContainer!=null){
+        if (mContainer != null) {
             mSuperContainer.removeAllViews();
             mContainer.removeView(mSuperContainer);
         }
@@ -106,12 +101,12 @@ public abstract class TXBasePlay {
         mReceiverEventListener.startPlay();
     }
 
-    public void startPlay(String playUrl) {
-        mReceiverEventListener.startPlay(playUrl);
+    public int startPlay(String playUrl) {
+        return mReceiverEventListener.startPlay(playUrl);
     }
 
-    public void stop() {
-        mReceiverEventListener.stopPlay();
+    public int stop() {
+        return mReceiverEventListener.stopPlay();
     }
 
     public void destroy() {
@@ -119,12 +114,10 @@ public abstract class TXBasePlay {
             mV2TXLivePlayer.stopPlay();
             mSuperContainer.removeAllViews();
             mContainer.removeView(mSuperContainer);
+            mSuperContainer = null;
             mV2TXLivePlayer = null;
         }
     }
-
-
-
 
 
 }
