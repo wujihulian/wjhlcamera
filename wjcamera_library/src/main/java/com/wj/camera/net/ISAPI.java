@@ -144,6 +144,18 @@ public class ISAPI {
                         data.getTwoWayAudioChannel().setSpeakerVolume(String.valueOf(volume));
                         setAuido(data, callback);
                     }
+                }else {
+                    if (callback!=null){
+                        callback.onError(0,"设置失败");
+                    }
+                }
+            }
+
+            @Override
+            public void onError(int code, String msg) {
+                super.onError(code, msg);
+                if (callback!=null){
+                    callback.onError(0,"设置失败");
                 }
             }
         });

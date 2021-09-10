@@ -1,6 +1,7 @@
 package com.wj.uikit.tx.cover;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -11,7 +12,10 @@ import com.tencent.live2.V2TXLivePlayer;
 import com.wj.camera.uitl.WJLogUitl;
 import com.wj.uikit.R;
 import com.wj.uikit.tx.bs.TXBaseCover;
+import com.wj.uikit.tx.bs.TXIReceiver;
+import com.wj.uikit.tx.bs.TXIReceiverGroup;
 import com.wj.uikit.tx.bs.TXOnGestureListener;
+import com.wj.uikit.tx.bs.TXReceiverGroup;
 import com.wj.uikit.view.VolumeProgressView;
 
 /**
@@ -128,6 +132,7 @@ public class TXGestureCover extends TXBaseCover implements TXOnGestureListener {
         setVolumeBoxState(true);
         setVolumeText(s);
         mVp.setProgress(i);
+        setVolume(i);
     }
 
     public void onVerticalSlide(float percent) {
@@ -144,11 +149,33 @@ public class TXGestureCover extends TXBaseCover implements TXOnGestureListener {
             s = "OFF";
         }
         volume = i;
-        setPlayoutVolume(i);
         setVolumeBoxState(true);
         setVolumeText(s);
         mVp.setProgress(i);
 
+    }
+
+    public void setVolume(int volume) {
+        setPlayoutVolume(volume);
+        TXReceiverGroup txReceiverGroup = getTXReceiverGroup();
+        txReceiverGroup.forEach(new TXIReceiverGroup.OnLoopListener() {
+            @Override
+            public void onEach(TXIReceiver receiver) {
+                Bundle bundle = new Bundle();
+                bundle.putInt("volume", volume);
+                receiver.event(bundle);
+            }
+        });
+    }
+
+    @Override
+    public void event(Bundle build) {
+        super.event(build);
+        int volume = build.getInt("volume", -1);
+        if (volume != -1) {
+            this.volume = volume;
+            mVp.setProgress(volume);
+        }
     }
 
     public void setVolumeText(String text) {

@@ -2,7 +2,6 @@ package com.wj.uikit.tx.cover;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -11,7 +10,9 @@ import com.tencent.live2.V2TXLivePlayer;
 import com.wj.camera.uitl.WJLogUitl;
 import com.wj.uikit.R;
 import com.wj.uikit.tx.bs.TXBaseCover;
-import com.wj.uikit.tx.bs.TXReceiverEventListener;
+import com.wj.uikit.tx.bs.TXIReceiver;
+import com.wj.uikit.tx.bs.TXIReceiverGroup;
+import com.wj.uikit.tx.bs.TXReceiverGroup;
 
 /**
  * FileName: TXControlCover
@@ -28,7 +29,7 @@ public class TXControlCover extends TXBaseCover {
     private ImageView mWj_mic_iv;
     private boolean audio = false;//默认静音
     private ImageView mWj_full_iv;
-    private int volume = 50;
+    private int volume = 100;
 
     public TXControlCover(Context context) {
         super(context);
@@ -38,6 +39,7 @@ public class TXControlCover extends TXBaseCover {
     protected View onCreateCoverView(Context context) {
         return View.inflate(context, R.layout.wj_layout_control_cover, null);
     }
+
     @Override
     public void onReceiverBind() {
         super.onReceiverBind();
@@ -61,15 +63,28 @@ public class TXControlCover extends TXBaseCover {
             public void onClick(View v) {
                 if (volume <= 0) {
                     WJLogUitl.d("打开 音量");
-                    setPlayoutVolume(100);
+                    setVolume(100);
                     mWj_mic_iv.setImageResource(R.mipmap.wj_device_mic_open);
                 } else {
                     mWj_mic_iv.setImageResource(R.mipmap.wj_device_mic_close);
-                    setPlayoutVolume(0);
+                    setVolume(0);
                 }
             }
         });
 
+    }
+
+    public void setVolume(int volume) {
+        setPlayoutVolume(volume);
+        TXReceiverGroup txReceiverGroup = getTXReceiverGroup();
+        txReceiverGroup.forEach(new TXIReceiverGroup.OnLoopListener() {
+            @Override
+            public void onEach(TXIReceiver receiver) {
+                Bundle bundle = new Bundle();
+                bundle.putInt("volume", volume);
+                receiver.event(bundle);
+            }
+        });
     }
 
     public ImageView getWj_full_iv() {
@@ -90,14 +105,20 @@ public class TXControlCover extends TXBaseCover {
         }
     }
 
+
+
     @Override
-    public void onPlayoutVolumeUpdate(V2TXLivePlayer player, int volume) {
-        super.onPlayoutVolumeUpdate(player, volume);
-        this.volume = volume;
-        if (volume <= 0) {
-            mWj_mic_iv.setImageResource(R.mipmap.wj_device_mic_close);
-        } else {
-            mWj_mic_iv.setImageResource(R.mipmap.wj_device_mic_open);
+    public void event(Bundle build) {
+        super.event(build);
+        int volume = build.getInt("volume", -1);
+        if (volume != -1) {
+            this.volume = volume;
+            if (this.volume <= 0) {
+                mWj_mic_iv.setImageResource(R.mipmap.wj_device_mic_close);
+            } else {
+                mWj_mic_iv.setImageResource(R.mipmap.wj_device_mic_open);
+            }
         }
+
     }
 }

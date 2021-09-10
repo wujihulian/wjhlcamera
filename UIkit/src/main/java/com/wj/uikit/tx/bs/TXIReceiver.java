@@ -1,5 +1,7 @@
 package com.wj.uikit.tx.bs;
 
+import android.os.Bundle;
+
 /**
  * FileName: TXIReceiver
  * Author: xiongxiang
@@ -11,7 +13,8 @@ package com.wj.uikit.tx.bs;
  */
 public interface TXIReceiver {
     void onReceiverBind();
-
+    void bindTXReceiverGroup(TXReceiverGroup receiverGroup);
+    void event(Bundle build);
     void bindReceiverEventListener(TXReceiverEventListener observer);
 
 }

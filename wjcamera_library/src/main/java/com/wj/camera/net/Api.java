@@ -25,7 +25,7 @@ public interface Api {
     //音量
     String Audio = baseUrl + "/api/hikvision/ISAPI/System/TwoWayAudio/channels/1";
     //场景
-    String Scene =baseUrl+"/api/hikvision/ISAPI/Image/channels/1/mountingScenario";
+    String Scene = baseUrl + "/api/hikvision/ISAPI/Image/channels/1/mountingScenario";
 
 
     //设备信息
@@ -45,11 +45,9 @@ public interface Api {
     //检查设备升级
     String CheckDeviceUpdate = baseUrl + "/api/lapp/device/version/info";
     //设备升级
-    String DeviceUpdate =baseUrl+"/api/lapp/device/upgrade";
+    String DeviceUpdate = baseUrl + "/api/lapp/device/upgrade";
     //设备升级状态
-    String DeviceUpdateStatus=baseUrl+"/api/lapp/device/upgrade/status";
-
-
+    String DeviceUpdateStatus = baseUrl + "/api/lapp/device/upgrade/status";
 
 
 }

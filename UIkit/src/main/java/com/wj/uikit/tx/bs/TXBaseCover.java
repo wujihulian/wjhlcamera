@@ -4,9 +4,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 
-import com.tencent.live2.V2TXLiveDef;
-import com.tencent.live2.V2TXLivePlayer;
-
 /**
  * FileName: TXBaseCover
  * Author: xiongxiang
@@ -16,9 +13,10 @@ import com.tencent.live2.V2TXLivePlayer;
  * <author> <time> <version> <desc>
  * 作者姓名 修改时间 版本号 描述
  */
-public abstract class TXBaseCover extends TXSingleLivePlayerObserver implements TXIReceiver,TXReceiverEventListener {
+public abstract class TXBaseCover extends TXSingleLivePlayerObserver implements TXIReceiver, TXReceiverEventListener {
     private View mCoverView;
     private TXReceiverEventListener mEvent;
+    private TXReceiverGroup mTXReceiverGroup;
 
     public TXBaseCover(Context context) {
         mCoverView = onCreateCoverView(context);
@@ -44,7 +42,13 @@ public abstract class TXBaseCover extends TXSingleLivePlayerObserver implements 
     public void onReceiverBind() {
 
     }
-    protected final <T extends View> T findViewById(int id){
+
+    @Override
+    public void event(Bundle build) {
+
+    }
+
+    protected final <T extends View> T findViewById(int id) {
         return mCoverView.findViewById(id);
     }
 
@@ -91,5 +95,14 @@ public abstract class TXBaseCover extends TXSingleLivePlayerObserver implements 
     @Override
     public int setPlayoutVolume(int var1) {
         return mEvent.setPlayoutVolume(var1);
+    }
+
+    @Override
+    public void bindTXReceiverGroup(TXReceiverGroup receiverGroup) {
+        this.mTXReceiverGroup = receiverGroup;
+    }
+
+    public TXReceiverGroup getTXReceiverGroup() {
+        return mTXReceiverGroup;
     }
 }

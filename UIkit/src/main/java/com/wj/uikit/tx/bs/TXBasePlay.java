@@ -1,10 +1,13 @@
 package com.wj.uikit.tx.bs;
 
 import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.ap.ezviz.pub.ap.ApWifiConfigInfo;
 import com.tencent.live2.V2TXLiveDef;
 import com.tencent.live2.impl.V2TXLivePlayerImpl;
 
@@ -41,13 +44,10 @@ public abstract class TXBasePlay {
     public V2TXLivePlayerImpl getV2TXLivePlayer() {
         return mV2TXLivePlayer;
     }
-
     public abstract void onCreate();
-
     public void init() {
         mSuperContainer = new TXSuperContainer(mContext);
         mV2TXLivePlayer = new V2TXLivePlayerImpl(mContext);
-        mV2TXLivePlayer.enableVolumeEvaluation(300);
         mV2TXLivePlayer.setRenderFillMode(V2TXLiveDef.V2TXLiveFillMode.V2TXLiveFillModeFill);
         mReceiverEventListener = new TXReceiverEventListenerImpl(mV2TXLivePlayer);
         mReceiverGroup = new TXReceiverGroup();
@@ -88,6 +88,7 @@ public abstract class TXBasePlay {
                     if (coverView != null) {
                         mSuperContainer.addView(coverView);
                     }
+                    txiReceiver.bindTXReceiverGroup(mReceiverGroup);
                     txiReceiver.bindReceiverEventListener(mReceiverEventListener);
                 }
             }
@@ -118,6 +119,4 @@ public abstract class TXBasePlay {
             mV2TXLivePlayer = null;
         }
     }
-
-
 }

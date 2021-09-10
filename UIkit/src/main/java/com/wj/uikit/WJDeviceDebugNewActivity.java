@@ -644,11 +644,39 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
             @Override
             public void onClick(View v) {
                 if (mTp_volume.getProgress() == 0) {
-                    ISAPI.getInstance().setVolume(mDeviceInfo.device_serial, 0);
-                    mTp_volume.setProgress(50);
+                    ISAPI.getInstance().setVolume(mDeviceInfo.device_serial, 50, new JsonCallback<ResponseStatus>() {
+                        @Override
+                        public void onSuccess(ResponseStatus data) {
+                            if (data!=null && data.ResponseStatus!=null && "1".equals(data.ResponseStatus.statusCode)){
+                                mTp_volume.setProgress(50);
+                            }else {
+                                Toast.makeText(WJDeviceDebugNewActivity.this,"音量设置失败",Toast.LENGTH_LONG).show();
+                            }
+                        }
+
+                        @Override
+                        public void onError(int code, String msg) {
+                            super.onError(code, msg);
+                            Toast.makeText(WJDeviceDebugNewActivity.this,"音量设置失败",Toast.LENGTH_LONG).show();
+                        }
+                    });
+
                 } else {
-                    ISAPI.getInstance().setVolume(mDeviceInfo.device_serial, 50);
-                    mTp_volume.setProgress(0);
+                    ISAPI.getInstance().setVolume(mDeviceInfo.device_serial, 0, new JsonCallback<ResponseStatus>() {
+                        @Override
+                        public void onError(int code, String msg) {
+                            super.onError(code, msg);
+                            Toast.makeText(WJDeviceDebugNewActivity.this,"音量设置失败",Toast.LENGTH_LONG).show();
+                        }
+                        @Override
+                        public void onSuccess(ResponseStatus data) {
+                            if (data!=null && data.ResponseStatus!=null && "1".equals(data.ResponseStatus.statusCode)){
+                                mTp_volume.setProgress(0);
+                            }else {
+                                Toast.makeText(WJDeviceDebugNewActivity.this,"音量设置失败",Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    });
                 }
             }
         });
