@@ -40,7 +40,7 @@ import okhttp3.Response;
  * 作者姓名 修改时间 版本号 描述
  */
 public class TXReconnectCover extends TXBaseCover {
-    private int  fps ;
+    private int fps;
 
     public TXReconnectCover(Context context) {
         super(context);
@@ -61,19 +61,19 @@ public class TXReconnectCover extends TXBaseCover {
     @Override
     public void onVideoPlayStatusUpdate(V2TXLivePlayer player, V2TXLiveDef.V2TXLivePlayStatus status, V2TXLiveDef.V2TXLiveStatusChangeReason reason, Bundle extraInfo) {
         super.onVideoPlayStatusUpdate(player, status, reason, extraInfo);
-        switch (status){
+        switch (status) {
             case V2TXLivePlayStatusStopped:
-                if (fps==0){
+                if (fps == 0) {
                     reconnection();
                 }
                 break;
         }
-    }   
+    }
 
     @Override
     public void onStatisticsUpdate(V2TXLivePlayer player, V2TXLiveDef.V2TXLivePlayerStatistics statistics) {
         super.onStatisticsUpdate(player, statistics);
-        fps=statistics.fps;
+        fps = statistics.fps;
     }
 
     @SuppressLint("CheckResult")
@@ -157,16 +157,16 @@ public class TXReconnectCover extends TXBaseCover {
                 .subscribe(new Consumer<RtmpConfig>() {
                     @Override
                     public void accept(RtmpConfig rtmpConfig) throws Exception {
-                        String privatelyEnabled = rtmpConfig.getRTMP().getPrivatelyEnabled();
-                        String url;
-                        if ("true".equals(privatelyEnabled)) {
-                            url = rtmpConfig.getRTMP().getPlayURL2();
-                        } else {
-                            url = rtmpConfig.getRTMP().getPlayURL1();
-
+                        String url = null;
+                        if (rtmpConfig != null && rtmpConfig.getRTMP() != null) {
+                            String privatelyEnabled = rtmpConfig.getRTMP().getPrivatelyEnabled();
+                            if ("true".equals(privatelyEnabled)) {
+                                url = rtmpConfig.getRTMP().getPlayURL2();
+                            } else {
+                                url = rtmpConfig.getRTMP().getPlayURL1();
+                            }
                         }
-
-                        if (TextUtils.isEmpty(url)){
+                        if (TextUtils.isEmpty(url)) {
                             liveReconnectCount++;
                             reconnection();
                             return;
@@ -180,6 +180,7 @@ public class TXReconnectCover extends TXBaseCover {
                     }
                 });
     }
+
     //触发流检测
     private void triggerLiveCheck() {
         GetRequest getRequest = OkHttpUtils.getInstance().get("/api/course/cameraDevicePreviewState?deviceCode=" + getDeviceSerial());
