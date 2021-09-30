@@ -23,6 +23,8 @@ public class GetRequest extends BaseRequest<GetRequest>{
         return null;
     }
 
+
+
     @Override
     Request.Builder buildRequest() {
         return new Request.Builder().url(getFullUrl()).get();

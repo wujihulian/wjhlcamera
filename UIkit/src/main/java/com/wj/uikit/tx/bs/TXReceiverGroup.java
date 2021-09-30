@@ -1,6 +1,7 @@
 package com.wj.uikit.tx.bs;
 
 import android.os.Bundle;
+import android.os.ParcelUuid;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,10 +45,21 @@ public class TXReceiverGroup  implements TXIReceiverGroup{
     }
 
 
+    public void clear(){
+        mReceivers.clear();
+        mReceiverArray.clear();
+        mReceivers=null;
+        mReceiverArray=null;
+    }
+
+
     @Override
     public void forEach(OnLoopListener onLoopListener) {
-        for (TXIReceiver txiReceiver : mReceiverArray) {
-            onLoopListener.onEach(txiReceiver);
+        if (mReceiverArray!=null) {
+            for (TXIReceiver txiReceiver : mReceiverArray) {
+                onLoopListener.onEach(txiReceiver);
+            }
         }
     }
+
 }

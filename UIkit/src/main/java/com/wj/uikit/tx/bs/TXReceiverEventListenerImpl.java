@@ -1,7 +1,5 @@
 package com.wj.uikit.tx.bs;
 
-import android.text.TextUtils;
-
 import com.tencent.live2.impl.V2TXLivePlayerImpl;
 
 /**
@@ -23,10 +21,7 @@ public class TXReceiverEventListenerImpl implements TXReceiverEventListener {
 
     @Override
     public int startPlay() {
-        if (!TextUtils.isEmpty(playUrl)) {
-            return mV2TXLivePlayer.startPlay(playUrl);
-        }
-        return 0;
+        return mV2TXLivePlayer.startPlay(playUrl);
     }
 
     @Override

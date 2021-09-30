@@ -24,6 +24,7 @@ import com.wj.camera.config.WJDeviceSceneEnum;
 import com.wj.camera.config.WJRateTypeEnum;
 import com.wj.camera.net.DeviceApi;
 import com.wj.camera.net.ISAPI;
+import com.wj.camera.net.OkHttpUtils;
 import com.wj.camera.net.RxConsumer;
 import com.wj.camera.response.BaseDeviceResponse;
 import com.wj.camera.response.CheckDevcieUpdate;
@@ -163,6 +164,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                         WJLogUitl.d(url);
                         if (mTxVideoPlayer!=null){
                             int startCode = mTxVideoPlayer.startPlay(url);
+                            WJLogUitl.d("startPlay "+(System.currentTimeMillis()/1000));
                             if (startCode== V2TXLiveCode.V2TXLIVE_OK){
 
                             }else {
@@ -173,6 +175,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                 }
             }
         });
+
         TXControlCover txControlCover = (TXControlCover) mTxVideoPlayer.getReceiver("TXControlCover");
         txControlCover.getWj_full_iv().setOnClickListener(new View.OnClickListener() {
             @Override
@@ -922,6 +925,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
             mTxVideoPlayer.destroy();
             mTxVideoPlayer = null;
         }
+        OkHttpUtils.getInstance().cancelAll();
 
         EventBus.getDefault().unregister(this);
     }

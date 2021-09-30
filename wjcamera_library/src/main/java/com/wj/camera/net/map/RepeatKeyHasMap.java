@@ -33,4 +33,11 @@ public class RepeatKeyHasMap<K, V> {
     public void remove(K key) {
         mHashMap.remove(key);
     }
+
+    public HashMap<K, List<V>> getHashMap() {
+        return mHashMap;
+    }
+    public void cancel(){
+        mHashMap.clear();
+    }
 }

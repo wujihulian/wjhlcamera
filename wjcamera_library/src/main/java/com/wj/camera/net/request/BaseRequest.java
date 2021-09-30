@@ -8,7 +8,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import okhttp3.Call;
@@ -114,7 +113,11 @@ public abstract class BaseRequest<R extends BaseRequest> {
     }
 
     public String getTag() {
+        if (TextUtils.isEmpty(tag)) {
+            return "BaseRequest";
+        }
         return tag;
+        //   return tag;
     }
 
     public Call enqueue(Callback callback) {
@@ -137,7 +140,6 @@ public abstract class BaseRequest<R extends BaseRequest> {
         call.enqueue(new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                clearTagCall(getTag());
                 if (callback != null) {
                     callback.onFailure(call, e);
                 }
@@ -145,7 +147,6 @@ public abstract class BaseRequest<R extends BaseRequest> {
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                clearTagCall(getTag());
                 if (callback != null) {
                     callback.onResponse(call, response);
                 }
@@ -154,13 +155,6 @@ public abstract class BaseRequest<R extends BaseRequest> {
         return call;
     }
 
-
-    private void clearTagCall(String tag) {
-        if (!TextUtils.isEmpty(tag)) {
-            List<Call> calls = OkHttpUtils.getInstance().getTagHasMap().get(tag);
-            calls.remove(getCall());
-        }
-    }
 
     public void cancel(String tag) {
         OkHttpUtils.getInstance().cancel(tag);

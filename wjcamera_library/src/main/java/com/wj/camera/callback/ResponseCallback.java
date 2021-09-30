@@ -62,6 +62,7 @@ public abstract class ResponseCallback implements Callback {
     public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
         String string = getJson(call, response);
         WJLogUitl.i(  "onResponse: "+string);
+        response.close();
         if (TextUtils.isEmpty(string) || "{}".equals(string)) {
             Observable.just("1").subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())

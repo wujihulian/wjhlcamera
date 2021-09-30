@@ -30,6 +30,7 @@ public abstract class TXBasePlay {
 
     private TXReceiverEventListener mReceiverEventListener;
     private TXSuperContainer mSuperContainer;
+    private TextureView mTextureView;
 
     public TXBasePlay(Context context) {
         this.mContext = context;
@@ -78,8 +79,8 @@ public abstract class TXBasePlay {
             mContainer.removeView(mSuperContainer);
         }
         this.mContainer = container;
-        TextureView textureView = new TextureView(getContext());
-        mSuperContainer.addView(textureView);
+        mTextureView = new TextureView(getContext());
+        mSuperContainer.addView(mTextureView);
         mReceiverGroup.forEach(new TXIReceiverGroup.OnLoopListener() {
             @Override
             public void onEach(TXIReceiver txiReceiver) {
@@ -93,7 +94,7 @@ public abstract class TXBasePlay {
                 }
             }
         });
-        mV2TXLivePlayer.setRenderView(textureView);
+        mV2TXLivePlayer.setRenderView(mTextureView);
         container.addView(mSuperContainer, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
     }
@@ -113,10 +114,15 @@ public abstract class TXBasePlay {
     public void destroy() {
         if (mV2TXLivePlayer != null) {
             mV2TXLivePlayer.stopPlay();
+            mV2TXLivePlayer.setObserver(null);
             mSuperContainer.removeAllViews();
             mContainer.removeView(mSuperContainer);
+            mReceiverGroup.clear();
             mSuperContainer = null;
             mV2TXLivePlayer = null;
+            mReceiverGroup=null;
+            mContainer=null;
+            mTextureView=null;
         }
     }
 }

@@ -9,6 +9,7 @@ import com.wj.camera.net.request.PutRequest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -49,7 +50,7 @@ public class OkHttpUtils {
                 builder.addInterceptor(mInterceptor);
             }
         }
-        if (httpLogging = true) {
+        if (httpLogging == true) {
             HttpLoggingInterceptor mInterceptor = new HttpLoggingInterceptor();
             mInterceptor.level(HttpLoggingInterceptor.Level.BODY);
             builder.addNetworkInterceptor(mInterceptor);
@@ -57,9 +58,9 @@ public class OkHttpUtils {
 
         mOkHttpClient = builder
                 .addInterceptor(new SafeGuardInterceptor())
-                .connectTimeout(3, TimeUnit.SECONDS)
-                .readTimeout(3, TimeUnit.SECONDS)
-                .writeTimeout(3, TimeUnit.SECONDS)
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.SECONDS)
+                .writeTimeout(5, TimeUnit.SECONDS)
                 .build();
         setBaseUrl(Api.baseUrl);
     }
@@ -121,6 +122,19 @@ public class OkHttpUtils {
             calls.clear();
             mTagHasMap.remove(tag);
         }
+    }
+
+    public void cancelAll() {
+        HashMap<String, List<Call>> hashMap = mTagHasMap.getHashMap();
+
+        for (Map.Entry<String, List<Call>> entry : hashMap.entrySet()) {
+            List<Call> value = entry.getValue();
+
+            for (Call call : value) {
+                call.cancel();
+            }
+        }
+        mTagHasMap.cancel();
     }
 
     public RepeatKeyHasMap<String, Call> getTagHasMap() {

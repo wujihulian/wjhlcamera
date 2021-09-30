@@ -39,4 +39,10 @@ public class TXVideoPlayer extends TXBasePlay {
         return mReconnectCover;
     }
 
+    @Override
+    public void destroy() {
+        super.destroy();
+        mReconnectCover=null;
+
+    }
 }

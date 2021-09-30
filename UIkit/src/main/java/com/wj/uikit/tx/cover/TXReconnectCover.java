@@ -6,11 +6,15 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+
 import com.google.gson.Gson;
 import com.tencent.live2.V2TXLiveDef;
 import com.tencent.live2.V2TXLivePlayer;
 import com.wj.camera.net.ISAPI;
 import com.wj.camera.net.OkHttpUtils;
+import com.wj.camera.net.RxConsumer;
 import com.wj.camera.net.request.GetRequest;
 import com.wj.camera.response.CameraDeviceLiveUrlResponse;
 import com.wj.camera.response.RtmpConfig;
@@ -24,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
@@ -41,9 +46,14 @@ import okhttp3.Response;
  */
 public class TXReconnectCover extends TXBaseCover {
     private int fps;
+    private FragmentActivity mFragmentActivity;
+    private Disposable mSubscribe;
 
     public TXReconnectCover(Context context) {
         super(context);
+        if (context instanceof FragmentActivity){
+            mFragmentActivity= (FragmentActivity) context;
+        }
     }
 
     @Override
@@ -56,15 +66,19 @@ public class TXReconnectCover extends TXBaseCover {
     public void onError(V2TXLivePlayer player, int code, String msg, Bundle extraInfo) {
         super.onError(player, code, msg, extraInfo);
         reconnection();
+        WJLogUitl.d("onError "+(System.currentTimeMillis()/1000));
     }
 
     @Override
     public void onVideoPlayStatusUpdate(V2TXLivePlayer player, V2TXLiveDef.V2TXLivePlayStatus status, V2TXLiveDef.V2TXLiveStatusChangeReason reason, Bundle extraInfo) {
         super.onVideoPlayStatusUpdate(player, status, reason, extraInfo);
+
+
         switch (status) {
             case V2TXLivePlayStatusStopped:
                 if (fps == 0) {
                     reconnection();
+                    WJLogUitl.d("V2TXLivePlayStatusStopped "+(System.currentTimeMillis()/1000));
                 }
                 break;
         }
@@ -75,11 +89,18 @@ public class TXReconnectCover extends TXBaseCover {
         super.onStatisticsUpdate(player, statistics);
         fps = statistics.fps;
     }
-
+    boolean isReconnection =false;
     @SuppressLint("CheckResult")
     public void reconnection() {
+        isReconnection=true;
+        if (mSubscribe!=null){
+            if (!mSubscribe.isDisposed()) {
+                mSubscribe.dispose();
+                mSubscribe=null;
+            }
+        }
         WJLogUitl.d("reconnection");
-        Observable.timer(2, TimeUnit.SECONDS).map(new Function<Long, RtmpConfig>() {
+        mSubscribe = Observable.timer(2, TimeUnit.SECONDS).map(new Function<Long, RtmpConfig>() {
             @Override
             public RtmpConfig apply(@NonNull Long aLong) throws Exception {
                 RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDeviceSerial);
@@ -126,6 +147,9 @@ public class TXReconnectCover extends TXBaseCover {
                 if (rtmpConfig.getRTMP() == null) {
                     return rtmpConfig;
                 }
+                if (liveReconnectCount>=2){
+                   return triggerLiveCheck();
+                }
 
                 //确定预览地址
                 RtmpConfig.RTMPDTO rtmp = rtmpConfig.getRTMP();
@@ -136,6 +160,7 @@ public class TXReconnectCover extends TXBaseCover {
                 String privatelyEnabled = rtmp.getPrivatelyEnabled();
 
                 if ("true".equals(privatelyEnabled)) {
+
                     if (TextUtils.isEmpty(privatelyURL) || TextUtils.isEmpty(playURL2)) {
                         //预览地址为空 或者 预览推流地址为空  需要给设备配置 推流地址 啦流地址
                         WJLogUitl.i("apply: 预览地址为空 开始配置预览地址");
@@ -144,19 +169,31 @@ public class TXReconnectCover extends TXBaseCover {
                         WJLogUitl.i("apply: 预览地址过期 开始配置预览地址");
                         configPrivatelyURL(rtmpConfig);
                     }
+
                 } else {
                     if (liveReconnectCount >= 2 || TextUtils.isEmpty(playURL1)) {
                         //直播流重连3次取不到
-                        triggerLiveCheck();
+                        return  triggerLiveCheck();
                     }
                 }
                 return rtmpConfig;
             }
         }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .doOnError(new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                        isReconnection = false;
+                        liveReconnectCount++;
+                        WJLogUitl.d("doOnError");
+                        reconnection();
+                    }
+                })
+                .doOnSubscribe(new RxConsumer(mFragmentActivity))
                 .subscribe(new Consumer<RtmpConfig>() {
                     @Override
                     public void accept(RtmpConfig rtmpConfig) throws Exception {
+                        liveReconnectCount++;
                         String url = null;
                         if (rtmpConfig != null && rtmpConfig.getRTMP() != null) {
                             String privatelyEnabled = rtmpConfig.getRTMP().getPrivatelyEnabled();
@@ -167,26 +204,32 @@ public class TXReconnectCover extends TXBaseCover {
                             }
                         }
                         if (TextUtils.isEmpty(url)) {
-                            liveReconnectCount++;
+
                             reconnection();
                             return;
                         }
-
-                        liveReconnectCount++;
                         url = WJReconnectEventConfig.transformUrl(url);
                         WJLogUitl.i(url);
                         startPlay(url);
+                        isReconnection = false;
 
                     }
                 });
     }
 
     //触发流检测
-    private void triggerLiveCheck() {
-        GetRequest getRequest = OkHttpUtils.getInstance().get("/api/course/cameraDevicePreviewState?deviceCode=" + getDeviceSerial());
+    private RtmpConfig triggerLiveCheck() {
+        WJLogUitl.d("triggerLiveCheck");
+        GetRequest getRequest = OkHttpUtils.getInstance().get("/api/course/cameraDevicePreviewState?isCheck=1&deviceCode=" + getDeviceSerial());
         getRequest.setBaseUrl(getHost());
         getRequest.addHeader("token", getToken()).execute();
         liveReconnectCount = 0;
+
+        RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDeviceSerial);
+        if (rtmp == null) {
+            return new RtmpConfig();
+        }
+        return rtmp;
     }
 
 

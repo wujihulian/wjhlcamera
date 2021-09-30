@@ -10,6 +10,8 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleEventObserver;
 import androidx.lifecycle.LifecycleOwner;
 
+import com.wj.camera.uitl.WJLogUitl;
+
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 
@@ -62,6 +64,7 @@ public class RxConsumer implements Consumer<Disposable> {
         lifecycle.addObserver(new LifecycleEventObserver() {
             @Override
             public void onStateChanged(@NonNull LifecycleOwner source, @NonNull Lifecycle.Event event) {
+                WJLogUitl.d(event.name());
                 switch (event) {
                     case ON_DESTROY:
                         dispose();

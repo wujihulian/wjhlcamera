@@ -584,7 +584,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                     ).show();*/
 
                             new XPopup.Builder(WJSettingWifiActivity.this).asConfirm(
-                                    "提示", "查找设备热点失败,请尝试重试设备并重新扫码配网"
+                                    "提示", "查找设备热点失败,请尝试重置设备并重新扫码配网"
                                     , null,
                                     "确定",
                                     null,
@@ -742,7 +742,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
 
                         } else {
                             new XPopup.Builder(WJSettingWifiActivity.this).asConfirm(
-                                    "提示", "查找设备热点失败,请尝试重试设备并重新扫码配网"
+                                    "提示", "查找设备热点失败,请尝试重置设备并重新扫码配网"
                                     , null,
                                     "确定",
                                     null,
