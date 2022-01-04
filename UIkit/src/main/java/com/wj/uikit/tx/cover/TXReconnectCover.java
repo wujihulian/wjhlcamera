@@ -70,10 +70,18 @@ public class TXReconnectCover extends TXBaseCover {
     }
 
     @Override
+    public void onVideoLoading(V2TXLivePlayer player, Bundle extraInfo) {
+        super.onVideoLoading(player, extraInfo);
+        if (fps == 0) {
+            reconnection();
+            WJLogUitl.d("V2TXLivePlayStatusStopped "+(System.currentTimeMillis()/1000));
+        }
+    }
+
+    /*
+    @Override
     public void onVideoPlayStatusUpdate(V2TXLivePlayer player, V2TXLiveDef.V2TXLivePlayStatus status, V2TXLiveDef.V2TXLiveStatusChangeReason reason, Bundle extraInfo) {
         super.onVideoPlayStatusUpdate(player, status, reason, extraInfo);
-
-
         switch (status) {
             case V2TXLivePlayStatusStopped:
                 if (fps == 0) {
@@ -83,6 +91,8 @@ public class TXReconnectCover extends TXBaseCover {
                 break;
         }
     }
+*/
+
 
     @Override
     public void onStatisticsUpdate(V2TXLivePlayer player, V2TXLiveDef.V2TXLivePlayerStatistics statistics) {

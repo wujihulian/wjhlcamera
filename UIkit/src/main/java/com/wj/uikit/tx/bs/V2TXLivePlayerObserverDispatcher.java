@@ -52,6 +52,33 @@ public class V2TXLivePlayerObserverDispatcher extends TXSingleLivePlayerObserver
     }
 
     @Override
+    public void onAudioPlaying(V2TXLivePlayer player, boolean firstPlay, Bundle extraInfo) {
+        super.onAudioPlaying(player, firstPlay, extraInfo);
+        mReceiverGroup.forEach(new TXIReceiverGroup.OnLoopListener() {
+            @Override
+            public void onEach(TXIReceiver receiver) {
+                if (receiver instanceof V2TXLivePlayerObserver) {
+                    ((V2TXLivePlayerObserver) receiver).onAudioPlaying(player,firstPlay, extraInfo);
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onAudioLoading(V2TXLivePlayer player, Bundle extraInfo) {
+        super.onAudioLoading(player, extraInfo);
+
+        mReceiverGroup.forEach(new TXIReceiverGroup.OnLoopListener() {
+            @Override
+            public void onEach(TXIReceiver receiver) {
+                if (receiver instanceof V2TXLivePlayerObserver) {
+                    ((V2TXLivePlayerObserver) receiver).onAudioLoading(player, extraInfo);
+                }
+            }
+        });
+
+    }
+    /*  @Override
     public void onAudioPlayStatusUpdate(V2TXLivePlayer player, V2TXLiveDef.V2TXLivePlayStatus status, V2TXLiveDef.V2TXLiveStatusChangeReason reason, Bundle extraInfo) {
         super.onAudioPlayStatusUpdate(player, status, reason, extraInfo);
         WJLogUitl.i(TAG, "onAudioPlayStatusUpdate: " + status);
@@ -63,7 +90,7 @@ public class V2TXLivePlayerObserverDispatcher extends TXSingleLivePlayerObserver
                 }
             }
         });
-    }
+    }*/
 
     @Override
     public void onPlayoutVolumeUpdate(V2TXLivePlayer player, int volume) {
@@ -109,9 +136,36 @@ public class V2TXLivePlayerObserverDispatcher extends TXSingleLivePlayerObserver
     }
 
     @Override
+    public void onVideoPlaying(V2TXLivePlayer player, boolean firstPlay, Bundle extraInfo) {
+        super.onVideoPlaying(player, firstPlay, extraInfo);
+        mReceiverGroup.forEach(new TXIReceiverGroup.OnLoopListener() {
+            @Override
+            public void onEach(TXIReceiver receiver) {
+                if (receiver instanceof V2TXLivePlayerObserver) {
+                    ((V2TXLivePlayerObserver) receiver).onVideoPlaying(player,firstPlay, extraInfo);
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onVideoLoading(V2TXLivePlayer player, Bundle extraInfo) {
+        super.onVideoLoading(player, extraInfo);
+        mReceiverGroup.forEach(new TXIReceiverGroup.OnLoopListener() {
+            @Override
+            public void onEach(TXIReceiver receiver) {
+                if (receiver instanceof V2TXLivePlayerObserver) {
+                    ((V2TXLivePlayerObserver) receiver).onVideoLoading(player, extraInfo);
+                }
+            }
+        });
+
+    }
+
+/*    @Override
     public void onVideoPlayStatusUpdate(V2TXLivePlayer player, V2TXLiveDef.V2TXLivePlayStatus status, V2TXLiveDef.V2TXLiveStatusChangeReason reason, Bundle extraInfo) {
         super.onVideoPlayStatusUpdate(player, status, reason, extraInfo);
-        WJLogUitl.i(TAG, "onVideoPlayStatusUpdate: " + status);
+
         mReceiverGroup.forEach(new TXIReceiverGroup.OnLoopListener() {
             @Override
             public void onEach(TXIReceiver receiver) {
@@ -120,7 +174,7 @@ public class V2TXLivePlayerObserverDispatcher extends TXSingleLivePlayerObserver
                 }
             }
         });
-    }
+    }*/
 
     @Override
     public void onSnapshotComplete(V2TXLivePlayer player, Bitmap image) {

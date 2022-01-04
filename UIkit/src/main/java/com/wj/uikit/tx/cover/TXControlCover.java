@@ -52,9 +52,12 @@ public class TXControlCover extends TXBaseCover {
                 if (isPlaying() == 1) {
                     //正在播放
                     stopPlay();
+                    mWj_player_iv.setImageResource(R.mipmap.wj_device_start);
                 } else {
                     //已经停止播放
                     startPlay();
+                    mWj_player_iv.setImageResource(R.mipmap.wj_device_stop);
+
                 }
             }
         });
@@ -92,6 +95,25 @@ public class TXControlCover extends TXBaseCover {
     }
 
     @Override
+    public void onVideoPlaying(V2TXLivePlayer player, boolean firstPlay, Bundle extraInfo) {
+        super.onVideoPlaying(player, firstPlay, extraInfo);
+        mWj_player_iv.setImageResource(R.mipmap.wj_device_stop);
+
+    }
+
+    @Override
+    public void onError(V2TXLivePlayer player, int code, String msg, Bundle extraInfo) {
+        super.onError(player, code, msg, extraInfo);
+        mWj_player_iv.setImageResource(R.mipmap.wj_device_start);
+    }
+
+    @Override
+    public void onVideoLoading(V2TXLivePlayer player, Bundle extraInfo) {
+        super.onVideoLoading(player, extraInfo);
+        mWj_player_iv.setImageResource(R.mipmap.wj_device_start);
+    }
+
+/*    @Override
     public void onVideoPlayStatusUpdate(V2TXLivePlayer player, V2TXLiveDef.V2TXLivePlayStatus status, V2TXLiveDef.V2TXLiveStatusChangeReason reason, Bundle extraInfo) {
         super.onVideoPlayStatusUpdate(player, status, reason, extraInfo);
         switch (status) {
@@ -103,7 +125,7 @@ public class TXControlCover extends TXBaseCover {
                 mWj_player_iv.setImageResource(R.mipmap.wj_device_stop);
                 break;
         }
-    }
+    }*/
 
 
 

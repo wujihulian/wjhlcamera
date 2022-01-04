@@ -56,7 +56,8 @@ dependencies {
 
 
 
-    api "com.tencent.liteav:LiteAVSDK_Professional:latest.release"
+ //   api "com.tencent.liteav:LiteAVSDK_Professional:latest.release"
+    api "com.tencent.liteav:LiteAVSDK_Professional:9.4.10921"
     /**
      *
      * 写了 要专业版或企业版，没看到专业版的购买地址，或者有无开源库可以播放的 我们先测试下

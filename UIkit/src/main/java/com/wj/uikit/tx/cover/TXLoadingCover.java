@@ -42,6 +42,18 @@ public class TXLoadingCover extends TXBaseCover {
     }
 
     @Override
+    public void onVideoLoading(V2TXLivePlayer player, Bundle extraInfo) {
+        super.onVideoLoading(player, extraInfo);
+        mView.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onVideoPlaying(V2TXLivePlayer player, boolean firstPlay, Bundle extraInfo) {
+        super.onVideoPlaying(player, firstPlay, extraInfo);
+        mView.setVisibility(View.GONE);
+
+    }
+    /*   @Override
     public void onVideoPlayStatusUpdate(V2TXLivePlayer player, V2TXLiveDef.V2TXLivePlayStatus status, V2TXLiveDef.V2TXLiveStatusChangeReason reason, Bundle extraInfo) {
         super.onVideoPlayStatusUpdate(player, status, reason, extraInfo);
         WJLogUitl.d("onVideoPlayStatusUpdate" +fps);
@@ -56,7 +68,7 @@ public class TXLoadingCover extends TXBaseCover {
                 mView.setVisibility(View.VISIBLE);
                 break;
         }
-    }
+    }*/
 
     @Override
     public void onError(V2TXLivePlayer player, int code, String msg, Bundle extraInfo) {

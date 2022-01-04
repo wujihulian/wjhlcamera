@@ -10,7 +10,7 @@
         android:layout_height="match_parent"
         >
         <ImageView
-            android:visibility="gone"
+            android:visibility="visible"
             android:padding="5dp"
             android:id="@+id/wj_player_iv"
             android:layout_width="26dp"
@@ -26,7 +26,7 @@
             android:layout_width="26dp"
             android:layout_height="26dp"
             android:layout_gravity="bottom"
-            android:layout_marginLeft="12dp"
+            android:layout_marginLeft="44dp"
             android:layout_marginBottom="10dp"
             android:src="@mipmap/wj_device_mic_open" />
 

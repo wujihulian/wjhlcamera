@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
@@ -40,6 +41,7 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
     private AssistPlay mAssistPlay;
     private String mDeviceSerial;
     private int liveReconnectCount = 0;
+    private Disposable mSubscribe;
 
     public void setHost(String host) {
         this.host = host;
@@ -115,7 +117,14 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
     @SuppressLint("CheckResult")
     private void reconnection() {
         WJLogUitl.d("reconnection");
-        Observable.timer(2, TimeUnit.SECONDS).map(new Function<Long, RtmpConfig>() {
+        if (mSubscribe!=null){
+            if (!mSubscribe.isDisposed()) {
+                mSubscribe.dispose();
+                mSubscribe=null;
+            }
+        }
+
+        mSubscribe = Observable.timer(2, TimeUnit.SECONDS).map(new Function<Long, RtmpConfig>() {
             @Override
             public RtmpConfig apply(@NonNull Long aLong) throws Exception {
                 RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDeviceSerial);
