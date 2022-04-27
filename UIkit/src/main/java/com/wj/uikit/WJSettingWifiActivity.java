@@ -14,10 +14,12 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -32,7 +34,6 @@ import com.ap.ezviz.pub.YsApManager;
 import com.ap.ezviz.pub.ap.ApWifiConfigInfo;
 import com.ap.ezviz.pub.ap.FIXED_IP;
 import com.ap.ezviz.pub.http.APHttpClient;
-import com.google.gson.Gson;
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.core.BasePopupView;
 import com.lxj.xpopup.impl.LoadingPopupView;
@@ -48,7 +49,6 @@ import com.wj.camera.net.DeviceApi;
 import com.wj.camera.net.ISAPI;
 import com.wj.camera.net.RxConsumer;
 import com.wj.camera.response.BaseDeviceResponse;
-import com.wj.camera.response.NetConfig;
 import com.wj.camera.response.NetworkInterface;
 import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.uitl.WJLogUitl;
@@ -116,8 +116,17 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                 finish();
             }
         });
+        findViewById(R.id._tv_query).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(WJSettingWifiActivity.this, WJLogQueryActivity.class);
+                intent.putExtras(getIntent().getExtras());
+                startActivity(intent);
+            }
+        });
 
     }
+
 
     private void getData() {
         Intent intent = getIntent();
@@ -458,10 +467,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
             ;
         }
         WJLogUitl.i("onClick: " + bssid);
-
         startAp(data.SSID, wifiPssword, bssid);
-
-
     }
 
     public boolean removeWifiConfig(String SSID) {
@@ -670,6 +676,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
     }
 
 
+
     @SuppressLint("CheckResult")
     private void getApConfigLog() {
         String password = "AP" + mDeviceInfo.device_code;
@@ -696,7 +703,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                         String string = s.body().string();
                                         String errorMsg = "未知错误";
                                         if (!TextUtils.isEmpty(string)) {
-                                            errorMsg=string;
+                                            errorMsg = string;
                                            /* NetConfig netConfig = new Gson().fromJson(string, NetConfig.class);
                                             if (netConfig.getNetConfig() != null) {
                                                 WJLogUitl.i(netConfig.getNetConfig().getResult());
@@ -725,7 +732,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                                         ClipData mClipData = ClipData.newPlainText("Label", finalErrorMsg);
                                                         // 将ClipData内容放到系统剪贴板里。
                                                         cm.setPrimaryClip(mClipData);
-                                                        Toast.makeText(WJSettingWifiActivity.this,"复制成功",Toast.LENGTH_LONG).show();
+                                                        Toast.makeText(WJSettingWifiActivity.this, "复制成功", Toast.LENGTH_LONG).show();
                                                     }
                                                 },
                                                 null,

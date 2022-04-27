@@ -1,5 +1,6 @@
 package com.ap.ezviz.pub.http
 
+import android.util.Log
 import ap.apconnect.add.component.BuildConfig
 import com.ap.ezviz.pub.ap.FIXED_IP
 import com.ap.ezviz.pub.http.digest.AuthenticationCacheInterceptor
@@ -68,7 +69,19 @@ object APHttpClient {
                 .build()
         return mHttpClient.newCall(request).execute()
     }
+    //获取配网日志
+    fun getApConfigLog(ipPort: FIXED_IP.IP_PORT,time:String):Response? {
+        Log.i(TAG, ipPort.ip+"")
+        Log.i(TAG, time+"")
+        //Log.i(TAG, "getApConfigLog: "+ipPort.ip+"----"+time)
 
+        val  url ="http://${ipPort.ip}:${ipPort.port}/${time}";
+        Log.i(TAG, "getApConfigLog: "+url)
+        val request = Request.Builder()
+                .url(url)
+                .build()
+        return mHttpClient.newCall(request).execute()
+    }
     /**
      * 获取设备激活状态
      */
