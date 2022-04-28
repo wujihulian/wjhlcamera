@@ -4,18 +4,17 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiConfiguration;
-import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.ap.ezviz.pub.ap.ApWifiConfigInfo;
 import com.ap.ezviz.pub.ap.FIXED_IP;
@@ -25,8 +24,11 @@ import com.lxj.xpopup.impl.LoadingPopupView;
 import com.thanosfisherman.wifiutils.WifiUtils;
 import com.thanosfisherman.wifiutils.wifiConnect.ConnectionErrorCode;
 import com.thanosfisherman.wifiutils.wifiConnect.ConnectionSuccessListener;
+import com.thanosfisherman.wifiutils.wifiDisconnect.DisconnectionErrorCode;
+import com.thanosfisherman.wifiutils.wifiDisconnect.DisconnectionSuccessListener;
 import com.wj.camera.view.WJDeviceConfig;
 import com.wj.uikit.adapter.OnItemClickListener;
+import com.wj.uikit.adapter.WJLogAdapter;
 import com.wj.uikit.db.DeviceInfo;
 import com.wj.uikit.pop.EditPop;
 
@@ -58,13 +60,16 @@ public class WJLogQueryActivity extends BaseUikitActivity {
     private WifiManager mWifiMgr;
     //设备信息
     private DeviceInfo mDeviceInfo;
-    private TextView mTextView;
+    private RecyclerView mRecyclerView;
+    private WJLogAdapter mWjLogAdapter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.wj_activity_log_query);
-        mTextView = findViewById(R.id.tv);
+        mRecyclerView = findViewById(R.id.recyclerView);
+        mWjLogAdapter = new WJLogAdapter();
+        mRecyclerView.setAdapter(mWjLogAdapter);
         mWifiMgr = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         getData();
         Date day = new Date();
@@ -77,7 +82,13 @@ public class WJLogQueryActivity extends BaseUikitActivity {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        File file = appendLog(mTextView.getText() + "");
+                        StringBuffer stringBuffer = new StringBuffer();
+                        List<String> allData = mWjLogAdapter.getAllData();
+                        for (String allDatum : allData) {
+                            stringBuffer.append(allDatum);
+                            stringBuffer.append("\r\n");
+                        }
+                        File file = appendLog(stringBuffer.toString() + "");
 
                         runOnUiThread(new Runnable() {
                             @Override
@@ -133,6 +144,7 @@ public class WJLogQueryActivity extends BaseUikitActivity {
         Bundle extras = intent.getExtras();
         mDeviceInfo = (DeviceInfo) extras.getSerializable(WJDeviceConfig.DEVICE_INFO);
     }
+
     public boolean removeWifiConfig(String SSID) {
         WifiManager wifiManager = mWifiMgr;
         List<WifiConfiguration> configs = wifiManager.getConfiguredNetworks();
@@ -149,7 +161,7 @@ public class WJLogQueryActivity extends BaseUikitActivity {
 
     @SuppressLint("CheckResult")
     private void getAppConfigLog(String time) {
-        Log.i(TAG, "getAppConfigLog: "+time);
+        Log.i(TAG, "getAppConfigLog: " + time);
         String password = "AP" + mDeviceInfo.device_code;
         //"EZVIZ_"+设备序列号
         String ssid = "HAP_" + mDeviceInfo.device_serial;
@@ -162,6 +174,7 @@ public class WJLogQueryActivity extends BaseUikitActivity {
                     public void success() {
                         getLog(time);
                     }
+
                     @Override
                     public void failed(@NonNull ConnectionErrorCode errorCode) {
 
@@ -185,16 +198,33 @@ public class WJLogQueryActivity extends BaseUikitActivity {
             if (response == null || response.body() == null) {
                 return "";
             }
-            return response.body().string();
+            String string = response.body().string();
+            mWjLogAdapter.clear();
+            String[] split = string.split("\\r?\\n");
+            if (split!=null){
+                for (String s : split) {
+                    mWjLogAdapter.addData(s);
+                }
+            }
+            return "";
         }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<String>() {
                     @Override
                     public void accept(String response) throws Exception {
-                        StringBuffer stringBuffer = new StringBuffer();
-                        stringBuffer.append("日志------------------");
-                        stringBuffer.append(response);
-                        mTextView.setText(stringBuffer.toString());
+                        mWjLogAdapter.notifyDataSetChanged();
+                        //  mTextView.setText(stringBuffer.toString());
+                        WifiUtils.withContext(WJLogQueryActivity.this).disconnect(new DisconnectionSuccessListener() {
+                            @Override
+                            public void success() {
+
+                            }
+
+                            @Override
+                            public void failed(@NonNull DisconnectionErrorCode errorCode) {
+
+                            }
+                        });
                         loadingPopupView.dismiss();
                     }
                 });
@@ -211,7 +241,7 @@ public class WJLogQueryActivity extends BaseUikitActivity {
             }
         }
         try {
-            BufferedWriter buf = new BufferedWriter(new FileWriter(logFile, false));
+            BufferedWriter buf = new BufferedWriter(new FileWriter(logFile,false));
             buf.append(text);
             buf.newLine();
             buf.close();
@@ -222,4 +252,6 @@ public class WJLogQueryActivity extends BaseUikitActivity {
         }
         return null;
     }
+
+
 }
