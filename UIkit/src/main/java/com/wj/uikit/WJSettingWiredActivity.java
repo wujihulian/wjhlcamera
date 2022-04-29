@@ -181,6 +181,15 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                 new XPopup.Builder(WJSettingWiredActivity.this).asCustom(selectPop).show();
             }
         });
+
+        findViewById(R.id._tv_query).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(WJSettingWiredActivity.this, WJLogQueryActivity.class);
+                intent.putExtras(getIntent().getExtras());
+                startActivity(intent);
+            }
+        });
     }
 
 

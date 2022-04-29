@@ -26,6 +26,16 @@
             android:text="为设备配置有线网络"
             android:textColor="#FF333333"
             android:textSize="17dp" />
+
+        <TextView
+            android:id="@+id/_tv_query"
+            android:layout_marginRight="12dp"
+            android:layout_gravity="right|center_vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="日志查询"
+            android:textColor="#FF333333"
+            android:textSize="17dp" />
     </FrameLayout>
 
     <LinearLayout

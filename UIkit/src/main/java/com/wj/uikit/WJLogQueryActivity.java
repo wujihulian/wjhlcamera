@@ -7,7 +7,6 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Environment;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -30,13 +29,14 @@ import com.wj.camera.view.WJDeviceConfig;
 import com.wj.uikit.adapter.OnItemClickListener;
 import com.wj.uikit.adapter.WJLogAdapter;
 import com.wj.uikit.db.DeviceInfo;
-import com.wj.uikit.pop.EditPop;
+import com.wj.uikit.pop.SelectPop;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -62,6 +62,8 @@ public class WJLogQueryActivity extends BaseUikitActivity {
     private DeviceInfo mDeviceInfo;
     private RecyclerView mRecyclerView;
     private WJLogAdapter mWjLogAdapter;
+    private List<Long> timeLong = new ArrayList<>();
+    private String[] mList = new String[5];
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -72,10 +74,17 @@ public class WJLogQueryActivity extends BaseUikitActivity {
         mRecyclerView.setAdapter(mWjLogAdapter);
         mWifiMgr = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         getData();
-        Date day = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-        String format = sdf.format(day);
-        getAppConfigLog(format);
+        long date = System.currentTimeMillis();
+        for (int i = 0; i < mList.length; i++) {
+            long time = date - i * 1000 * 60 * 60 * 24;
+            timeLong.add(time);
+            Date day = new Date(time);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
+            String format = sdf.format(day);
+            mList[i] = format;
+        }
+        String formatTime = formatTime(date);
+        getAppConfigLog(formatTime);
         findViewById(R.id.tv_save).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -115,20 +124,38 @@ public class WJLogQueryActivity extends BaseUikitActivity {
         findViewById(R.id.tv_title).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                EditPop editPop = new EditPop(v.getContext(), "请输入查询时间:" + format);
+
+                SelectPop selectPop = new SelectPop(v.getContext(), mList);
+                selectPop.setListener(new OnItemClickListener<String>() {
+                    @Override
+                    public void onClick(String s, int position) {
+                        getAppConfigLog(formatTime(timeLong.get(position)));
+                    }
+                });
+                new XPopup.Builder(v.getContext()).asCustom(selectPop).show();
+
+          /*      EditPop editPop = new EditPop(v.getContext(), "请输入查询时间:" + formatTime);
                 editPop.setOnConfirmListener(new OnItemClickListener<String>() {
                     @Override
                     public void onClick(String s, int position) {
                         if (TextUtils.isEmpty(s)) {
-                            getAppConfigLog(format);
+                            getAppConfigLog(formatTime);
                         } else {
                             getAppConfigLog(s);
                         }
                     }
                 });
-                new XPopup.Builder(v.getContext()).asCustom(editPop).show();
+                new XPopup.Builder(v.getContext()).asCustom(editPop).show();*/
             }
         });
+    }
+
+
+    public String formatTime(long time) {
+        Date day = new Date(time);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+        String format = sdf.format(day);
+        return format;
     }
 
     public static String getDiskCachePath(Context context) {
@@ -201,7 +228,7 @@ public class WJLogQueryActivity extends BaseUikitActivity {
             String string = response.body().string();
             mWjLogAdapter.clear();
             String[] split = string.split("\\r?\\n");
-            if (split!=null){
+            if (split != null) {
                 for (String s : split) {
                     mWjLogAdapter.addData(s);
                 }
@@ -241,7 +268,7 @@ public class WJLogQueryActivity extends BaseUikitActivity {
             }
         }
         try {
-            BufferedWriter buf = new BufferedWriter(new FileWriter(logFile,false));
+            BufferedWriter buf = new BufferedWriter(new FileWriter(logFile, false));
             buf.append(text);
             buf.newLine();
             buf.close();
