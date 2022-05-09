@@ -730,7 +730,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                             String currentVersion = response.getData().getCurrentVersion();
 
 
-                            if (responseData.getIsNeedUpgrade() == 1 && !(currentVersion.equals(latestVersion))) {
+                            if (responseData.getIsNeedUpgrade() >= 1 && !(currentVersion.equals(latestVersion))) {
                                 // 有新版本
                                 new XPopup.Builder(WJDeviceDebugNewActivity.this).asConfirm("检测到新版本", responseData.getCurrentVersion() + " 是否升级到 " + responseData.getLatestVersion(), "否", "是", new OnConfirmListener() {
                                     @Override
@@ -800,13 +800,12 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
 
                             String latestVersion = response.getData().getLatestVersion();
                             String currentVersion = response.getData().getCurrentVersion();
-                            if (responseData.getIsNeedUpgrade() == 1 && !(currentVersion.equals(latestVersion))) {
+                            if (responseData.getIsNeedUpgrade() >= 1 && !(currentVersion.equals(latestVersion))) {
                                 // 有新版本
                                 new XPopup.Builder(WJDeviceDebugNewActivity.this).asConfirm("检测到新版本", responseData.getCurrentVersion() + " 是否升级到 " + responseData.getLatestVersion(), "否", "是", new OnConfirmListener() {
                                     @Override
                                     public void onConfirm() {
                                         deviceUpdate();
-
                                     }
                                 }, null, false, 0).show();
                             } else {
