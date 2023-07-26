@@ -5,19 +5,27 @@ import com.google.gson.reflect.TypeToken;
 import com.wj.camera.WJCamera;
 import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.callback.StringCallbck;
+import com.wj.camera.requestEntity.RequestDeviceListEntity;
 import com.wj.camera.response.BaseDeviceResponse;
 import com.wj.camera.response.CheckDevcieUpdate;
 import com.wj.camera.response.DeviceCameraData;
 import com.wj.camera.response.DeviceData;
 import com.wj.camera.response.DeviceUpdateStatus;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 
+import okhttp3.Callback;
 import okhttp3.FormBody;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
@@ -45,12 +53,13 @@ public class DeviceApi {
         mGson = new Gson();
     }
 
-    public OkHttpClient getClient(){
+    public OkHttpClient getClient() {
         return WJCamera.getInstance().getClient();
     }
 
     /**
      * 获取设备信息
+     *
      * @param deviceSerial 设备序列号
      * @param callback
      */
@@ -97,6 +106,7 @@ public class DeviceApi {
 
     /**
      * 获取设备通道信息
+     *
      * @param deviceSerial
      * @return
      */
@@ -124,6 +134,7 @@ public class DeviceApi {
 
     /**
      * 修改通道名称
+     *
      * @param deviceSerial
      * @param jsonCallback
      */
@@ -143,7 +154,36 @@ public class DeviceApi {
 
 
     /**
+     * 设置设备列表
+     */
+    public void getDeviceList(String key, Callback callback) {
+        MediaType mediaType = MediaType.parse("application/json; charset=UTF-8");
+        RequestDeviceListEntity deviceListEntity = new RequestDeviceListEntity();
+        RequestDeviceListEntity.SearchDescriptionBean descriptionBean = new RequestDeviceListEntity.SearchDescriptionBean();
+        RequestDeviceListEntity.SearchDescriptionBean.FilterBean filterBean = new RequestDeviceListEntity.SearchDescriptionBean.FilterBean();
+        filterBean.setKey(key);
+        ArrayList<String> protocolType = new ArrayList<>();
+        protocolType.add("ehomeV5");
+        filterBean.setProtocolType(protocolType);
+        ArrayList<String> devStatus = new ArrayList<>();
+        devStatus.add("online");
+        devStatus.add("offline");
+        filterBean.setDevStatus(devStatus);
+        descriptionBean.setFilter(filterBean);
+        deviceListEntity.setSearchDescription(descriptionBean);
+        RequestBody requestBody = RequestBody.create(mediaType, new Gson().toJson(deviceListEntity));
+
+        Request request = new Request.Builder()
+                .url(Api.DeviceList)
+                .post(requestBody)
+                .build();
+        getClient().newCall(request).enqueue(callback);
+    }
+
+
+    /**
      * 设置设备名称
+     *
      * @param deviceSerial
      * @param deviceName
      * @param callback
@@ -163,6 +203,7 @@ public class DeviceApi {
 
     /**
      * 添加设备
+     *
      * @param deviceSerial 设备序列号
      * @param validateCode 设备验证码
      * @param callback
@@ -182,6 +223,7 @@ public class DeviceApi {
 
     /**
      * 删除设备
+     *
      * @param deviceSerial
      * @param callback
      */
@@ -214,7 +256,7 @@ public class DeviceApi {
             }.getType();
             BaseDeviceResponse<CheckDevcieUpdate> baseDeviceResponse = mGson.fromJson(string, jsonType);
             return baseDeviceResponse;
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return defaultResponse();
@@ -257,7 +299,7 @@ public class DeviceApi {
             }.getType();
             BaseDeviceResponse<DeviceUpdateStatus> baseDeviceResponse = mGson.fromJson(string, jsonType);
             return baseDeviceResponse;
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

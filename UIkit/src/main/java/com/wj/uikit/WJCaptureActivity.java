@@ -67,7 +67,7 @@ public class WJCaptureActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        checkDevice("www.xx.cn F87307358 UOTJUZ DS-2CD8E45F-W 5.2-110mm");
         barcodeScannerView = initializeContent();
         capture = new CaptureManager(this, barcodeScannerView) {
             @Override
@@ -109,6 +109,11 @@ public class WJCaptureActivity extends AppCompatActivity {
             }
         });
     }
+
+    public void getDeviceList() {
+
+    }
+
 
     @SuppressLint("CheckResult")
     public void checkDevice(String content) {
@@ -291,22 +296,23 @@ public class WJCaptureActivity extends AppCompatActivity {
 
     protected DeviceInfo parse(String content) {
         WJLogUitl.i("parse: " + content);
-        byte[] byteArray = content.getBytes();
-        StringBuffer stringBuffer = new StringBuffer();
-        for (int i = 0; i < byteArray.length; i++) {
-            try {
-                String res = new String(new byte[]{byteArray[i]}, "UTF-8");
-                WJLogUitl.i("parse: " + res);
-                if (byteArray[i] == 13) {
-                    stringBuffer.append("&");
-                } else {
-                    stringBuffer.append(res);
-                }
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-        }
-        String[] split = stringBuffer.toString().split("&");
+//        byte[] byteArray = content.getBytes();
+//        StringBuffer stringBuffer = new StringBuffer();
+//        for (int i = 0; i < byteArray.length; i++) {
+//            try {
+//                String res = new String(new byte[]{byteArray[i]}, "UTF-8");
+//                WJLogUitl.i("parse: " + res);
+//                if (byteArray[i] == 13) {
+//                    stringBuffer.append("&");
+//                } else {
+//                    stringBuffer.append(res);
+//                }
+//            } catch (UnsupportedEncodingException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        String[] split = stringBuffer.toString().split("&");
+        String[] split = content.split(" ");
         WJLogUitl.i("parse: " + new Gson().toJson(split));
         if (split != null && split.length >= 4) {
             DeviceInfo deviceInfo = new DeviceInfo();
@@ -350,10 +356,10 @@ public class WJCaptureActivity extends AppCompatActivity {
                             deviceInfo.setIpAaddress(networkInterface.get(1).getIPAddress().getIpAddress());
                             String wifi = networkInterface.get(1).getIPAddress().getIpAddress();
                             String wired = networkInterface.get(0).getIPAddress().getIpAddress();
-                            if ("192.168.8.1".equals(wifi)){
+                            if ("192.168.8.1".equals(wifi)) {
                                 deviceInfo.setIpAaddress(wired);
                                 deviceInfo.setNetworkMode("1");
-                            }else {
+                            } else {
                                 deviceInfo.setIpAaddress(wifi);
                                 deviceInfo.setNetworkMode("2");
                             }

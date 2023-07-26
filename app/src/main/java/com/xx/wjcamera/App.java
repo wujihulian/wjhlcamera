@@ -16,12 +16,12 @@ import com.wj.uikit.uitl.WJUikit;
  * <author> <time> <version> <desc>
  * 作者姓名 修改时间 版本号 描述
  */
-public class App  extends Application {
+public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
         MultiDex.install(this);
-
+        WJUikit.init(this, "2390420812811299", "asdiubpfhaishfipaeqhf319842301");
 
     }
 }

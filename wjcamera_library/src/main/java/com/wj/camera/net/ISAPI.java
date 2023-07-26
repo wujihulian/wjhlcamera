@@ -53,6 +53,7 @@ public class ISAPI {
     public static ISAPI isapi;
     private OkHttpClient mClient;
     private String deviceSerial;
+    private String devIndex="";
     private Gson mGson;
 
     public static ISAPI getInstance() {
@@ -62,8 +63,17 @@ public class ISAPI {
         return isapi;
     }
 
+    public String getDevIndex() {
+        return devIndex;
+    }
+
+    public void setDevIndex(String devIndex) {
+        this.devIndex = devIndex;
+    }
+
     /**
      * 配置设备
+     *
      * @param deviceSerial 设备 序列号
      */
     public void config(String deviceSerial) {
@@ -100,17 +110,17 @@ public class ISAPI {
         return null;
     }
 
-    public void zoom(int zoom) {
+    public void zoom(int zoom,String devIndex) {
         ZoomResponse zoomResponse = new ZoomResponse();
         zoomResponse.setZoom(new ZoomResponse.ZoomDTO());
         zoomResponse.getZoom().setRatio(zoom);
-        OkHttpUtils.getInstance().put(ApiNew.Zoom).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(zoomResponse)).enqueue(new XmlCallback(null));
+        OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.Zoom, devIndex)).addHeader("EZO-DeviceSerial", devIndex).jsons(entityToXml(zoomResponse)).enqueue(new XmlCallback(null));
     }
 
 
     //获取RTMP配置
     public void getRTMP(String deviceSerial, JsonCallback<RtmpConfig> callback) {
-        OkHttpUtils.getInstance().get(ApiNew.RTMP).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
+        OkHttpUtils.getInstance().get(String.format("%s?devIndex=%s", ApiNew.RTMP, devIndex)).addHeader("EZO-DeviceSerial", devIndex).enqueue(new XmlCallback(callback));
     }
 
     //获取RTMP配置
@@ -119,15 +129,16 @@ public class ISAPI {
     }
 
     public void getAudio(JsonCallback<TwoWayAudio> callback) {
-        OkHttpUtils.getInstance().get(ApiNew.Audio).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
+        OkHttpUtils.getInstance().get(String.format("%s?devIndex=%s", ApiNew.Audio, devIndex)).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
     }
-    public void getAudio(String deviceSerial,JsonCallback<TwoWayAudio> callback) {
-        OkHttpUtils.getInstance().get(ApiNew.Audio).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
+
+    public void getAudio(String deviceSerial, JsonCallback<TwoWayAudio> callback) {
+//        OkHttpUtils.getInstance().get(ApiNew.Audio).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
     }
 
 
     public void setAuido(TwoWayAudio twoWayAudio, JsonCallback<ResponseStatus> callback) {
-        OkHttpUtils.getInstance().put(ApiNew.Audio).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(twoWayAudio)).enqueue(new XmlCallback(callback));
+        OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.Audio, devIndex)).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(twoWayAudio)).enqueue(new XmlCallback(callback));
     }
 
     public void setVolume(String deviceSerial, @IntRange(from = 0, to = 100) int volume) {
@@ -144,9 +155,9 @@ public class ISAPI {
                         data.getTwoWayAudioChannel().setSpeakerVolume(String.valueOf(volume));
                         setAuido(data, callback);
                     }
-                }else {
-                    if (callback!=null){
-                        callback.onError(0,"设置失败");
+                } else {
+                    if (callback != null) {
+                        callback.onError(0, "设置失败");
                     }
                 }
             }
@@ -154,8 +165,8 @@ public class ISAPI {
             @Override
             public void onError(int code, String msg) {
                 super.onError(code, msg);
-                if (callback!=null){
-                    callback.onError(0,"设置失败");
+                if (callback != null) {
+                    callback.onError(0, "设置失败");
                 }
             }
         });
@@ -164,11 +175,12 @@ public class ISAPI {
     //获取RTMP配置
     public synchronized RtmpConfig getRTMP(String device_serial) {
         try {
-            Response execute = OkHttpUtils.getInstance().get(ApiNew.RTMP).addHeader("EZO-DeviceSerial", device_serial).execute();
+            Response execute = OkHttpUtils.getInstance().get(String.format("%s?devIndex=%s", ApiNew.RTMP, devIndex)).execute();
             if (execute == null || execute.body() == null) {
                 return null;
             }
             String string = execute.body().string();
+            System.out.println("execute-->"+string);
             String xml = Objects.requireNonNull(string);
             String json = new XmlToJson.Builder(xml).build().toString();
             return new Gson().fromJson(json, RtmpConfig.class);
@@ -181,12 +193,12 @@ public class ISAPI {
 
     //获取当前设置 分辨率 码率相关设置
     public Call getVideoConfig(JsonCallback<VideoConfig> callback) {
-        return OkHttpUtils.getInstance().get(ApiNew.setting101).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
+        return OkHttpUtils.getInstance().get(String.format("%s?devIndex=%s", ApiNew.setting101, devIndex)).addHeader("EZO-DeviceSerial", devIndex).enqueue(new XmlCallback(callback));
     }
 
     //设置当前设置 分辨率 码率相关设置
     public Call setVideoConfig(VideoConfig videoConfig, JsonCallback<ResponseStatus> callback) {
-        return OkHttpUtils.getInstance().put(ApiNew.setting101).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(videoConfig)).enqueue(new XmlCallback(callback));
+        return OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.setting101, devIndex)).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(videoConfig)).enqueue(new XmlCallback(callback));
     }
 
     public Call getZoom(JsonCallback<ZoomResponse> jsonCallback) {
@@ -358,7 +370,7 @@ public class ISAPI {
         focusctrldto.setMode(mode);
         focusctrldto.setStep(step);
         focusctrl.setFOCUSCTRL(focusctrldto);
-        return OkHttpUtils.getInstance().put(ApiNew.FOCUSCTRL).jsons(entityToXml(focusctrl)).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
+        return OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.FOCUSCTRL, devIndex)).jsons(entityToXml(focusctrl)).addHeader("EZO-DeviceSerial", devIndex).enqueue(null);
     }
 
     //简单恢复
@@ -389,9 +401,11 @@ public class ISAPI {
         OkHttpUtils.getInstance().get(ApiNew.networkInterface).addHeader("EZO-DeviceSerial", deviceSerial)
                 .enqueue(new XmlCallback(jsonCallback));
     }
-    public void onepushFoucsStart(String deviceSerial){
-        OkHttpUtils.getInstance().put(ApiNew.onepushfoucsStart).addHeader("EZO-DeviceSerial", deviceSerial).jsons(XML.PTZDATA_0).enqueue(null);
+
+    public void onepushFoucsStart() {
+        OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.onepushfoucsStart, devIndex)).addHeader("EZO-DeviceSerial", devIndex).jsons(XML.PTZDATA_0).enqueue(null);
     }
+
     //获取配网错误日志
     public void getApConfigLog(String deviceSerial, JsonCallback jsonCallback) {
 

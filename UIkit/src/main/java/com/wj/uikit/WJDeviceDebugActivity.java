@@ -213,7 +213,7 @@ public class WJDeviceDebugActivity extends BaseUikitActivity {
                         public void onClick(String s, int position) {
                             zoomIndex = position;
                             mFocus_tv.setText(s);
-                            ISAPI.getInstance().zoom(position + 1);
+                            ISAPI.getInstance().zoom(position + 1,deviceSerial);
 
 
                         }

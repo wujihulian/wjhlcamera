@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
+import com.google.gson.Gson;
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.interfaces.OnConfirmListener;
 import com.tencent.live2.V2TXLiveCode;
@@ -28,6 +29,7 @@ import com.wj.camera.net.OkHttpUtils;
 import com.wj.camera.net.RxConsumer;
 import com.wj.camera.response.BaseDeviceResponse;
 import com.wj.camera.response.CheckDevcieUpdate;
+import com.wj.camera.response.DeviceInfoListResponse;
 import com.wj.camera.response.DeviceUpdateStatus;
 import com.wj.camera.response.ResponseStatus;
 import com.wj.camera.response.RtmpConfig;
@@ -56,6 +58,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.IOException;
 import java.util.concurrent.Callable;
 
 import io.reactivex.Observable;
@@ -65,6 +68,9 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
 
 /**
  * FileName: DeviceDebugActivity
@@ -77,6 +83,7 @@ import io.reactivex.schedulers.Schedulers;
  */
 public class WJDeviceDebugNewActivity extends BaseUikitActivity {
     private String deviceSerial;
+    private String devIndex;
     private String deviceCode;
     private String deviceType;
     private FrameLayout mRatio_fl;
@@ -128,29 +135,59 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
         getDeviceInfo();
         findView();
         initClick();
-        initVideoPlay();
-        getData();
-        initAudio();
-        isLatestVersion();
+//        initVideoPlay();
+
+
+//        isLatestVersion();
+        getDevice();
     }
 
-    private void initVideoPlay() {
+    private void initVideoPlay(String devIndex) {
         if (WJReconnectEventConfig.isWebRtc) {
-            initWebrtc();
+            initWebrtc(devIndex);
+            getData(devIndex);
+            initAudio();
         } else {
             initAction();
         }
     }
 
-    private void initWebrtc() {
+    private void getDevice() {
+        DeviceApi.getInstance().getDeviceList(mDeviceInfo.device_serial, new Callback() {
+            @Override
+            public void onFailure(@androidx.annotation.NonNull Call call, @androidx.annotation.NonNull IOException e) {
+                System.out.println("onFailure--> " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@androidx.annotation.NonNull Call call, @androidx.annotation.NonNull Response response) throws IOException {
+                String json = response.body().string();
+                DeviceInfoListResponse infoListResponse = new Gson().fromJson(json, DeviceInfoListResponse.class);
+                if (!infoListResponse.getSearchResult().getMatchList().isEmpty()) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            initVideoPlay(infoListResponse.getSearchResult().getMatchList().get(0).getDevice().getDevIndex());
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    private void initWebrtc(String devIndex) {
         FrameLayout frameLayout = findViewById(R.id.fl);
         frameLayout.setVisibility(View.VISIBLE);
         mTxVideoPlayer = new TXVideoPlayer(this);
         mTxVideoPlayer.getReconnectCover().setDeviceSerial(mDeviceInfo.device_serial);
+        mTxVideoPlayer.getReconnectCover().setDevIndex(devIndex);
         mTxVideoPlayer.attachContainer(frameLayout);
-        ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial, new JsonCallback<RtmpConfig>() {
+        this.devIndex = devIndex;
+        ISAPI.getInstance().getRTMP(devIndex, new JsonCallback<RtmpConfig>() {
             @Override
             public void onSuccess(RtmpConfig data) {
+
+                System.out.println("onSuccessRtmpConfig--> " + data.toString());
                 if (data != null) {
                     RtmpConfig.RTMPDTO rtmp = data.getRTMP();
                     if (rtmp != null) {
@@ -160,14 +197,14 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                         } else {
                             url = rtmp.getPlayURL1();
                         }
-                        url = WJReconnectEventConfig.transformUrl(url);
+//                        url = WJReconnectEventConfig.transformUrl(url);
                         WJLogUitl.d(url);
-                        if (mTxVideoPlayer!=null){
+                        if (mTxVideoPlayer != null) {
                             int startCode = mTxVideoPlayer.startPlay(url);
-                            WJLogUitl.d("startPlay "+(System.currentTimeMillis()/1000));
-                            if (startCode== V2TXLiveCode.V2TXLIVE_OK){
+                            WJLogUitl.d("startPlay " + (System.currentTimeMillis() / 1000));
+                            if (startCode == V2TXLiveCode.V2TXLIVE_OK) {
 
-                            }else {
+                            } else {
                                 mTxVideoPlayer.getReconnectCover().reconnection();
                             }
                         }
@@ -188,7 +225,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void addDevice(DeviceInfo deviceInfo) {
         //initAction();
-        getData();
+        getData("");
         initAudio();
     }
 
@@ -219,12 +256,14 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
 
 
     @SuppressLint("CheckResult")
-    private void getData() {
+    private void getData(String devIndex) {
         mIsapi = ISAPI.getInstance();
         mIsapi.config(deviceSerial);
+        mIsapi.setDevIndex(devIndex);
         mIsapi.getVideoConfig(new JsonCallback<VideoConfig>() {
             @Override
             public void onSuccess(VideoConfig data) {
+                System.out.println("getVideoConfig--> "+new Gson().toJson(data));
                 mVideoConfig = data;
                 if (mVideoConfig != null && mVideoConfig.getStreamingChannel() != null && mVideoConfig.getStreamingChannel().getVideo() != null) {
                     VideoConfig.StreamingChannelDTO.VideoDTO video = mVideoConfig.getStreamingChannel().getVideo();
@@ -375,7 +414,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                         public void onClick(String s, int position) {
                             zoomIndex = position;
                             mFocus_tv.setText(s);
-                            ISAPI.getInstance().zoom(position + 1);
+                            ISAPI.getInstance().zoom(position + 1, devIndex);
 
 
                         }
@@ -575,14 +614,14 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
             @Override
             public void onViewClick(View view) {
                 // ISAPI.getInstance().focus(mDeviceInfo.device_serial,false);
-                ISAPI.getInstance().FOCUSCTRL(mDeviceInfo.device_serial, "far");
+                ISAPI.getInstance().FOCUSCTRL(devIndex, "far");
             }
         });
         findViewById(R.id.tv_right).setOnClickListener(new OnControlClickListener() {
             @Override
             public void onViewClick(View v) {
                 //ISAPI.getInstance().focus(mDeviceInfo.device_serial,true);
-                ISAPI.getInstance().FOCUSCTRL(mDeviceInfo.device_serial, "near");
+                ISAPI.getInstance().FOCUSCTRL(devIndex, "near");
             }
         });
 
@@ -638,7 +677,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
             @Override
             public void onClick(View v) {
                 //一键聚焦
-                ISAPI.getInstance().onepushFoucsStart(mDeviceInfo.device_serial);
+                ISAPI.getInstance().onepushFoucsStart();
             }
         });
 
@@ -650,17 +689,17 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                     ISAPI.getInstance().setVolume(mDeviceInfo.device_serial, 50, new JsonCallback<ResponseStatus>() {
                         @Override
                         public void onSuccess(ResponseStatus data) {
-                            if (data!=null && data.ResponseStatus!=null && "1".equals(data.ResponseStatus.statusCode)){
+                            if (data != null && data.ResponseStatus != null && "1".equals(data.ResponseStatus.statusCode)) {
                                 mTp_volume.setProgress(50);
-                            }else {
-                                Toast.makeText(WJDeviceDebugNewActivity.this,"音量设置失败",Toast.LENGTH_LONG).show();
+                            } else {
+                                Toast.makeText(WJDeviceDebugNewActivity.this, "音量设置失败", Toast.LENGTH_LONG).show();
                             }
                         }
 
                         @Override
                         public void onError(int code, String msg) {
                             super.onError(code, msg);
-                            Toast.makeText(WJDeviceDebugNewActivity.this,"音量设置失败",Toast.LENGTH_LONG).show();
+                            Toast.makeText(WJDeviceDebugNewActivity.this, "音量设置失败", Toast.LENGTH_LONG).show();
                         }
                     });
 
@@ -669,14 +708,15 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                         @Override
                         public void onError(int code, String msg) {
                             super.onError(code, msg);
-                            Toast.makeText(WJDeviceDebugNewActivity.this,"音量设置失败",Toast.LENGTH_LONG).show();
+                            Toast.makeText(WJDeviceDebugNewActivity.this, "音量设置失败", Toast.LENGTH_LONG).show();
                         }
+
                         @Override
                         public void onSuccess(ResponseStatus data) {
-                            if (data!=null && data.ResponseStatus!=null && "1".equals(data.ResponseStatus.statusCode)){
+                            if (data != null && data.ResponseStatus != null && "1".equals(data.ResponseStatus.statusCode)) {
                                 mTp_volume.setProgress(0);
-                            }else {
-                                Toast.makeText(WJDeviceDebugNewActivity.this,"音量设置失败",Toast.LENGTH_LONG).show();
+                            } else {
+                                Toast.makeText(WJDeviceDebugNewActivity.this, "音量设置失败", Toast.LENGTH_LONG).show();
                             }
                         }
                     });
@@ -690,16 +730,16 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
     @SuppressLint("CheckResult")
     private void isLatestVersion() {
         Observable.fromCallable(new Callable<BaseDeviceResponse<CheckDevcieUpdate>>() {
-            @Override
-            public BaseDeviceResponse<CheckDevcieUpdate> call() throws Exception {
-                BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(mDeviceInfo.device_serial);
-                BaseDeviceResponse<DeviceUpdateStatus> deviceUpdateStatus = DeviceApi.getInstance().deviceUpdateStatus(mDeviceInfo.device_serial);
-                if (deviceResponse.getData() != null && deviceUpdateStatus != null) {
-                    deviceResponse.getData().mDeviceResponse = deviceUpdateStatus.getData();
-                }
-                return deviceResponse;
-            }
-        }).subscribeOn(Schedulers.io())
+                    @Override
+                    public BaseDeviceResponse<CheckDevcieUpdate> call() throws Exception {
+                        BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(mDeviceInfo.device_serial);
+                        BaseDeviceResponse<DeviceUpdateStatus> deviceUpdateStatus = DeviceApi.getInstance().deviceUpdateStatus(mDeviceInfo.device_serial);
+                        if (deviceResponse.getData() != null && deviceUpdateStatus != null) {
+                            deviceResponse.getData().mDeviceResponse = deviceUpdateStatus.getData();
+                        }
+                        return deviceResponse;
+                    }
+                }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(new RxConsumer(WJDeviceDebugNewActivity.this))
                 .subscribe(new Consumer<BaseDeviceResponse<CheckDevcieUpdate>>() {
@@ -757,16 +797,16 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
         }
 
         mDisposable = Observable.just(mDeviceInfo).map(new Function<DeviceInfo, BaseDeviceResponse<CheckDevcieUpdate>>() {
-            @Override
-            public BaseDeviceResponse<CheckDevcieUpdate> apply(@NonNull DeviceInfo deviceInfo) throws Exception {
-                BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(mDeviceInfo.device_serial);
-                BaseDeviceResponse<DeviceUpdateStatus> deviceUpdateStatus = DeviceApi.getInstance().deviceUpdateStatus(mDeviceInfo.device_serial);
-                if (deviceResponse.getData() != null && deviceUpdateStatus != null) {
-                    deviceResponse.getData().mDeviceResponse = deviceUpdateStatus.getData();
-                }
-                return deviceResponse;
-            }
-        }).subscribeOn(Schedulers.io())
+                    @Override
+                    public BaseDeviceResponse<CheckDevcieUpdate> apply(@NonNull DeviceInfo deviceInfo) throws Exception {
+                        BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(mDeviceInfo.device_serial);
+                        BaseDeviceResponse<DeviceUpdateStatus> deviceUpdateStatus = DeviceApi.getInstance().deviceUpdateStatus(mDeviceInfo.device_serial);
+                        if (deviceResponse.getData() != null && deviceUpdateStatus != null) {
+                            deviceResponse.getData().mDeviceResponse = deviceUpdateStatus.getData();
+                        }
+                        return deviceResponse;
+                    }
+                }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(new RxConsumer(WJDeviceDebugNewActivity.this))
                 .subscribe(new Consumer<BaseDeviceResponse<CheckDevcieUpdate>>() {
@@ -837,12 +877,12 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
     @SuppressLint("CheckResult")
     public void deviceUpdate() {
         Observable.just(mDeviceInfo).map(new Function<DeviceInfo, BaseDeviceResponse<CheckDevcieUpdate>>() {
-            @Override
-            public BaseDeviceResponse apply(@NonNull DeviceInfo deviceInfo) throws Exception {
-                BaseDeviceResponse deviceResponse = DeviceApi.getInstance().deviceUpdate(deviceInfo.device_serial);
-                return deviceResponse;
-            }
-        }).subscribeOn(Schedulers.io())
+                    @Override
+                    public BaseDeviceResponse apply(@NonNull DeviceInfo deviceInfo) throws Exception {
+                        BaseDeviceResponse deviceResponse = DeviceApi.getInstance().deviceUpdate(deviceInfo.device_serial);
+                        return deviceResponse;
+                    }
+                }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(new RxConsumer(WJDeviceDebugNewActivity.this))
                 .subscribe(new Consumer<BaseDeviceResponse<CheckDevcieUpdate>>() {

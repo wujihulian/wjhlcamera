@@ -19,7 +19,7 @@ object LogUtil {
     @JvmStatic
     fun debugLog(tag: String?, content: String?) {
         if (DEBUG && !TextUtils.isEmpty(content)) {
-            Log.d(tag, content)
+            Log.d(tag, content?:"")
         }
     }
 
@@ -39,7 +39,7 @@ object LogUtil {
     @JvmStatic
     fun errorLog(tag: String?, content: String?) {
         if (DEBUG && !TextUtils.isEmpty(content)) {
-            Log.e(tag, content)
+            Log.e(tag, content?:"")
         }
     }
 
@@ -59,7 +59,7 @@ object LogUtil {
     @JvmStatic
     fun infoLog(tag: String?, content: String?) {
         if (DEBUG && !TextUtils.isEmpty(content)) {
-            Log.i(tag, content)
+            Log.i(tag, content?:"")
         }
     }
 
@@ -79,7 +79,7 @@ object LogUtil {
     @JvmStatic
     fun verboseLog(tag: String?, content: String?) {
         if (DEBUG && !TextUtils.isEmpty(content)) {
-            Log.v(tag, content)
+            Log.v(tag, content?:"")
         }
     }
 
@@ -99,7 +99,7 @@ object LogUtil {
     @JvmStatic
     fun warnLog(tag: String?, content: String?) {
         if (DEBUG && !TextUtils.isEmpty(content)) {
-            Log.w(tag, content)
+            Log.w(tag, content?:"")
         }
     }
 

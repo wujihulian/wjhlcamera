@@ -1,11 +1,20 @@
 package com.wj.camera.net;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.burgstaller.okhttp.digest.Credentials;
+import com.burgstaller.okhttp.digest.DigestAuthenticator;
+import com.readystatesoftware.chuck.ChuckInterceptor;
 import com.wj.camera.net.map.RepeatKeyHasMap;
 import com.wj.camera.net.request.GetRequest;
 import com.wj.camera.net.request.PostFromRequest;
 import com.wj.camera.net.request.PostJsonRequest;
 import com.wj.camera.net.request.PutRequest;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +24,9 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.Call;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.Route;
 import okhttp3.logging.HttpLoggingInterceptor;
 
 
@@ -61,9 +73,11 @@ public class OkHttpUtils {
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(5, TimeUnit.SECONDS)
                 .writeTimeout(5, TimeUnit.SECONDS)
+                .authenticator(new DigestAuthenticator(new Credentials("admin", "hik12345")))
                 .build();
         setBaseUrl(Api.baseUrl);
     }
+
 
     public void commonHead(String key, String value) {
         commonHeads.put(key, value);

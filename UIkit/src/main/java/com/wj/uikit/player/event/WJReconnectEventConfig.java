@@ -14,7 +14,7 @@ import android.text.TextUtils;
 public class WJReconnectEventConfig {
     public static String token;
     public static String host;
-    public static boolean isWebRtc = false;
+    public static boolean isWebRtc = true;
 
 
     public static String transformUrl(String url) {
