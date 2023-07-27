@@ -23,7 +23,7 @@ public class SafeGuardInterceptor implements Interceptor {
         try {
             return chain.proceed(chain.request());
         } catch (Throwable e) {
-            throw new IOException("SafeGuarded when requesting ${chain.request().url}", e);
+            throw new IOException("SafeGuarded when requesting ${chain.request().url} " + e.getMessage(), e);
         }
     }
 }

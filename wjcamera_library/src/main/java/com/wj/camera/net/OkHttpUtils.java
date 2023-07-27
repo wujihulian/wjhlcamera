@@ -73,7 +73,6 @@ public class OkHttpUtils {
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(5, TimeUnit.SECONDS)
                 .writeTimeout(5, TimeUnit.SECONDS)
-                .addInterceptor(new SafeGuardInterceptor())
                 .authenticator(new DigestAuthenticator(new Credentials("admin", "hik12345")))
                 .build();
         setBaseUrl(Api.baseUrl);
