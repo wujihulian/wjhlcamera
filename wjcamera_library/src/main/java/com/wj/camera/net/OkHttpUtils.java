@@ -64,7 +64,7 @@ public class OkHttpUtils {
         }
         if (httpLogging == true) {
             HttpLoggingInterceptor mInterceptor = new HttpLoggingInterceptor();
-            mInterceptor.level(HttpLoggingInterceptor.Level.BODY);
+//            mInterceptor.level(HttpLoggingInterceptor.Level.BODY);
             builder.addNetworkInterceptor(mInterceptor);
         }
 
