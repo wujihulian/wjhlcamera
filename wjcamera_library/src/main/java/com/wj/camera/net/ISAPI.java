@@ -269,7 +269,7 @@ public class ISAPI {
         SceneResponse sceneResponse = new SceneResponse();
         sceneResponse.setMountingScenario(new SceneResponse.MountingScenarioDTO());
         sceneResponse.getMountingScenario().setMode(indoor.getScene());
-        return OkHttpUtils.getInstance().put(ApiNew.Scene)
+        return OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s",ApiNew.Scene, devIndex))
                 .jsons(entityToXml(sceneResponse))
                 .addHeader("EZO-DeviceSerial", deviceSerial)
                 .enqueue(new XmlCallback(jsonCallback));

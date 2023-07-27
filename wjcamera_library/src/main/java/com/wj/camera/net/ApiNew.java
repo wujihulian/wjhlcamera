@@ -25,7 +25,7 @@ public interface ApiNew {
     //音量
     String Audio = "/ISAPI/System/TwoWayAudio/channels/1";
     //场景
-    String Scene = "/api/hikvision/ISAPI/Image/channels/1/mountingScenario";
+    String Scene = "/ISAPI/Image/channels/1/mountingScenario";
     //调焦
     String focus = "/api/hikvision/ISAPI/System/Video/inputs/channels/1/focus";
     //新倍数变焦
