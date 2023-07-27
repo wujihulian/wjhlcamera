@@ -137,15 +137,15 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
         initClick();
 //        initVideoPlay();
 
-
+        mIsapi = ISAPI.getInstance();
 //        isLatestVersion();
         getDevice();
     }
 
     private void initVideoPlay(String devIndex) {
         if (WJReconnectEventConfig.isWebRtc) {
-            initWebrtc(devIndex);
             getData(devIndex);
+            initWebrtc(devIndex);
             initAudio();
         } else {
             initAction();
@@ -257,7 +257,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
 
     @SuppressLint("CheckResult")
     private void getData(String devIndex) {
-        mIsapi = ISAPI.getInstance();
+
         mIsapi.config(deviceSerial);
         mIsapi.setDevIndex(devIndex);
         mIsapi.getVideoConfig(new JsonCallback<VideoConfig>() {
@@ -414,7 +414,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                         public void onClick(String s, int position) {
                             zoomIndex = position;
                             mFocus_tv.setText(s);
-                            ISAPI.getInstance().zoom(position + 1, devIndex);
+                            ISAPI.getInstance().zoom(position + 1);
 
 
                         }

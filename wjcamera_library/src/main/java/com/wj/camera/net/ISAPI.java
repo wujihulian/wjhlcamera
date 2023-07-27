@@ -52,7 +52,7 @@ public class ISAPI {
     private static final String TAG = "ISAPI";
     public static ISAPI isapi;
     private OkHttpClient mClient;
-    private String deviceSerial;
+    private String deviceSerial="";
     private String devIndex="";
     private Gson mGson;
 
@@ -110,11 +110,12 @@ public class ISAPI {
         return null;
     }
 
-    public void zoom(int zoom,String devIndex) {
+    public void zoom(int zoom) {
         ZoomResponse zoomResponse = new ZoomResponse();
         zoomResponse.setZoom(new ZoomResponse.ZoomDTO());
         zoomResponse.getZoom().setRatio(zoom);
-        OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.Zoom, devIndex)).addHeader("EZO-DeviceSerial", devIndex).jsons(entityToXml(zoomResponse)).enqueue(new XmlCallback(null));
+        OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.Zoom, devIndex)).addHeader("EZO-DeviceSerial", devIndex).jsons(entityToXml(zoomResponse))
+                .enqueue(new XmlCallback(null));
     }
 
 
