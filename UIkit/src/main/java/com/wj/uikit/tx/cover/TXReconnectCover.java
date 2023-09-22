@@ -305,13 +305,7 @@ public class TXReconnectCover extends TXBaseCover {
         mDeviceSerial = deviceSerial;
     }
 
-    public String getDevIndex() {
-        return mDevIndex;
-    }
 
-    public void setDevIndex(String devIndex) {
-        mDevIndex = devIndex;
-    }
 
     public void configPrivatelyURL(RtmpConfig rtmpConfig) {
         GetRequest getRequest = OkHttpUtils.getInstance().get("/api/course/getCameraDeviceLiveUrl?deviceCode=" + getDeviceSerial());
