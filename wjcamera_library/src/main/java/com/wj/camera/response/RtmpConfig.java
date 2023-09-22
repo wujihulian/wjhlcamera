@@ -121,5 +121,26 @@ public class RtmpConfig implements Serializable {
         public void setVersion(String version) {
             this.version = version;
         }
+
+        @Override
+        public String toString() {
+            return "RTMPDTO{" +
+                    "enabled='" + enabled + '\'' +
+                    ", xmlns='" + xmlns + '\'' +
+                    ", URL='" + URL + '\'' +
+                    ", version='" + version + '\'' +
+                    ", PrivatelyEnabled='" + PrivatelyEnabled + '\'' +
+                    ", PrivatelyURL='" + PrivatelyURL + '\'' +
+                    ", PlayURL1='" + PlayURL1 + '\'' +
+                    ", PlayURL2='" + PlayURL2 + '\'' +
+                    '}';
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "RtmpConfig{" +
+                "RTMP=" + RTMP +
+                '}';
     }
 }

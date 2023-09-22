@@ -113,7 +113,7 @@ public class TXReconnectCover extends TXBaseCover {
         mSubscribe = Observable.timer(2, TimeUnit.SECONDS).map(new Function<Long, RtmpConfig>() {
             @Override
             public RtmpConfig apply(@NonNull Long aLong) throws Exception {
-                RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDeviceSerial);
+                RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDevIndex);
                 if (rtmp == null) {
                     return new RtmpConfig();
                 }
@@ -235,7 +235,7 @@ public class TXReconnectCover extends TXBaseCover {
         getRequest.addHeader("token", getToken()).execute();
         liveReconnectCount = 0;
 
-        RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDeviceSerial);
+        RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDevIndex);
         if (rtmp == null) {
             return new RtmpConfig();
         }
@@ -305,6 +305,13 @@ public class TXReconnectCover extends TXBaseCover {
         mDeviceSerial = deviceSerial;
     }
 
+    public String getDevIndex() {
+        return mDevIndex;
+    }
+
+    public void setDevIndex(String devIndex) {
+        mDevIndex = devIndex;
+    }
 
     public void configPrivatelyURL(RtmpConfig rtmpConfig) {
         GetRequest getRequest = OkHttpUtils.getInstance().get("/api/course/getCameraDeviceLiveUrl?deviceCode=" + getDeviceSerial());
