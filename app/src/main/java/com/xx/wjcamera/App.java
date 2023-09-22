@@ -4,6 +4,7 @@ import android.app.Application;
 
 import androidx.multidex.MultiDex;
 
+import com.wj.camera.net.OkHttpUtils;
 import com.wj.uikit.uitl.WJUikit;
 
 
@@ -22,6 +23,8 @@ public class App  extends Application {
         super.onCreate();
         MultiDex.install(this);
 
+        WJUikit.init(this, "2390420812811299", "asdiubpfhaishfipaeqhf319842301");
+        OkHttpUtils.getInstance(this);
 
     }
 }

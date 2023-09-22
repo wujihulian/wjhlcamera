@@ -38,8 +38,10 @@ import com.videogo.openapi.bean.EZProbeDeviceInfoResult;
 import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.net.DeviceApi;
 import com.wj.camera.net.ISAPI;
+import com.wj.camera.net.OkHttpUtils;
 import com.wj.camera.net.RxConsumer;
 import com.wj.camera.net.SafeGuardInterceptor;
+import com.wj.camera.response.AddCameraInfoResultResponse;
 import com.wj.camera.response.BaseDeviceResponse;
 import com.wj.camera.response.NetworkInterface;
 import com.wj.camera.response.RtmpConfig;
@@ -241,7 +243,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
         if (mFl_ip_config.getVisibility() != View.VISIBLE) {
             //自动配置
             apWiredConfigInfo.ipAddress(
-                    "192.168.0.84",
+                    "192.168.0.56",
                     "255.255.255.0",
                     "192.168.0.1"
             )
@@ -423,9 +425,9 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                                 if (handler != null) {
                                     if (mDeviceCode == 120020) {
                                         //已经添加过设备
-                                        handler.sendEmptyMessageDelayed(SEND_CHECK_ISAPI, 2000L);
+                                        handler.sendEmptyMessageDelayed(SEND_CHECK_ISAPI, 5000L);
                                     } else {
-                                        handler.sendEmptyMessageDelayed(SEND_CHECK_DEVICE_MSG, 2000L);
+                                        handler.sendEmptyMessageDelayed(SEND_CHECK_DEVICE_MSG, 5000L);
                                     }
                                 }
                             }
@@ -498,7 +500,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                     checkDevice();
                     break;
                 case SEND_CHECK_ISAPI:
-                    logPrint("正在注册设备到平台....");
+                    logPrint("正在注册设备到平台....1");
                     checkIsApi();
                     break;
             }
@@ -582,7 +584,37 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                     .map(new Function<DeviceInfo, EZProbeDeviceInfoResult>() {
                         @Override
                         public EZProbeDeviceInfoResult apply(@io.reactivex.annotations.NonNull DeviceInfo deviceInfo) throws Exception {
-                            EZProbeDeviceInfoResult result = EZOpenSDK.getInstance().probeDeviceInfo(deviceInfo.device_serial, deviceInfo.device_type);
+                            EZProbeDeviceInfoResult result = new EZProbeDeviceInfoResult();
+                            if (OkHttpUtils.getInstance().isOldVersion()) {
+                                result = EZOpenSDK.getInstance().probeDeviceInfo(deviceInfo.device_serial, deviceInfo.device_type);
+                            } else {
+                                DeviceApi.getInstance().addDevice(mDeviceInfo.device_serial, mDeviceInfo.device_code, new JsonCallback<AddCameraInfoResultResponse>() {
+                                    @Override
+                                    public void onSuccess(AddCameraInfoResultResponse data) {
+                                        if (mLoadingPopupView != null) {
+                                            mLoadingPopupView.dismiss();
+                                        }
+                                        clear();
+                                        post(mDeviceInfo);
+//                                        EventBus.getDefault().post(mDeviceInfo);
+//                                        Toast.makeText(WJSettingWifiActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
+//                                        WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
+//
+//                                        finish();
+                                    }
+
+                                    @Override
+                                    public void onError(int code, String msg) {
+                                        super.onError(code, msg);
+                                        if (mLoadingPopupView != null) {
+                                            mLoadingPopupView.dismiss();
+                                        }
+                                        clear();
+                                        Toast.makeText(WJSettingWiredActivity.this, "注册平台失败", Toast.LENGTH_SHORT).show();
+                                        finish();
+                                    }
+                                });
+                            }
                             return result;
                         }
                     })
@@ -613,33 +645,62 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                         public void accept(EZProbeDeviceInfoResult result) throws Exception {
                             if (result.getBaseException() == null) {
                                 // toast("开始添加设备");
-                                DeviceApi.getInstance().addDevie(mDeviceInfo.device_serial, mDeviceInfo.device_code, new JsonCallback<BaseDeviceResponse>() {
-                                    @Override
-                                    public void onSuccess(BaseDeviceResponse data) {
-                                        if (mLoadingPopupView != null) {
-                                            mLoadingPopupView.dismiss();
-                                        }
-                                        clear();
-                                        post(mDeviceInfo);
-                                     /*   EventBus.getDefault().post(mDeviceInfo);
-                                        Toast.makeText(WJSettingWiredActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
-
+                                if (OkHttpUtils.getInstance().isOldVersion()) {
+                                    // toast("开始添加设备");
+                                    DeviceApi.getInstance().addDevie(mDeviceInfo.device_serial, mDeviceInfo.device_code, new JsonCallback<BaseDeviceResponse>() {
+                                        @Override
+                                        public void onSuccess(BaseDeviceResponse data) {
+                                            if (mLoadingPopupView != null) {
+                                                mLoadingPopupView.dismiss();
+                                            }
+                                            clear();
+                                            post(mDeviceInfo);
+                                        /*EventBus.getDefault().post(mDeviceInfo);
+                                        Toast.makeText(WJSettingWifiActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
                                         WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
 
                                         finish();*/
-                                    }
-
-                                    @Override
-                                    public void onError(int code, String msg) {
-                                        super.onError(code, msg);
-                                        if (mLoadingPopupView != null) {
-                                            mLoadingPopupView.dismiss();
                                         }
-                                        clear();
-                                        Toast.makeText(WJSettingWiredActivity.this, "注册平台失败", Toast.LENGTH_SHORT).show();
-                                        finish();
-                                    }
-                                });
+
+                                        @Override
+                                        public void onError(int code, String msg) {
+                                            super.onError(code, msg);
+                                            if (mLoadingPopupView != null) {
+                                                mLoadingPopupView.dismiss();
+                                            }
+                                            clear();
+                                            Toast.makeText(WJSettingWiredActivity.this, "注册平台失败", Toast.LENGTH_SHORT).show();
+                                            finish();
+                                        }
+                                    });
+                                } else {
+                                    DeviceApi.getInstance().addDevice(mDeviceInfo.device_serial, mDeviceInfo.device_code, new JsonCallback<AddCameraInfoResultResponse>() {
+                                        @Override
+                                        public void onSuccess(AddCameraInfoResultResponse data) {
+                                            if (mLoadingPopupView != null) {
+                                                mLoadingPopupView.dismiss();
+                                            }
+                                            clear();
+                                            post(mDeviceInfo);
+//                                        EventBus.getDefault().post(mDeviceInfo);
+//                                        Toast.makeText(WJSettingWifiActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
+//                                        WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
+//
+//                                        finish();
+                                        }
+
+                                        @Override
+                                        public void onError(int code, String msg) {
+                                            super.onError(code, msg);
+                                            if (mLoadingPopupView != null) {
+                                                mLoadingPopupView.dismiss();
+                                            }
+                                            clear();
+                                            Toast.makeText(WJSettingWiredActivity.this, "注册平台失败", Toast.LENGTH_SHORT).show();
+                                            finish();
+                                        }
+                                    });
+                                }
                             } else {
 
                                 int errorCode = result.getBaseException().getErrorCode();
@@ -674,7 +735,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
             @Override
             public void onError(int code, String msg) {
                 super.onError(code, msg);
-                EventBus.getDefault().post(mDeviceInfo);
+                EventBus.getDefault().post(deviceInfo);
                 Toast.makeText(WJSettingWiredActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
                 WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
                 finish();
@@ -691,7 +752,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                         }
                     }
                 }
-                EventBus.getDefault().post(mDeviceInfo);
+                EventBus.getDefault().post(deviceInfo);
                 Toast.makeText(WJSettingWiredActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
                 WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
                 finish();

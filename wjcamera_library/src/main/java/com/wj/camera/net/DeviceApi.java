@@ -5,6 +5,9 @@ import com.google.gson.reflect.TypeToken;
 import com.wj.camera.WJCamera;
 import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.callback.StringCallbck;
+import com.wj.camera.request.RequestAddDeviceInfo;
+import com.wj.camera.requestEntity.RequestDeviceListEntity;
+import com.wj.camera.response.AddCameraInfoResultResponse;
 import com.wj.camera.response.BaseDeviceResponse;
 import com.wj.camera.response.CheckDevcieUpdate;
 import com.wj.camera.response.DeviceCameraData;
@@ -13,11 +16,15 @@ import com.wj.camera.response.DeviceUpdateStatus;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 
+import okhttp3.Callback;
 import okhttp3.FormBody;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
@@ -141,6 +148,34 @@ public class DeviceApi {
         getClient().newCall(request).enqueue(new StringCallbck(jsonCallback));
     }
 
+    /**
+     * 设置设备列表
+     */
+    public void getDeviceList(String key, Callback callback) {
+        MediaType mediaType = MediaType.parse("application/json; charset=UTF-8");
+        RequestDeviceListEntity deviceListEntity = new RequestDeviceListEntity();
+        RequestDeviceListEntity.SearchDescriptionBean descriptionBean = new RequestDeviceListEntity.SearchDescriptionBean();
+        RequestDeviceListEntity.SearchDescriptionBean.FilterBean filterBean = new RequestDeviceListEntity.SearchDescriptionBean.FilterBean();
+        filterBean.setKey(key);
+        ArrayList<String> protocolType = new ArrayList<>();
+        protocolType.add("ehomeV5");
+        filterBean.setProtocolType(protocolType);
+        ArrayList<String> devStatus = new ArrayList<>();
+        devStatus.add("online");
+        devStatus.add("offline");
+        filterBean.setDevStatus(devStatus);
+        descriptionBean.setFilter(filterBean);
+        deviceListEntity.setSearchDescription(descriptionBean);
+        RequestBody requestBody = RequestBody.create(mediaType, new Gson().toJson(deviceListEntity));
+
+        Request request = new Request.Builder()
+                .url(Api.DeviceList)
+                .post(requestBody)
+                .build();
+        getClient().newCall(request).enqueue(callback);
+    }
+
+
 
     /**
      * 设置设备名称
@@ -178,6 +213,45 @@ public class DeviceApi {
                 .post(formBody)
                 .build();
         getClient().newCall(request).enqueue(new StringCallbck(callback));
+    }
+    /**
+     * 添加设备
+     *
+     * @param deviceSerial 设备序列号
+     * @param validateCode 设备验证码
+     * @param callback
+     */
+    public void addDevice(String deviceSerial, String validateCode, JsonCallback<AddCameraInfoResultResponse> callback) {
+//        FormBody.Builder builder = new FormBody.Builder();
+//        builder.addEncoded("accessToken", WJCamera.getInstance().getAccessToken());
+//        builder.addEncoded("deviceSerial", deviceSerial);
+//        builder.addEncoded("validateCode", validateCode);
+//        FormBody formBody = builder.build();
+
+
+        MediaType mediaType = MediaType.parse("application/json; charset=UTF-8");
+        RequestAddDeviceInfo requestAddDeviceInfo = new RequestAddDeviceInfo();
+        ArrayList<RequestAddDeviceInfo.DeviceInListBean> deviceInList = new ArrayList<>();
+        RequestAddDeviceInfo.DeviceInListBean deviceInListBean = new RequestAddDeviceInfo.DeviceInListBean();
+        RequestAddDeviceInfo.DeviceInListBean.DeviceBean deviceBean = new RequestAddDeviceInfo.DeviceInListBean.DeviceBean();
+        RequestAddDeviceInfo.DeviceInListBean.DeviceBean.EhomeParamsBean ehomeParamsBean = new RequestAddDeviceInfo.DeviceInListBean.DeviceBean.EhomeParamsBean();
+        ehomeParamsBean.setEhomeID(deviceSerial);
+//        ehomeParamsBean.setEhomeKey(validateCode);
+        ehomeParamsBean.setEhomeKey("WUJIHL");
+        deviceBean.setEhomeParams(ehomeParamsBean);
+        deviceBean.setDevName(deviceSerial);
+        deviceInListBean.setDevice(deviceBean);
+        deviceInList.add(deviceInListBean);
+        requestAddDeviceInfo.setDeviceInList(deviceInList);
+        String content = new Gson().toJson(requestAddDeviceInfo);
+        System.out.println("addDevice--> "+Api.DeviceAdd+"  " + content);
+        RequestBody requestBody = RequestBody.create(mediaType, content);
+        Request request = new Request.Builder()
+                .url(Api.DeviceAdd)
+                .post(requestBody)
+                .build();
+        getClient().newCall(request).enqueue(new StringCallbck(callback));
+//        getHik();
     }
 
     /**

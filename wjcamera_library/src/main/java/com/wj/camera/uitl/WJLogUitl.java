@@ -3,6 +3,8 @@ package com.wj.camera.uitl;
 
 import android.util.Log;
 
+import com.wj.camera.BuildConfig;
+
 /**
  * FileName: LogUitl
  * Author: xiongxiang
@@ -13,7 +15,7 @@ import android.util.Log;
  * 作者姓名 修改时间 版本号 描述
  */
 public class WJLogUitl {
-    public static boolean isDebug = false;  //logi日志開關
+    public static boolean isDebug = BuildConfig.DEBUG;  //logi日志開關
 
     private final static String APP_TAG = "WJLogUitl";
 

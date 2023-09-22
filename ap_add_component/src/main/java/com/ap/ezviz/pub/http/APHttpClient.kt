@@ -12,7 +12,6 @@ import com.ap.ezviz.pub.utils.ApConfigUtil
 import com.ap.ezviz.pub.utils.LogUtil
 import com.ap.ezviz.pub.utils.XmlUtils
 import okhttp3.*
-import okhttp3.logging.HttpLoggingInterceptor
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
@@ -28,9 +27,9 @@ object APHttpClient {
                 .readTimeout(DEFAULT_CONNECT_TIMEOUT, TimeUnit.MILLISECONDS)
                 .writeTimeout(DEFAULT_CONNECT_TIMEOUT, TimeUnit.MILLISECONDS)
         if (BuildConfig.DEBUG) {
-            val httpLoggingInterceptor = HttpLoggingInterceptor()
-            httpLoggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
-            it.addInterceptor(httpLoggingInterceptor)
+//            val httpLoggingInterceptor = HttpLoggingInterceptor()
+//            httpLoggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
+//            it.addInterceptor(httpLoggingInterceptor)
         }
         return@lazy it.build()
     }
@@ -143,9 +142,9 @@ object APHttpClient {
                 .authenticator(CachingAuthenticatorDecorator(authenticator, authCache))
                 .addInterceptor(AuthenticationCacheInterceptor(authCache))
         if (BuildConfig.DEBUG) {
-            val httpLoggingInterceptor = HttpLoggingInterceptor()
-            httpLoggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
-            clientBuilder.addInterceptor(httpLoggingInterceptor)
+//            val httpLoggingInterceptor = HttpLoggingInterceptor()
+//            httpLoggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
+//            clientBuilder.addInterceptor(httpLoggingInterceptor)
         }
         val client = clientBuilder.build()
         val request = Request.Builder().url(url).get().build()
@@ -203,9 +202,9 @@ object APHttpClient {
                 .authenticator(CachingAuthenticatorDecorator(authenticator, authCache))
                 .addInterceptor(AuthenticationCacheInterceptor(authCache))
         if (BuildConfig.DEBUG) {
-            val httpLoggingInterceptor = HttpLoggingInterceptor()
-            httpLoggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
-            clientBuilder.addInterceptor(httpLoggingInterceptor)
+//            val httpLoggingInterceptor = HttpLoggingInterceptor()
+//            httpLoggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
+//            clientBuilder.addInterceptor(httpLoggingInterceptor)
         }
         val client = clientBuilder.build()
         val request = Request.Builder().url(url).put(body).build()
@@ -227,9 +226,9 @@ object APHttpClient {
                 .authenticator(CachingAuthenticatorDecorator(authenticator, authCache))
                 .addInterceptor(AuthenticationCacheInterceptor(authCache))
         if (BuildConfig.DEBUG) {
-            val httpLoggingInterceptor = HttpLoggingInterceptor()
-            httpLoggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
-            clientBuilder.addInterceptor(httpLoggingInterceptor)
+//            val httpLoggingInterceptor = HttpLoggingInterceptor()
+//            httpLoggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
+//            clientBuilder.addInterceptor(httpLoggingInterceptor)
         }
         val client = clientBuilder.build()
         val request = Request.Builder().url(url).get().build()

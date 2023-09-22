@@ -27,8 +27,12 @@ import com.videogo.openapi.bean.EZProbeDeviceInfoResult;
 import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.net.DeviceApi;
 import com.wj.camera.net.ISAPI;
+import com.wj.camera.net.OkHttpUtils;
 import com.wj.camera.net.RxConsumer;
 import com.wj.camera.response.BaseDeviceResponse;
+import com.wj.camera.response.CheckDevcieUpdate;
+import com.wj.camera.response.DeviceInfoListResponse;
+import com.wj.camera.response.DeviceUpdateStatus;
 import com.wj.camera.response.NetworkInterface;
 import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.uitl.WJLogUitl;
@@ -39,14 +43,19 @@ import com.wj.uikit.uitl.OnContinuousClick;
 
 import org.greenrobot.eventbus.EventBus;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
 
 /**
  * FileName: WJCaptureActivity
@@ -63,6 +72,7 @@ public class WJCaptureActivity extends AppCompatActivity {
     private static final String TAG = "WJCaptureActivity";
     private TextView mTv_no_qr_code;
     private LoadingPopupView mLoadingPopupView;
+    private DeviceInfo mDeviceInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,7 +92,8 @@ public class WJCaptureActivity extends AppCompatActivity {
                     } else {
                         if ("QR_CODE".equals(result.getFormatName())) {
                             //  Toast.makeText(WJCaptureActivity.this, "Scanned: " + result.getContents(), Toast.LENGTH_LONG).show();
-                            checkDevice(result.getContents());
+                            mDeviceInfo = parse(result.getContents());
+                            isLatestVersion(mDeviceInfo);
                         } else {
                             Toast.makeText(WJCaptureActivity.this, "请扫描正确的二维码", Toast.LENGTH_SHORT).show();
                         }
@@ -110,10 +121,178 @@ public class WJCaptureActivity extends AppCompatActivity {
         });
     }
 
+    //检查是不是最新版
     @SuppressLint("CheckResult")
-    public void checkDevice(String content) {
-        WJLogUitl.i("checkDevice: " + content);
-        DeviceInfo deviceInfo = parse(content);
+    private void isLatestVersion(DeviceInfo mDeviceInfo) {
+        Observable.fromCallable(new Callable<BaseDeviceResponse<CheckDevcieUpdate>>() {
+                    @Override
+                    public BaseDeviceResponse<CheckDevcieUpdate> call() throws Exception {
+                        BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(mDeviceInfo.device_serial);
+                        BaseDeviceResponse<DeviceUpdateStatus> deviceUpdateStatus = DeviceApi.getInstance().deviceUpdateStatus(mDeviceInfo.device_serial);
+                        if (deviceResponse.getData() != null && deviceUpdateStatus != null) {
+                            deviceResponse.getData().mDeviceResponse = deviceUpdateStatus.getData();
+                        }
+                        return deviceResponse;
+                    }
+                }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe(new RxConsumer(WJCaptureActivity.this))
+                .subscribe(new Consumer<BaseDeviceResponse<CheckDevcieUpdate>>() {
+                    @Override
+                    public void accept(BaseDeviceResponse<CheckDevcieUpdate> response) throws Exception {
+                        WJLogUitl.d("设备详情",new Gson().toJson(response));
+                        if (response.getCode() == 200 && response.getData() != null) {
+                            CheckDevcieUpdate responseData = response.getData();
+                            try {
+                                String currentVersion = responseData.getCurrentVersion();
+                                String version = currentVersion.substring(currentVersion.lastIndexOf(" ") + 1);
+                                OkHttpUtils.getInstance().setOldVersion(Integer.parseInt(version.substring(0, 2)) <= 22);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                            if (OkHttpUtils.getInstance().isOldVersion()) {
+                                checkDevice();
+                            } else {
+                                getDevice(mDeviceInfo);
+                            }
+//                            if (responseData.getIsUpgrading() == 1) {
+//                                //设备正在升级
+//                                //toUpdateProgress();
+//                                return;
+//                            }
+
+//                            if (response.getData().mDeviceResponse != null) {
+//                                int progress = response.getData().mDeviceResponse.getProgress();
+//                                int status = response.getData().mDeviceResponse.getStatus();
+//                                if (status == 0) {
+//                                    //toUpdateProgress();
+//                                    return;
+//                                } else if (status == 2) {
+//                                    if (progress == 100) {
+//                                        //toUpdateProgress();
+//                                        return;
+//                                    }
+//                                }
+//                            }
+                            String latestVersion = response.getData().getLatestVersion();
+                            String currentVersion = response.getData().getCurrentVersion();
+
+
+                        }
+                    }
+                });
+    }
+
+    private void getDevice(DeviceInfo deviceInfo) {
+        DeviceApi.getInstance().getDeviceList(deviceInfo.device_serial, new Callback() {
+            @Override
+            public void onFailure(@androidx.annotation.NonNull Call call, @androidx.annotation.NonNull IOException e) {
+                System.out.println("onFailure--> " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@androidx.annotation.NonNull Call call, @androidx.annotation.NonNull Response response) throws IOException {
+                String json = response.body().string();
+                Log.d(TAG, "onResponse: " + json);
+                DeviceInfoListResponse infoListResponse = new Gson().fromJson(json, DeviceInfoListResponse.class);
+                if (0 == infoListResponse.getSearchResult().getNumOfMatches()) {
+                    Intent intent = new Intent(WJCaptureActivity.this, WJSettingModeActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putSerializable(WJDeviceConfig.DEVICE_INFO, deviceInfo);
+//                bundle.putInt(WJDeviceConfig.SUPPORT_APP_MODE, probeDeviceInfo.getSupportAP());
+//                if (result.getBaseException().getErrorCode() == 120029) {
+//                    bundle.putInt(WJDeviceConfig.DEVICE_CODE, 120020);
+                    intent.putExtras(bundle);
+                    startActivity(intent);
+                    finish();
+                    return;
+                }
+                if (!infoListResponse.getSearchResult().getMatchList().isEmpty()) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            DeviceInfoListResponse.SearchResultBean.MatchListBean.DeviceBean deviceBean = infoListResponse.getSearchResult().getMatchList().get(0).getDevice();
+                            deviceInfo.setDevIndex(deviceBean.getDevIndex());
+                            switch (deviceBean.getDevStatus()) {
+                                case "online": {
+                                    getRTMP(deviceInfo, deviceBean.getDevIndex());
+                                }
+                                break;
+                                case "offline": {
+                                    Intent intent = new Intent(WJCaptureActivity.this, WJSettingModeActivity.class);
+                                    Bundle bundle = new Bundle();
+                                    bundle.putSerializable(WJDeviceConfig.DEVICE_INFO, deviceInfo);
+//                bundle.putInt(WJDeviceConfig.SUPPORT_APP_MODE, probeDeviceInfo.getSupportAP());
+//                if (result.getBaseException().getErrorCode() == 120029) {
+                                    bundle.putInt(WJDeviceConfig.DEVICE_CODE, 120029);
+//                                    bundle.putInt(WJDeviceConfig.DEVICE_CODE, 120020);
+                                    intent.putExtras(bundle);
+                                    startActivity(intent);
+                                    finish();
+                                }
+                                break;
+                            }
+//                            addDevices(deviceInfo);
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    private void getRTMP(DeviceInfo deviceInfo, String devIndex) {
+        ISAPI.getInstance().setDevIndex(devIndex);
+        ISAPI.getInstance().getRTMP(devIndex, new JsonCallback<RtmpConfig>() {
+            @Override
+            public void onSuccess(RtmpConfig data) {
+                System.out.println("onSuccessRtmpConfig--> " + data.toString());
+                if (null != data.getRTMP()) {
+//                    addDevices(deviceInfo);
+                    Intent intent = new Intent(WJCaptureActivity.this, WJSettingModeActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putSerializable(WJDeviceConfig.DEVICE_INFO, deviceInfo);
+//                bundle.putInt(WJDeviceConfig.SUPPORT_APP_MODE, probeDeviceInfo.getSupportAP());
+//                if (result.getBaseException().getErrorCode() == 120029) {
+                    bundle.putInt(WJDeviceConfig.DEVICE_CODE, 120029);
+//                                    bundle.putInt(WJDeviceConfig.DEVICE_CODE, 120020);
+                    intent.putExtras(bundle);
+                    startActivity(intent);
+                    finish();
+                } else {
+                    Intent intent = new Intent(WJCaptureActivity.this, WJSettingModeActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putSerializable(WJDeviceConfig.DEVICE_INFO, deviceInfo);
+//                bundle.putInt(WJDeviceConfig.SUPPORT_APP_MODE, probeDeviceInfo.getSupportAP());
+//                if (result.getBaseException().getErrorCode() == 120029) {
+//                    bundle.putInt(WJDeviceConfig.DEVICE_CODE, 120020);
+                    intent.putExtras(bundle);
+                    startActivity(intent);
+                    finish();
+                }
+            }
+
+            @Override
+            public void onError(int code, String msg) {
+                super.onError(code, msg);
+                Intent intent = new Intent(WJCaptureActivity.this, WJSettingModeActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putSerializable(WJDeviceConfig.DEVICE_INFO, deviceInfo);
+//                bundle.putInt(WJDeviceConfig.SUPPORT_APP_MODE, probeDeviceInfo.getSupportAP());
+//                if (result.getBaseException().getErrorCode() == 120029) {
+//                bundle.putInt(WJDeviceConfig.DEVICE_CODE, 120020);
+                intent.putExtras(bundle);
+                startActivity(intent);
+                finish();
+            }
+        });
+    }
+
+
+    @SuppressLint("CheckResult")
+    public void checkDevice() {
+//        WJLogUitl.i("checkDevice: " + content);
+        DeviceInfo deviceInfo = mDeviceInfo;
         if (deviceInfo != null) {
             mLoadingPopupView = new XPopup.Builder(this).asLoading();
 
@@ -183,10 +362,10 @@ public class WJCaptureActivity extends AppCompatActivity {
                                             Intent intent = new Intent(WJCaptureActivity.this, WJSettingModeActivity.class);
                                             Bundle bundle = new Bundle();
                                             bundle.putSerializable(WJDeviceConfig.DEVICE_INFO, deviceInfo);
-                                            bundle.putInt(WJDeviceConfig.SUPPORT_APP_MODE, probeDeviceInfo.getSupportAP());
-                                            if (result.getBaseException().getErrorCode() == 120029) {
-                                                bundle.putInt(WJDeviceConfig.DEVICE_CODE, 120020);
-                                            }
+//                                            bundle.putInt(WJDeviceConfig.SUPPORT_APP_MODE, probeDeviceInfo.getSupportAP());
+//                                            if (result.getBaseException().getErrorCode() == 120029) {
+//                                                bundle.putInt(WJDeviceConfig.DEVICE_CODE, 120020);
+//                                            }
                                             intent.putExtras(bundle);
                                             startActivity(intent);
                                             finish();
@@ -278,7 +457,7 @@ public class WJCaptureActivity extends AppCompatActivity {
                             Intent intent = new Intent(WJCaptureActivity.this, WJSettingModeActivity.class);
                             Bundle bundle = new Bundle();
                             bundle.putSerializable(WJDeviceConfig.DEVICE_INFO, deviceInfo);
-                            bundle.putInt(WJDeviceConfig.DEVICE_CODE, 120020);
+//                            bundle.putInt(WJDeviceConfig.DEVICE_CODE, 120020);
                             intent.putExtras(bundle);
                             startActivity(intent);
                             finish();
@@ -350,10 +529,10 @@ public class WJCaptureActivity extends AppCompatActivity {
                             deviceInfo.setIpAaddress(networkInterface.get(1).getIPAddress().getIpAddress());
                             String wifi = networkInterface.get(1).getIPAddress().getIpAddress();
                             String wired = networkInterface.get(0).getIPAddress().getIpAddress();
-                            if ("192.168.8.1".equals(wifi)){
+                            if ("192.168.8.1".equals(wifi)) {
                                 deviceInfo.setIpAaddress(wired);
                                 deviceInfo.setNetworkMode("1");
-                            }else {
+                            } else {
                                 deviceInfo.setIpAaddress(wifi);
                                 deviceInfo.setNetworkMode("2");
                             }

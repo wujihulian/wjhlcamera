@@ -81,6 +81,7 @@ public class WJCamera {
 
     /**
      * 初始化
+     *
      * @param context
      * @param appKey
      */
@@ -129,12 +130,12 @@ public class WJCamera {
             if (System.currentTimeMillis() >= expireTime - 86400000) {
             } else {
                 //获取缓存token
-                WJLogUitl.i(  "get cache " + accessToken.getCode());
+                WJLogUitl.i("get cache " + accessToken.getCode());
                 login(accessToken.getData().getAccessToken());
                 return;
             }
         }
-        WJLogUitl.i(  "init camera");
+        WJLogUitl.i("init camera");
         OkHttpClient client = getClient();
         MediaType JSON = MediaType.parse("application/json; charset=utf-8");
         TokenRequest tokenRequest = new TokenRequest();
@@ -143,7 +144,9 @@ public class WJCamera {
         tokenRequest.timestamp = currentTimeMillis + "";
         String sign = MD5Util.stringToMD5(appId + appKey + currentTimeMillis);
         tokenRequest.sign = sign;
-        RequestBody requestBody = RequestBody.create(JSON, new Gson().toJson(tokenRequest));
+        String content = new Gson().toJson(tokenRequest);
+        System.out.println("RequestToken--> "+content);
+        RequestBody requestBody = RequestBody.create(JSON, content);
         Request request = new Request.Builder()
                 .post(requestBody)
                 .url("https://syswx.xx.cn/api/course/nLive/token/get")
@@ -152,24 +155,25 @@ public class WJCamera {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 if (e != null) {
-                    WJLogUitl.i(  "onFailure: " + e.getMessage());
+                    WJLogUitl.i("onFailure: " + e.getMessage());
                 }
             }
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 String string = response.body().string();
+                System.out.println("onResponse--> "+string);
                 try {
                     AccessToken accessToken = new Gson().fromJson(string, AccessToken.class);
                     if ("200".equals(accessToken.getCode())) {
                         SPUtil.saveData(mApplication, "WJAccessToken", new Gson().toJson(accessToken));
-                        WJLogUitl.i(  "WJCamera init succeed");
+                        WJLogUitl.i("WJCamera init succeed");
                         login(accessToken.getData().getAccessToken());
                     } else {
-                        WJLogUitl.i(  "WJCamera init failure " + accessToken.getCode());
+                        WJLogUitl.i("WJCamera init failure " + accessToken.getCode());
                     }
                 } catch (Exception e) {
-                    WJLogUitl.i(  "WJCamera init failure " + e.getMessage());
+                    WJLogUitl.i("WJCamera init failure " + e.getMessage());
                     e.printStackTrace();
                 }
 
@@ -185,11 +189,14 @@ public class WJCamera {
 
     /**
      * 登录 适用sdk相关的 必须先登录
+     *
      * @param accessToken
      */
     public void login(String accessToken) {
         this.accessToken = accessToken;
-        OkHttpUtils.getInstance().commonHead("EZO-AccessToken", WJCamera.getInstance().getAccessToken());
+        String token = WJCamera.getInstance().getAccessToken();
+        System.out.println("萤石token---> " + token);
+        OkHttpUtils.getInstance().commonHead("EZO-AccessToken", token);
         EZOpenSDK.getInstance().setAccessToken(accessToken);
     }
 
@@ -198,9 +205,10 @@ public class WJCamera {
     }
 
     /**
-     *创建设备Playe
+     * 创建设备Playe
+     *
      * @param deviceSerial 设备序列号
-     * @param cameraNo 相机通道
+     * @param cameraNo     相机通道
      */
     public EZPlayer createPlayer(String deviceSerial, int cameraNo) {
         EZPlayer player = EZOpenSDK.getInstance().createPlayer(deviceSerial, cameraNo);

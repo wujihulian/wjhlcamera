@@ -10,7 +10,8 @@ package com.wj.camera.net;
  * 作者姓名 修改时间 版本号 描述
  */
 public interface Api {
-    String baseUrl = "https://open.ys7.com";
+    String baseUrlOld = "https://open.ys7.com";
+    String baseUrl = "http://admin:hik12345@hik.1x.cn:8880";
 
     //RTMP
     String RTMP = baseUrl + "/api/hikvision/ISAPI/Custom/RTMP";
@@ -37,17 +38,20 @@ public interface Api {
     //修改设备名称
     String DeviceNameUpdate = baseUrl + "/api/lapp/device/name/update";
     //添加设备
-    String DeviceAdd = baseUrl + "/api/lapp/device/add";
+//    String DeviceAdd = baseUrl + "/api/lapp/device/add";
+    String DeviceAdd = baseUrl + "/ISAPI/ContentMgmt/DeviceMgmt/addDevice?format=json";
     //删除设备
     String DeviceDelete = baseUrl + "/api/lapp/device/delete";
     //获取token
-    String Token = baseUrl + "/api/lapp/token/get";
+    String Token = baseUrlOld + "/api/lapp/token/get";
     //检查设备升级
-    String CheckDeviceUpdate = baseUrl + "/api/lapp/device/version/info";
+    String CheckDeviceUpdate = baseUrlOld + "/api/lapp/device/version/info";
     //设备升级
-    String DeviceUpdate = baseUrl + "/api/lapp/device/upgrade";
+    String DeviceUpdate = baseUrlOld + "/api/lapp/device/upgrade";
     //设备升级状态
-    String DeviceUpdateStatus = baseUrl + "/api/lapp/device/upgrade/status";
+    String DeviceUpdateStatus = baseUrlOld + "/api/lapp/device/upgrade/status";
 
+    //设备列表
+    String DeviceList = baseUrl + "/ISAPI/ContentMgmt/DeviceMgmt/deviceList?format=json";
 
 }

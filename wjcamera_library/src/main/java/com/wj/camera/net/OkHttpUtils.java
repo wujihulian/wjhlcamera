@@ -1,5 +1,9 @@
 package com.wj.camera.net;
 
+import android.content.Context;
+
+import com.burgstaller.okhttp.digest.Credentials;
+import com.burgstaller.okhttp.digest.DigestAuthenticator;
 import com.wj.camera.net.map.RepeatKeyHasMap;
 import com.wj.camera.net.request.GetRequest;
 import com.wj.camera.net.request.PostFromRequest;
@@ -31,6 +35,7 @@ public class OkHttpUtils {
     private static OkHttpUtils instance;
     private String baseUrl;
     private OkHttpClient mOkHttpClient;
+    private boolean mIsOldVersion;
     private HashMap<String, String> commonHeads = new HashMap<>();
     private static List<Interceptor> mInterceptors;
     private RepeatKeyHasMap<String, Call> mTagHasMap = new RepeatKeyHasMap<>();
@@ -52,7 +57,7 @@ public class OkHttpUtils {
         }
         if (httpLogging == true) {
             HttpLoggingInterceptor mInterceptor = new HttpLoggingInterceptor();
-            mInterceptor.level(HttpLoggingInterceptor.Level.BODY);
+            mInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
             builder.addNetworkInterceptor(mInterceptor);
         }
 
@@ -61,8 +66,38 @@ public class OkHttpUtils {
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(5, TimeUnit.SECONDS)
                 .writeTimeout(5, TimeUnit.SECONDS)
+                .authenticator(new DigestAuthenticator(new Credentials("admin", "hik12345")))
                 .build();
         setBaseUrl(Api.baseUrl);
+    }
+    private OkHttpUtils(Context context) {
+        OkHttpClient.Builder builder = new OkHttpClient().newBuilder();
+        if (mInterceptors != null) {
+            for (Interceptor mInterceptor : mInterceptors) {
+                builder.addInterceptor(mInterceptor);
+            }
+        }
+        if (httpLogging == true) {
+            HttpLoggingInterceptor mInterceptor = new HttpLoggingInterceptor();
+//            mInterceptor.level(HttpLoggingInterceptor.Level.BODY);
+            builder.addNetworkInterceptor(mInterceptor);
+        }
+
+        mOkHttpClient = builder
+                .addInterceptor(new SafeGuardInterceptor())
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.SECONDS)
+                .writeTimeout(5, TimeUnit.SECONDS)
+                .authenticator(new DigestAuthenticator(new Credentials("admin", "hik12345")))
+                .build();
+        setBaseUrl(Api.baseUrl);
+    }
+    public Boolean isOldVersion() {
+        return mIsOldVersion;
+    }
+
+    public void setOldVersion(Boolean oldVersion) {
+        mIsOldVersion = oldVersion;
     }
 
     public void commonHead(String key, String value) {
@@ -84,7 +119,6 @@ public class OkHttpUtils {
     public String getBaseUrl() {
         return baseUrl;
     }
-
     public static OkHttpUtils getInstance() {
         if (instance == null) {
             synchronized (OkHttpUtils.class) {
@@ -95,6 +129,18 @@ public class OkHttpUtils {
         }
         return instance;
     }
+
+    public static OkHttpUtils getInstance(Context context) {
+        if (instance == null) {
+            synchronized (OkHttpUtils.class) {
+                if (instance == null) {
+                    instance = new OkHttpUtils(context);
+                }
+            }
+        }
+        return instance;
+    }
+
 
     public GetRequest get(String url) {
         return new GetRequest(url);

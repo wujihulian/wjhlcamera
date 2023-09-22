@@ -14,12 +14,10 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -34,6 +32,8 @@ import com.ap.ezviz.pub.YsApManager;
 import com.ap.ezviz.pub.ap.ApWifiConfigInfo;
 import com.ap.ezviz.pub.ap.FIXED_IP;
 import com.ap.ezviz.pub.http.APHttpClient;
+import com.google.firebase.database.annotations.NotNull;
+import com.google.gson.Gson;
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.core.BasePopupView;
 import com.lxj.xpopup.impl.LoadingPopupView;
@@ -47,7 +47,9 @@ import com.videogo.openapi.bean.EZProbeDeviceInfoResult;
 import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.net.DeviceApi;
 import com.wj.camera.net.ISAPI;
+import com.wj.camera.net.OkHttpUtils;
 import com.wj.camera.net.RxConsumer;
+import com.wj.camera.response.AddCameraInfoResultResponse;
 import com.wj.camera.response.BaseDeviceResponse;
 import com.wj.camera.response.NetworkInterface;
 import com.wj.camera.response.RtmpConfig;
@@ -59,7 +61,6 @@ import com.wj.uikit.db.DeviceInfo;
 import com.wj.uikit.uitl.WJActivityControl;
 
 import org.greenrobot.eventbus.EventBus;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -248,7 +249,37 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                     .map(new Function<DeviceInfo, EZProbeDeviceInfoResult>() {
                         @Override
                         public EZProbeDeviceInfoResult apply(@io.reactivex.annotations.NonNull DeviceInfo deviceInfo) throws Exception {
-                            EZProbeDeviceInfoResult result = EZOpenSDK.getInstance().probeDeviceInfo(deviceInfo.device_serial, deviceInfo.device_type);
+                            EZProbeDeviceInfoResult result = new EZProbeDeviceInfoResult();
+                            if (OkHttpUtils.getInstance().isOldVersion()) {
+                                result = EZOpenSDK.getInstance().probeDeviceInfo(deviceInfo.device_serial, deviceInfo.device_type);
+                            } else {
+                                DeviceApi.getInstance().addDevice(mDeviceInfo.device_serial, mDeviceInfo.device_code, new JsonCallback<AddCameraInfoResultResponse>() {
+                                    @Override
+                                    public void onSuccess(AddCameraInfoResultResponse data) {
+                                        if (mLoadingPopupView != null) {
+                                            mLoadingPopupView.dismiss();
+                                        }
+                                        clear();
+                                        post(mDeviceInfo);
+//                                        EventBus.getDefault().post(mDeviceInfo);
+//                                        Toast.makeText(WJSettingWifiActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
+//                                        WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
+//
+//                                        finish();
+                                    }
+
+                                    @Override
+                                    public void onError(int code, String msg) {
+                                        super.onError(code, msg);
+                                        if (mLoadingPopupView != null) {
+                                            mLoadingPopupView.dismiss();
+                                        }
+                                        clear();
+                                        Toast.makeText(WJSettingWifiActivity.this, "注册平台失败", Toast.LENGTH_SHORT).show();
+                                        finish();
+                                    }
+                                });
+                            }
                             return result;
                         }
                     })
@@ -272,32 +303,62 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                         public void accept(EZProbeDeviceInfoResult result) throws Exception {
                             if (result.getBaseException() == null) {
                                 // toast("开始添加设备");
-                                DeviceApi.getInstance().addDevie(mDeviceInfo.device_serial, mDeviceInfo.device_code, new JsonCallback<BaseDeviceResponse>() {
-                                    @Override
-                                    public void onSuccess(BaseDeviceResponse data) {
-                                        if (mLoadingPopupView != null) {
-                                            mLoadingPopupView.dismiss();
-                                        }
-                                        clear();
-                                        post(mDeviceInfo);
+                                if (OkHttpUtils.getInstance().isOldVersion()) {
+                                    // toast("开始添加设备");
+                                    DeviceApi.getInstance().addDevie(mDeviceInfo.device_serial, mDeviceInfo.device_code, new JsonCallback<BaseDeviceResponse>() {
+                                        @Override
+                                        public void onSuccess(BaseDeviceResponse data) {
+                                            if (mLoadingPopupView != null) {
+                                                mLoadingPopupView.dismiss();
+                                            }
+                                            clear();
+                                            post(mDeviceInfo);
                                         /*EventBus.getDefault().post(mDeviceInfo);
                                         Toast.makeText(WJSettingWifiActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
                                         WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
 
                                         finish();*/
-                                    }
-
-                                    @Override
-                                    public void onError(int code, String msg) {
-                                        super.onError(code, msg);
-                                        if (mLoadingPopupView != null) {
-                                            mLoadingPopupView.dismiss();
                                         }
-                                        clear();
-                                        Toast.makeText(WJSettingWifiActivity.this, "注册平台失败", Toast.LENGTH_SHORT).show();
-                                        finish();
-                                    }
-                                });
+
+                                        @Override
+                                        public void onError(int code, String msg) {
+                                            super.onError(code, msg);
+                                            if (mLoadingPopupView != null) {
+                                                mLoadingPopupView.dismiss();
+                                            }
+                                            clear();
+                                            Toast.makeText(WJSettingWifiActivity.this, "注册平台失败", Toast.LENGTH_SHORT).show();
+                                            finish();
+                                        }
+                                    });
+                                } else {
+                                    DeviceApi.getInstance().addDevice(mDeviceInfo.device_serial, mDeviceInfo.device_code, new JsonCallback<AddCameraInfoResultResponse>() {
+                                        @Override
+                                        public void onSuccess(AddCameraInfoResultResponse data) {
+                                            if (mLoadingPopupView != null) {
+                                                mLoadingPopupView.dismiss();
+                                            }
+                                            clear();
+                                            post(mDeviceInfo);
+//                                        EventBus.getDefault().post(mDeviceInfo);
+//                                        Toast.makeText(WJSettingWifiActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
+//                                        WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
+//
+//                                        finish();
+                                        }
+
+                                        @Override
+                                        public void onError(int code, String msg) {
+                                            super.onError(code, msg);
+                                            if (mLoadingPopupView != null) {
+                                                mLoadingPopupView.dismiss();
+                                            }
+                                            clear();
+                                            Toast.makeText(WJSettingWifiActivity.this, "注册平台失败", Toast.LENGTH_SHORT).show();
+                                            finish();
+                                        }
+                                    });
+                                }
                             } else {
 
                                 int errorCode = result.getBaseException().getErrorCode();
@@ -305,10 +366,10 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                     clear();
                                     //设备已在线
                                     post(mDeviceInfo);
-                                /*    EventBus.getDefault().post(mDeviceInfo);
-                                    Toast.makeText(WJSettingWifiActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
-                                    WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
-                                    finish();*/
+//                                    EventBus.getDefault().post(mDeviceInfo);
+//                                    Toast.makeText(WJSettingWifiActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
+//                                    WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
+//                                    finish();
                                 } else {
                                     if (startApTime + 1000 * 100 <= System.currentTimeMillis()) {
                                         if (mLoadingPopupView != null) {
@@ -362,17 +423,17 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
     @SuppressLint("CheckResult")
     private void checkIsApi() {
         Observable.just(mDeviceInfo).map(new Function<DeviceInfo, DeviceInfo>() {
-            @Override
-            public DeviceInfo apply(@io.reactivex.annotations.NonNull DeviceInfo deviceInfo) throws Exception {
+                    @Override
+                    public DeviceInfo apply(@io.reactivex.annotations.NonNull DeviceInfo deviceInfo) throws Exception {
 
-                RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial);
-                if (rtmp == null || rtmp.getRTMP() == null) {
-                    return deviceInfo;
-                }
-                deviceInfo.rtmpConfig = rtmp;
-                return deviceInfo;
-            }
-        }).subscribeOn(Schedulers.io())
+                        RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial);
+                        if (rtmp == null || rtmp.getRTMP() == null) {
+                            return deviceInfo;
+                        }
+                        deviceInfo.rtmpConfig = rtmp;
+                        return deviceInfo;
+                    }
+                }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnError(new Consumer<Throwable>() {
                     @Override
@@ -547,9 +608,9 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                     startApTime = System.currentTimeMillis();
                                     if (mDeviceCode == 120020) {
                                         //已经添加过设备
-                                        handler.sendEmptyMessageDelayed(SEND_CHECK_ISAPI, 2000L);
+                                        handler.sendEmptyMessageDelayed(SEND_CHECK_ISAPI, 15000L);
                                     } else {
-                                        handler.sendEmptyMessageDelayed(SEND_CHECK_DEVICE_MSG, 2000L);
+                                        handler.sendEmptyMessageDelayed(SEND_CHECK_DEVICE_MSG, 15000L);
                                     }
                                 }
                             }
@@ -590,13 +651,13 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                     ).show();*/
 
                             new XPopup.Builder(WJSettingWifiActivity.this).asConfirm(
-                                    "提示", "查找设备热点失败,请尝试重置设备并重新扫码配网"
-                                    , null,
-                                    "确定",
-                                    null,
-                                    null,
-                                    true,
-                                    0)
+                                            "提示", "查找设备热点失败,请尝试重置设备并重新扫码配网"
+                                            , null,
+                                            "确定",
+                                            null,
+                                            null,
+                                            true,
+                                            0)
                                     .show();
                         }
                         //  Toast.makeText(WJSettingWifiActivity.this, "找不到设备", Toast.LENGTH_SHORT).show();
@@ -617,6 +678,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
     public void post(DeviceInfo deviceInfo) {
         deviceInfo.setNetworkMode("2");
         deviceInfo.setSsid(ssid);
+        WJLogUitl.d("这个就是全部的数据",new Gson().toJson(deviceInfo));
         ISAPI.getInstance().getNetworkInterface(deviceInfo.device_serial, new JsonCallback<NetworkInterface>() {
             @Override
             public void onError(int code, String msg) {
@@ -641,7 +703,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                         }
                     }
                 }
-                EventBus.getDefault().post(mDeviceInfo);
+                EventBus.getDefault().post(deviceInfo);
                 Toast.makeText(WJSettingWifiActivity.this, "注册平台成功", Toast.LENGTH_SHORT).show();
                 WJActivityControl.getInstance().finishActivity(WJSettingModeActivity.class);
 
@@ -676,7 +738,6 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
     }
 
 
-
     @SuppressLint("CheckResult")
     private void getApConfigLog() {
         String password = "AP" + mDeviceInfo.device_code;
@@ -690,12 +751,12 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                     @Override
                     public void success() {
                         Observable.fromCallable(new Callable<Response>() {
-                            @Override
-                            public Response call() throws Exception {
-                                Response apConfigLog = APHttpClient.INSTANCE.getApConfigLog(mApConfigInfo.getIpPort());
-                                return apConfigLog;
-                            }
-                        }).subscribeOn(Schedulers.io())
+                                    @Override
+                                    public Response call() throws Exception {
+                                        Response apConfigLog = APHttpClient.INSTANCE.getApConfigLog(mApConfigInfo.getIpPort());
+                                        return apConfigLog;
+                                    }
+                                }).subscribeOn(Schedulers.io())
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .subscribe(new Consumer<Response>() {
                                     @Override
@@ -722,22 +783,22 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                                         }
                                         String finalErrorMsg = errorMsg;
                                         new XPopup.Builder(WJSettingWifiActivity.this).asConfirm("错误报告", errorMsg
-                                                , "取消",
-                                                "复制",
-                                                new OnConfirmListener() {
-                                                    @Override
-                                                    public void onConfirm() {
-                                                        ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                                                        // 创建普通字符型ClipData
-                                                        ClipData mClipData = ClipData.newPlainText("Label", finalErrorMsg);
-                                                        // 将ClipData内容放到系统剪贴板里。
-                                                        cm.setPrimaryClip(mClipData);
-                                                        Toast.makeText(WJSettingWifiActivity.this, "复制成功", Toast.LENGTH_LONG).show();
-                                                    }
-                                                },
-                                                null,
-                                                true,
-                                                0)
+                                                        , "取消",
+                                                        "复制",
+                                                        new OnConfirmListener() {
+                                                            @Override
+                                                            public void onConfirm() {
+                                                                ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                                                                // 创建普通字符型ClipData
+                                                                ClipData mClipData = ClipData.newPlainText("Label", finalErrorMsg);
+                                                                // 将ClipData内容放到系统剪贴板里。
+                                                                cm.setPrimaryClip(mClipData);
+                                                                Toast.makeText(WJSettingWifiActivity.this, "复制成功", Toast.LENGTH_LONG).show();
+                                                            }
+                                                        },
+                                                        null,
+                                                        true,
+                                                        0)
                                                 .show();
                                     }
                                 });
@@ -749,13 +810,13 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
 
                         } else {
                             new XPopup.Builder(WJSettingWifiActivity.this).asConfirm(
-                                    "提示", "查找设备热点失败,请尝试重置设备并重新扫码配网"
-                                    , null,
-                                    "确定",
-                                    null,
-                                    null,
-                                    true,
-                                    0)
+                                            "提示", "查找设备热点失败,请尝试重置设备并重新扫码配网"
+                                            , null,
+                                            "确定",
+                                            null,
+                                            null,
+                                            true,
+                                            0)
                                     .show();
                         }
                     }

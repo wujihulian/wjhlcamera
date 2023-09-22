@@ -8,6 +8,7 @@ import java.util.Objects;
 import fr.arnaudguyon.xmltojsonlib.XmlToJson;
 import okhttp3.Call;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
  * FileName: ResponseStatusCallback
@@ -25,7 +26,10 @@ public class XmlCallback extends ResponseCallback {
 
     @Override
     public String getJson(@NotNull Call call, @NotNull Response response) throws IOException {
-        String xml = Objects.requireNonNull(response.body()).string();
+        ResponseBody body = response.body();
+
+        String xml = Objects.requireNonNull(body).string();
+        System.out.println("请求数据--->"+xml);
         return new XmlToJson.Builder(xml).build().toString();
     }
 

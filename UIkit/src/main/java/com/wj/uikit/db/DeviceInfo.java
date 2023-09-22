@@ -22,6 +22,7 @@ public class DeviceInfo implements Serializable {
     public String device_serial;
     public String device_code;
     public String device_type;
+    public String devIndex;
 
     public String networkMode;//有线或者无线 设备网络, 0无, 1有线, 2无线',
     public String ipAaddress;//ip地址
@@ -33,6 +34,13 @@ public class DeviceInfo implements Serializable {
     public RtmpConfig rtmpConfig;
     public DeviceCameraData deviceCamera;
 
+    public String getDevIndex() {
+        return devIndex;
+    }
+
+    public void setDevIndex(String devIndex) {
+        this.devIndex = devIndex;
+    }
 
     public void setNetworkMode(String networkMode) {
         this.networkMode = networkMode;

@@ -275,8 +275,13 @@ public class TXReconnectCover extends TXBaseCover {
 
     private String token;
     private String host;
+    private String mDevIndex;
     private String mDeviceSerial;
     private int liveReconnectCount = 0;
+
+    public void setDevIndex(String devIndex) {
+        mDevIndex = devIndex;
+    }
 
     public String getHost() {
         if (TextUtils.isEmpty(host)) {
