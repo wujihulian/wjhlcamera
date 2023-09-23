@@ -175,6 +175,8 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
 //                        url = WJReconnectEventConfig.transformUrl(url);
                         WJLogUitl.d(url);
                         if (TextUtils.isEmpty(url)) {
+                            Toast.makeText(WJDeviceDebugNewActivity.this, "设备不在线，请重新添加", Toast.LENGTH_SHORT).show();
+                            finish();
                             return;
                         }
                         if (mTxVideoPlayer != null) {

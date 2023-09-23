@@ -41,8 +41,8 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtras(extras);
 
 
-            integrator.initiateScan();
-//            startActivity(intent);
+//            integrator.initiateScan();
+            startActivity(intent);
 
 
 

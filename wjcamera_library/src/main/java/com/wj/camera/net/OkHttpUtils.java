@@ -56,9 +56,9 @@ public class OkHttpUtils {
             }
         }
         if (httpLogging == true) {
-            HttpLoggingInterceptor mInterceptor = new HttpLoggingInterceptor();
-            mInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-            builder.addNetworkInterceptor(mInterceptor);
+//            HttpLoggingInterceptor mInterceptor = new HttpLoggingInterceptor();
+//            mInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+//            builder.addNetworkInterceptor(mInterceptor);
         }
 
         mOkHttpClient = builder
@@ -78,9 +78,9 @@ public class OkHttpUtils {
             }
         }
         if (httpLogging == true) {
-            HttpLoggingInterceptor mInterceptor = new HttpLoggingInterceptor();
+//            HttpLoggingInterceptor mInterceptor = new HttpLoggingInterceptor();
 //            mInterceptor.level(HttpLoggingInterceptor.Level.BODY);
-            builder.addNetworkInterceptor(mInterceptor);
+//            builder.addNetworkInterceptor(mInterceptor);
         }
 
         mOkHttpClient = builder
