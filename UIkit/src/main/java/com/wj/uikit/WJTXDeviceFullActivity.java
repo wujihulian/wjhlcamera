@@ -4,11 +4,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.FrameLayout;
 
 import androidx.annotation.Nullable;
 
+import com.google.gson.Gson;
 import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.net.ISAPI;
 import com.wj.camera.response.RtmpConfig;
@@ -59,32 +61,49 @@ public class WJTXDeviceFullActivity extends BaseUikitActivity {
     private void getDeviceInfo() {
         Bundle extras = getIntent().getExtras();
         mDeviceInfo = (DeviceInfo) extras.getSerializable(WJDeviceConfig.DEVICE_INFO);
+        System.out.println("mDeviceInfo--- " + new Gson().toJson(mDeviceInfo));
     }
 
     private void initWebrtc() {
         FrameLayout frameLayout = findViewById(R.id.fl);
         mTxVideoPlayer = new TXVideoPlayer(this);
+
         mTxVideoPlayer.getReconnectCover().setDeviceSerial(mDeviceInfo.device_serial);
+        mTxVideoPlayer.getReconnectCover().setDevIndex(mDeviceInfo.getDevIndex());
         mTxVideoPlayer.attachContainer(frameLayout);
-        ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial, new JsonCallback<RtmpConfig>() {
-            @Override
-            public void onSuccess(RtmpConfig data) {
-                if (data != null) {
-                    RtmpConfig.RTMPDTO rtmp = data.getRTMP();
-                    if (rtmp != null) {
-                        String url;
-                        if ("true".equals(rtmp.getPrivatelyEnabled())) {
-                            url = rtmp.getPlayURL2();
-                        } else {
-                            url = rtmp.getPlayURL1();
+        if (null != mDeviceInfo.rtmpConfig && null != mDeviceInfo.rtmpConfig.getRTMP()) {
+            String url;
+            if ("true".equals(mDeviceInfo.rtmpConfig.getRTMP().getPrivatelyEnabled())) {
+                url = mDeviceInfo.rtmpConfig.getRTMP().getPlayURL2();
+            } else {
+                url = mDeviceInfo.rtmpConfig.getRTMP().getPlayURL1();
+            }
+//                        url = WJReconnectEventConfig.transformUrl(url);
+            WJLogUitl.d(url);
+            mTxVideoPlayer.startPlay(url);
+        } else {
+            String deviceSerial = TextUtils.isEmpty(mDeviceInfo.getDevIndex()) ? mDeviceInfo.getDevice_serial() : mDeviceInfo.getDevIndex();
+
+            ISAPI.getInstance().getRTMP_byVersion(TextUtils.isEmpty(mDeviceInfo.getDevIndex()), deviceSerial, new JsonCallback<RtmpConfig>() {
+                @Override
+                public void onSuccess(RtmpConfig data) {
+                    if (data != null) {
+                        RtmpConfig.RTMPDTO rtmp = data.getRTMP();
+                        if (rtmp != null) {
+                            String url;
+                            if ("true".equals(rtmp.getPrivatelyEnabled())) {
+                                url = rtmp.getPlayURL2();
+                            } else {
+                                url = rtmp.getPlayURL1();
+                            }
+//                        url = WJReconnectEventConfig.transformUrl(url);
+                            WJLogUitl.d(url);
+                            mTxVideoPlayer.startPlay(url);
                         }
-                        url = WJReconnectEventConfig.transformUrl(url);
-                        WJLogUitl.d(url);
-                        mTxVideoPlayer.startPlay(url);
                     }
                 }
-            }
-        });
+            });
+        }
         TXControlCover txControlCover = (TXControlCover) mTxVideoPlayer.getReceiver("TXControlCover");
         txControlCover.getWj_full_iv().setVisibility(View.GONE);
     }

@@ -51,6 +51,7 @@ import com.wj.uikit.player.event.WJReconnectEventConfig;
 import com.wj.uikit.player.interfac.OnVolumeChangeListener;
 import com.wj.uikit.pop.FocusSelectPop;
 import com.wj.uikit.pop.SelectPop;
+import com.wj.uikit.subscribe.LoadingObserver;
 import com.wj.uikit.tx.TXVideoPlayer;
 import com.wj.uikit.tx.cover.TXControlCover;
 import com.wj.uikit.uitl.OnControlClickListener;
@@ -159,45 +160,115 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
         mTxVideoPlayer.getReconnectCover().setDeviceSerial(mDeviceInfo.device_serial);
         mTxVideoPlayer.getReconnectCover().setDevIndex(mDevIndex);
         mTxVideoPlayer.attachContainer(frameLayout);
-        ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial, new JsonCallback<RtmpConfig>() {
-            @Override
-            public void onSuccess(RtmpConfig data) {
-                System.out.println("ISAPI.getInstance().getRTMP--> " + new Gson().toJson(data));
-                if (data != null) {
-                    RtmpConfig.RTMPDTO rtmp = data.getRTMP();
-                    if (rtmp != null) {
-                        String url;
-                        if ("true".equals(rtmp.getPrivatelyEnabled())) {
-                            url = rtmp.getPlayURL2();
-                        } else {
-                            url = rtmp.getPlayURL1();
+        Observable.just(mDeviceInfo)
+                .map(new Function<DeviceInfo, RtmpConfig>() {
+                    @Override
+                    public RtmpConfig apply(DeviceInfo deviceInfo) throws Exception {
+                        BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(deviceInfo.device_serial);
+                        boolean oldVersion = false;//是不是旧版的
+                        try {
+                            String currentVersion = deviceResponse.getData().getCurrentVersion();
+                            String version = currentVersion.substring(currentVersion.lastIndexOf(" ") + 1);
+                            oldVersion = (Integer.parseInt(version.substring(0, 2)) <= 22);
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
-//                        url = WJReconnectEventConfig.transformUrl(url);
-                        WJLogUitl.d(url);
-                        if (TextUtils.isEmpty(url)) {
-                            Toast.makeText(WJDeviceDebugNewActivity.this, "设备不在线，请重新添加", Toast.LENGTH_SHORT).show();
-                            finish();
-                            return;
-                        }
-                        if (mTxVideoPlayer != null) {
-                            int startCode = mTxVideoPlayer.startPlay(url);
-                            WJLogUitl.d("startPlay " + (System.currentTimeMillis() / 1000));
-                            if (startCode == V2TXLiveCode.V2TXLIVE_OK) {
 
-                            } else {
-                                mTxVideoPlayer.getReconnectCover().reconnection();
+                        RtmpConfig rtmp = null;
+                        if (oldVersion) {
+                            rtmp = ISAPI.getInstance().getRTMP_byVersion(oldVersion, deviceInfo.device_serial, null);
+                        } else {
+                            DeviceInfoListResponse infoListResponse = DeviceApi.getInstance().getDeviceList(deviceInfo.device_serial);
+
+                            if (0 != infoListResponse.getSearchResult().getNumOfMatches()) {
+                                if (!infoListResponse.getSearchResult().getMatchList().isEmpty()) {
+                                    String mDevIndex = infoListResponse.getSearchResult().getMatchList().get(0).getDevice().getDevIndex();
+                                    deviceInfo.setDevIndex(mDevIndex);
+                                    rtmp = ISAPI.getInstance().getRTMP_byVersion(false, mDevIndex, null);
+                                }
+                            }
+
+                        }
+
+                        return rtmp;
+                    }
+                }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe(new RxConsumer(this))
+                .subscribe(new LoadingObserver<RtmpConfig>(this) {
+                    @Override
+                    public void onNext(RtmpConfig data) {
+                        super.onNext(data);
+                        if (data != null) {
+                            RtmpConfig.RTMPDTO rtmp = data.getRTMP();
+                            if (rtmp != null) {
+                                String url;
+                                if ("true".equals(rtmp.getPrivatelyEnabled())) {
+                                    url = rtmp.getPlayURL2();
+                                } else {
+                                    url = rtmp.getPlayURL1();
+                                }
+//                        url = WJReconnectEventConfig.transformUrl(url);
+                                WJLogUitl.d(url);
+                                if (TextUtils.isEmpty(url)) {
+                                    Toast.makeText(WJDeviceDebugNewActivity.this, "设备不在线，请重新添加", Toast.LENGTH_SHORT).show();
+                                    finish();
+                                    return;
+                                }
+                                if (mTxVideoPlayer != null) {
+                                    int startCode = mTxVideoPlayer.startPlay(url);
+                                    WJLogUitl.d("startPlay-- " + startCode + "  " + (System.currentTimeMillis() / 1000));
+                                    if (startCode == V2TXLiveCode.V2TXLIVE_OK) {
+
+                                    } else {
+                                        mTxVideoPlayer.getReconnectCover().reconnection();
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
+                });
 
-            @Override
-            public void onError(int code, String msg) {
-                super.onError(code, msg);
-                System.out.println("ISAPI.getInstance().getRTM-->" + msg);
-            }
-        });
+
+//        ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial, new JsonCallback<RtmpConfig>() {
+//            @Override
+//            public void onSuccess(RtmpConfig data) {
+//                System.out.println("ISAPI.getInstance().getRTMP--> " + new Gson().toJson(data));
+//                if (data != null) {
+//                    RtmpConfig.RTMPDTO rtmp = data.getRTMP();
+//                    if (rtmp != null) {
+//                        String url;
+//                        if ("true".equals(rtmp.getPrivatelyEnabled())) {
+//                            url = rtmp.getPlayURL2();
+//                        } else {
+//                            url = rtmp.getPlayURL1();
+//                        }
+////                        url = WJReconnectEventConfig.transformUrl(url);
+//                        WJLogUitl.d(url);
+//                        if (TextUtils.isEmpty(url)) {
+//                            Toast.makeText(WJDeviceDebugNewActivity.this, "设备不在线，请重新添加", Toast.LENGTH_SHORT).show();
+//                            finish();
+//                            return;
+//                        }
+//                        if (mTxVideoPlayer != null) {
+//                            int startCode = mTxVideoPlayer.startPlay(url);
+//                            WJLogUitl.d("startPlay " + (System.currentTimeMillis() / 1000));
+//                            if (startCode == V2TXLiveCode.V2TXLIVE_OK) {
+//
+//                            } else {
+//                                mTxVideoPlayer.getReconnectCover().reconnection();
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void onError(int code, String msg) {
+//                super.onError(code, msg);
+//                System.out.println("ISAPI.getInstance().getRTM-->" + msg);
+//            }
+//        });
 
         TXControlCover txControlCover = (TXControlCover) mTxVideoPlayer.getReceiver("TXControlCover");
         txControlCover.getWj_full_iv().setOnClickListener(new View.OnClickListener() {
@@ -388,7 +459,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
             @Override
             public void onResponse(@androidx.annotation.NonNull Call call, @androidx.annotation.NonNull Response response) throws IOException {
                 String json = response.body().string();
-                System.out.println("onResponse--> "+json);
+                System.out.println("onResponse--> " + json);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {

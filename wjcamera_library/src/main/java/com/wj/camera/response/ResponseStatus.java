@@ -12,11 +12,11 @@ import java.io.Serializable;
  * 作者姓名 修改时间 版本号 描述
  */
 public class ResponseStatus implements Serializable {
-    public Status ResponseStatus;
+    public Status ResponseStatus=new Status();
     public class Status implements Serializable{
-        public String requestURL;
-        public String statusCode;
-        public String statusString;
-        public String subStatusCode;
+        public String requestURL="";
+        public String statusCode="";
+        public String statusString="";
+        public String subStatusCode="";
     }
 }

@@ -1,5 +1,7 @@
 package com.wj.camera.net;
 
+import android.text.TextUtils;
+
 import androidx.annotation.IntRange;
 
 import com.google.gson.Gson;
@@ -7,7 +9,9 @@ import com.wj.camera.WJCamera;
 import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.callback.XmlCallback;
 import com.wj.camera.config.WJDeviceSceneEnum;
+import com.wj.camera.net.request.GetRequest;
 import com.wj.camera.request.XML;
+import com.wj.camera.response.CameraDeviceLiveUrlResponse;
 import com.wj.camera.response.FOCUSCTRL;
 import com.wj.camera.response.FocusEntity;
 import com.wj.camera.response.NetworkInterface;
@@ -35,6 +39,11 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
+/// 启用预览，设置预览推流地址
+/// @param deviceSerial deviceSerial description
+/// @param pushURL pushURL description
+/// @param playURL playURL description
+/// @param completion completion description
 
 /**
  * FileName: ISAPI
@@ -93,7 +102,14 @@ public class ISAPI {
     public synchronized ResponseStatus setRtmp(String deviceSerial, RtmpConfig rtmpConfig) {
 
         try {
-            Response execute = OkHttpUtils.getInstance().put(ApiNew.RTMP).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(rtmpConfig)).execute();
+            Response execute;
+            if (OkHttpUtils.getInstance().isOldVersion()) {
+                execute = OkHttpUtils.getInstance().put(ApiNew.RTMP).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(rtmpConfig)).execute();
+            } else {
+                execute = OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.RTMP_NEW, devIndex))
+                        .addHeader("EZO-DeviceSerial", devIndex).execute();
+            }
+
             if (execute == null || execute.body() == null) {
                 return null;
             }
@@ -107,11 +123,45 @@ public class ISAPI {
         return null;
     }
 
+    public synchronized ResponseStatus setRtmp(boolean oldVersion, String deviceSerial, RtmpConfig rtmpConfig) {
+
+        try {
+            Response execute;
+            if (oldVersion) {
+                execute = OkHttpUtils.getInstance().put(ApiNew.RTMP).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(rtmpConfig)).execute();
+            } else {
+                execute = OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.RTMP_NEW, deviceSerial))
+                        .jsons(entityToXml(rtmpConfig)).execute();
+            }
+
+            if (execute == null || execute.body() == null) {
+                return null;
+            }
+            String string = execute.body().string();
+            System.out.println("ResponseStatus setRtmp--- " + execute.request().url() + "  " + string);
+            String xml = Objects.requireNonNull(string);
+            String json = new XmlToJson.Builder(xml).build().toString();
+            return new Gson().fromJson(json, ResponseStatus.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public void zoom(int zoom) {
         ZoomResponse zoomResponse = new ZoomResponse();
         zoomResponse.setZoom(new ZoomResponse.ZoomDTO());
         zoomResponse.getZoom().setRatio(zoom);
-        OkHttpUtils.getInstance().put(ApiNew.Zoom).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(zoomResponse)).enqueue(new XmlCallback(null));
+        if (OkHttpUtils.getInstance().isOldVersion()) {
+            OkHttpUtils.getInstance().put(ApiNew.Zoom).addHeader("EZO-DeviceSerial", deviceSerial)
+                    .jsons(entityToXml(zoomResponse)).enqueue(new XmlCallback(null));
+        } else {
+            OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.Zoom_NEW, devIndex))
+                    .addHeader("EZO-DeviceSerial", devIndex)
+                    .jsons(entityToXml(zoomResponse))
+                    .enqueue(new XmlCallback(null));
+        }
+
     }
 
 
@@ -140,12 +190,24 @@ public class ISAPI {
     }
 
     public void getAudio(String deviceSerial, JsonCallback<TwoWayAudio> callback) {
-        OkHttpUtils.getInstance().get(ApiNew.Audio).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
+        if (OkHttpUtils.getInstance().isOldVersion()) {
+            OkHttpUtils.getInstance().get(ApiNew.Audio).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
+        } else {
+            OkHttpUtils.getInstance().get(String.format("%s?devIndex=%s", ApiNew.Audio_NEW, devIndex)).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
+        }
+
+
     }
 
 
     public void setAuido(TwoWayAudio twoWayAudio, JsonCallback<ResponseStatus> callback) {
-        OkHttpUtils.getInstance().put(ApiNew.Audio).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(twoWayAudio)).enqueue(new XmlCallback(callback));
+        if (OkHttpUtils.getInstance().isOldVersion()) {
+            OkHttpUtils.getInstance().put(ApiNew.Audio).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(twoWayAudio)).enqueue(new XmlCallback(callback));
+        } else {
+            OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.Audio_NEW, devIndex)).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(twoWayAudio)).enqueue(new XmlCallback(callback));
+        }
+
+
     }
 
     public void setVolume(String deviceSerial, @IntRange(from = 0, to = 100) int volume) {
@@ -185,13 +247,14 @@ public class ISAPI {
             Response execute = null;
             if (OkHttpUtils.getInstance().isOldVersion()) {
                 execute = OkHttpUtils.getInstance().get(ApiNew.RTMP).addHeader("EZO-DeviceSerial", device_serial).execute();
-            }else{
+            } else {
                 execute = OkHttpUtils.getInstance().get(String.format("%s?devIndex=%s", ApiNew.RTMP_NEW, devIndex)).execute();
             }
 
             if (execute == null || execute.body() == null) {
                 return null;
             }
+            System.out.println("getRTMP域名-- " + execute.request().url());
             String string = execute.body().string();
             String xml = Objects.requireNonNull(string);
             String json = new XmlToJson.Builder(xml).build().toString();
@@ -202,6 +265,82 @@ public class ISAPI {
         return null;
 
     }
+
+    //获取RTMP配置  自行传入是新版还是旧版
+    public RtmpConfig getRTMP_byVersion(Boolean oldVersion, String deviceSerial, JsonCallback<RtmpConfig> callback) {
+        try {
+            Response execute = null;
+            if (oldVersion) {
+                execute = OkHttpUtils.getInstance().get(ApiNew.RTMP).addHeader("EZO-DeviceSerial", deviceSerial).execute();
+            } else {
+                if (null != callback) {
+                    OkHttpUtils.getInstance().get(String.format("%s?devIndex=%s", ApiNew.RTMP_NEW, deviceSerial)).enqueue(new XmlCallback(callback));
+                } else {
+                    execute = OkHttpUtils.getInstance().get(String.format("%s?devIndex=%s", ApiNew.RTMP_NEW, deviceSerial)).execute();
+                }
+            }
+            if (execute == null || execute.body() == null) {
+                return null;
+            }
+            String string = execute.body().string();
+            System.out.println("getRTMP_byVersion-- " + execute.request().url() + "  " + string);
+            String xml = Objects.requireNonNull(string);
+            String json = new XmlToJson.Builder(xml).build().toString();
+            RtmpConfig rtmpConfig = new Gson().fromJson(json, RtmpConfig.class);
+            if (null != callback) {
+                callback.onSuccess(rtmpConfig);
+            }
+            return rtmpConfig;
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+        if (null != callback) {
+            callback.onError(0, "错误");
+        }
+        return new RtmpConfig();
+    }
+
+    /**
+     * 用当前配置去获取配置
+     *
+     * @param host
+     * @param token
+     * @param rtmpConfig
+     * @param deviceSerial
+     */
+    public RtmpConfig getRTMP_Config(String host, String token, RtmpConfig rtmpConfig, String deviceSerial) {
+        GetRequest getRequest = OkHttpUtils.getInstance().get("/api/course/getCameraDeviceLiveUrl?deviceCode=" + deviceSerial);
+        getRequest.setBaseUrl(host);
+        Response response = getRequest.addHeader("token", token).execute();
+        if (response == null || response.body() == null) {
+            return null;
+        }
+        String string = null;
+        try {
+            string = response.body().string();
+            CameraDeviceLiveUrlResponse deviceLiveUrlResponse = new Gson().fromJson(string, CameraDeviceLiveUrlResponse.class);
+            if (deviceLiveUrlResponse == null || deviceLiveUrlResponse.getData() == null) {
+                return null;
+            }
+            CameraDeviceLiveUrlResponse.CameraDeviceLiveUrlData data = deviceLiveUrlResponse.getData();
+            rtmpConfig.getRTMP().setPrivatelyURL(data.getDocpub());
+            rtmpConfig.getRTMP().setPlayURL2(data.getDocplay());
+
+            //必传参数 我也没办法 随便设置一个咯
+            if (TextUtils.isEmpty(rtmpConfig.getRTMP().getURL())) {
+                rtmpConfig.getRTMP().setURL(data.getDocpub());
+                rtmpConfig.getRTMP().setPlayURL1(data.getDocplay());
+            }
+            System.out.println("getRTMP_Config--- " + new Gson().toJson(rtmpConfig));
+            return rtmpConfig;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+
+    }
+
 
     //获取当前设置 分辨率 码率相关设置
     public Call getVideoConfig(JsonCallback<VideoConfig> callback) {
@@ -214,7 +353,15 @@ public class ISAPI {
 
     //设置当前设置 分辨率 码率相关设置
     public Call setVideoConfig(VideoConfig videoConfig, JsonCallback<ResponseStatus> callback) {
-        return OkHttpUtils.getInstance().put(ApiNew.setting101).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(videoConfig)).enqueue(new XmlCallback(callback));
+        if (OkHttpUtils.getInstance().isOldVersion()) {
+            return OkHttpUtils.getInstance().put(ApiNew.setting101).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(videoConfig))
+                    .enqueue(new XmlCallback(callback));
+        } else {
+            return OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.setting101_NEW, devIndex))
+                    .addHeader("EZO-DeviceSerial", devIndex).jsons(entityToXml(videoConfig)).enqueue(new XmlCallback(callback));
+        }
+
+
     }
 
     public Call getZoom(JsonCallback<ZoomResponse> jsonCallback) {
@@ -238,7 +385,8 @@ public class ISAPI {
             public void onSuccess(VideoConfig data) {
                 if (data != null && data.getStreamingChannel() != null && data.getStreamingChannel().getVideo() != null) {
                     data.getStreamingChannel().getVideo().setVbrUpperCap(bitrate);
-                    OkHttpUtils.getInstance().put(ApiNew.setting101).jsons(entityToXml(data)).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(jsonCallback));
+                    OkHttpUtils.getInstance().put(ApiNew.setting101).jsons(entityToXml(data)).addHeader("EZO-DeviceSerial", deviceSerial)
+                            .enqueue(new XmlCallback(jsonCallback));
                 } else {
                     if (jsonCallback != null) {
                         jsonCallback.onError(1001, "设置码率失败");
@@ -431,14 +579,14 @@ public class ISAPI {
     public void getNetworkInterface(String deviceSerial, JsonCallback<NetworkInterface> jsonCallback) {
 
         if (OkHttpUtils.getInstance().isOldVersion()) {
-             OkHttpUtils.getInstance()
+            OkHttpUtils.getInstance()
                     .get(ApiNew.networkInterface)
                     .addHeader("EZO-DeviceSerial", deviceSerial)
                     .enqueue(new XmlCallback(jsonCallback));
 
         } else {
 
-           OkHttpUtils.getInstance()
+            OkHttpUtils.getInstance()
                     .get(String.format("%s?devIndex=%s", ApiNew.networkInterface_NEW, devIndex))
                     .addHeader("EZO-DeviceSerial", deviceSerial)
                     .enqueue(new XmlCallback(jsonCallback));
@@ -460,8 +608,20 @@ public class ISAPI {
     private String entityToXml(Object obj) {
         String jsonString = mGson.toJson(obj);
         JsonToXml xml = new JsonToXml.Builder(jsonString).build();
-        return xml.toString();
+        String string = xml.toString();
+        System.out.println("格式化后的xml--- " + string);
+        return string;
     }
-
+//    <?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+//    <RTMP>
+//    <PlayURL1>https://liveplay.wxbig.cn/xx/O_RB5x0D7VvJzws.flv?auth_key=2147483647-0-0-7e733b00e5c456bc8cea43d1b83afc1f</PlayURL1>
+//    <PlayURL2>https://liveplay.wxbig.cn/xxt/P_F87307358.flv?auth_key=1695784028-0-0-7aa673320cdc6a0248b9d76f97900874&amp;txTime=65139c5c</PlayURL2>
+//    <PrivatelyEnabled>true</PrivatelyEnabled>
+//    <PrivatelyURL>rtmp://live.wxbig.cn/xxt/P_F87307358?auth_key=1695784028-0-0-bcd648907bbb93b77ad70d44321519c8&amp;txTime=65139c5c</PrivatelyURL>
+//    <URL>rtmp://live.wxbig.cn/xx/O_RB5x0D7VvJzws?auth_key=2147483647-0-0-fe05ac7dcd08c89b10417a166c64bfd3</URL>
+//    <enabled>true</enabled>
+//    <version>2.0</version>
+//    <xmlns>http://www.hikvision.com/ver20/XMLSchema</xmlns>
+//    </RTMP>
 
 }
