@@ -33,10 +33,10 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(this, WJDeviceDebugNewActivity.class);
             Bundle extras = new Bundle();
             com.wj.uikit.db.DeviceInfo deviceInfo = new com.wj.uikit.db.DeviceInfo();
-            deviceInfo.device_serial = "F87307358";
-            deviceInfo.device_code = "UOTJUZ";
-//            deviceInfo.device_serial = "F87307329";
-//            deviceInfo.device_code = "NTODPF";
+//            deviceInfo.device_serial = "F87307358";
+//            deviceInfo.device_code = "UOTJUZ";
+            deviceInfo.device_serial = "F87307329";
+            deviceInfo.device_code = "NTODPF";
             extras.putSerializable(WJDeviceConfig.DEVICE_INFO, deviceInfo);
             intent.putExtras(extras);
 

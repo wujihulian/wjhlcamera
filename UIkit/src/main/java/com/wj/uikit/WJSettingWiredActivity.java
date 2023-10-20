@@ -43,6 +43,8 @@ import com.wj.camera.net.RxConsumer;
 import com.wj.camera.net.SafeGuardInterceptor;
 import com.wj.camera.response.AddCameraInfoResultResponse;
 import com.wj.camera.response.BaseDeviceResponse;
+import com.wj.camera.response.CheckDevcieUpdate;
+import com.wj.camera.response.DeviceInfoListResponse;
 import com.wj.camera.response.NetworkInterface;
 import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.uitl.WJLogUitl;
@@ -117,7 +119,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
         mEt_ip4.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-                WJLogUitl.i(  "onFocusChange: " + hasFocus);
+                WJLogUitl.i("onFocusChange: " + hasFocus);
                 if (!hasFocus) {
                     String ip = mEt_ip4.getText().toString().trim();
                     String trim = mEt_subnet_mask.getText().toString().trim();
@@ -127,7 +129,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                             String[] split = ip.split("\\.");
                             String s = split[0];
                             Integer integer = Integer.valueOf(s);
-                            WJLogUitl.i(  "onFocusChange: " + integer);
+                            WJLogUitl.i("onFocusChange: " + integer);
                             String subnetMask = null;
                             if (integer >= 1 && integer <= 126) {
                                 subnetMask = "255.0.0.0";
@@ -243,10 +245,10 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
         if (mFl_ip_config.getVisibility() != View.VISIBLE) {
             //自动配置
             apWiredConfigInfo.ipAddress(
-                    "192.168.0.56",
-                    "255.255.255.0",
-                    "192.168.0.1"
-            )
+                            "192.168.0.56",
+                            "255.255.255.0",
+                            "192.168.0.1"
+                    )
                     .dhcp(getString(R.string.type))
                     .fixedIP(FIXED_IP.Companion.getWIRELESS_IPC_YS());
 
@@ -273,10 +275,10 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
 
             //手动配置
             apWiredConfigInfo.ipAddress(
-                    ip4,
-                    subnetMask,
-                    defaultGateway
-            )
+                            ip4,
+                            subnetMask,
+                            defaultGateway
+                    )
                     .dhcp(getString(R.string.type1))
                     .fixedIP(FIXED_IP.Companion.getWIRELESS_IPC_YS());
         }
@@ -302,8 +304,8 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                 return false;
             }
             if (TextUtils.isEmpty(dnsSecondary)) {
-                dnsSecondary="114.114.114.114";
-            }else {
+                dnsSecondary = "114.114.114.114";
+            } else {
                 if (!checkIp(dnsSecondary)) {
                     toast("备用DNS错误");
                     return false;
@@ -370,7 +372,8 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
         mDeviceInfo = (DeviceInfo) extras.getSerializable(WJDeviceConfig.DEVICE_INFO);
-        mDeviceCode = extras.getInt(WJDeviceConfig.DEVICE_CODE);
+//        mDeviceCode = extras.getInt(WJDeviceConfig.DEVICE_CODE);
+        mDeviceCode = 0;
     }
 
     private long startWiredTime;
@@ -401,7 +404,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                         apWiredConfigInfo.deviceSN(mDeviceInfo.device_serial)  // 设备序列号，非必要
                                 .activatePwd("Hik" + mDeviceInfo.device_code)  // 激活密码，萤石接入的海康设备规则为 Hik+验证码。这里不传会使用默认 Hik+验证码
                                 .verifyCode(mDeviceInfo.device_code); // 设备验证码，必要
-                        WJLogUitl.i(  "success: " + new Gson().toJson(apWiredConfigInfo.getApWiredConfigInfo()));
+                        WJLogUitl.i("success: " + new Gson().toJson(apWiredConfigInfo.getApWiredConfigInfo()));
                         YsApManager.INSTANCE.activateWired(apWiredConfigInfo.build(), new YsApManager.ApActivateCallback() {
                             @Override
                             public void onStartSearch() {
@@ -415,13 +418,13 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
 
                             @Override
                             public void onStartConfigWifi() {
-                                logPrint("第三步：开始配置wifi");
+                                logPrint("第三步：开始配置网络");
 
                             }
 
                             @Override
                             public void onSuccess() {
-                                logPrint("wifi 配置成功！！");
+                                logPrint("网络配置成功！！");
                                 if (handler != null) {
                                     if (mDeviceCode == 120020) {
                                         //已经添加过设备
@@ -435,12 +438,12 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                             @Override
                             public void onFailed(int code, @NotNull String msg, @org.jetbrains.annotations.Nullable Throwable exception) {
                                 String format = String.format("配置 失败：code=%s , msg=%s ", code + "", msg + "");
-                                WJLogUitl.i(  "logPrint: " + format);
-                                if (mLoadingPopupView!=null){
+                                WJLogUitl.i("logPrint: " + format);
+                                if (mLoadingPopupView != null) {
                                     mLoadingPopupView.dismiss();
                                 }
                                 showWiredHint();
-                               // logPrint(format);
+                                // logPrint(format);
                             }
                         });
 
@@ -448,7 +451,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
 
                     @Override
                     public void failed(@NonNull ConnectionErrorCode errorCode) {
-                        WJLogUitl.i(  "failed: " + errorCode.name());
+                        WJLogUitl.i("failed: " + errorCode.name());
                         if (errorCode == ConnectionErrorCode.USER_CANCELLED) {
 
                         } else {
@@ -500,7 +503,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                     checkDevice();
                     break;
                 case SEND_CHECK_ISAPI:
-                    logPrint("正在注册设备到平台....1");
+                    logPrint("正在注册设备到平台....");
                     checkIsApi();
                     break;
             }
@@ -510,16 +513,45 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
     @SuppressLint("CheckResult")
     private void checkIsApi() {
         Observable.just(mDeviceInfo).map(new Function<DeviceInfo, DeviceInfo>() {
-            @Override
-            public DeviceInfo apply(@io.reactivex.annotations.NonNull DeviceInfo deviceInfo) throws Exception {
-                RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial);
-                if (rtmp == null || rtmp.getRTMP() == null) {
-                    return deviceInfo;
-                }
-                deviceInfo.rtmpConfig = rtmp;
-                return deviceInfo;
-            }
-        }).subscribeOn(Schedulers.io())
+                    @Override
+                    public DeviceInfo apply(@io.reactivex.annotations.NonNull DeviceInfo deviceInfo) throws Exception {
+
+//                        BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(deviceInfo.device_serial);
+//                        boolean oldVersion = false;//是不是旧版的
+//                        try {
+//                            String currentVersion = deviceResponse.getData().getCurrentVersion();
+//                            String version = currentVersion.substring(currentVersion.lastIndexOf(" ") + 1);
+//                            oldVersion = (Integer.parseInt(version.substring(0, 2)) <= 22);
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
+                        DeviceInfoListResponse infoListResponse = DeviceApi.getInstance().getDeviceList(deviceInfo.getDevice_serial());
+                        boolean oldVersion = 0 == infoListResponse.getSearchResult().getNumOfMatches();//是不是旧版的
+
+                        RtmpConfig rtmp = null;
+                        if (oldVersion) {
+                            rtmp = ISAPI.getInstance().getRTMP_byVersion(oldVersion, deviceInfo.device_serial, null);
+                        } else {
+//                            DeviceInfoListResponse infoListResponse = DeviceApi.getInstance().getDeviceList(deviceInfo.device_serial);
+
+                            if (0 != infoListResponse.getSearchResult().getNumOfMatches()) {
+                                if (!infoListResponse.getSearchResult().getMatchList().isEmpty()) {
+                                    String mDevIndex = infoListResponse.getSearchResult().getMatchList().get(0).getDevice().getDevIndex();
+                                    deviceInfo.setDevIndex(mDevIndex);
+                                    rtmp = ISAPI.getInstance().getRTMP_byVersion(false, mDevIndex, null);
+                                }
+                            }
+
+                        }
+
+//                RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial);
+                        if (rtmp == null || rtmp.getRTMP() == null) {
+                            return deviceInfo;
+                        }
+                        deviceInfo.rtmpConfig = rtmp;
+                        return deviceInfo;
+                    }
+                }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnError(new Consumer<Throwable>() {
                     @Override
@@ -538,7 +570,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                                 }
                                 showWiredHint();
                             } else {
-                                handler.sendEmptyMessageDelayed(SEND_CHECK_ISAPI, 1000L);
+                                handler.sendEmptyMessageDelayed(SEND_CHECK_ISAPI, 5000L);
                             }
                         } else {
                             clear();
@@ -558,7 +590,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
         if (mLoadingPopupView != null) {
             mLoadingPopupView.setTitle(log);
         }
-        WJLogUitl.i(  "logPrint: " + log);
+        WJLogUitl.i("logPrint: " + log);
     }
 
     @SuppressLint("CheckResult")
@@ -578,7 +610,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
 
     @SuppressLint("CheckResult")
     public void checkDevice() {
-        WJLogUitl.i(  "checkDevice: ");
+        WJLogUitl.i("checkDevice: ");
         if (mDeviceInfo != null) {
             Observable.just(mDeviceInfo)
                     .map(new Function<DeviceInfo, EZProbeDeviceInfoResult>() {
@@ -729,7 +761,8 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
                     });
         }
     }
-    public void post(DeviceInfo deviceInfo){
+
+    public void post(DeviceInfo deviceInfo) {
         deviceInfo.setNetworkMode("1");
         ISAPI.getInstance().getNetworkInterface(deviceInfo.device_serial, new JsonCallback<NetworkInterface>() {
             @Override
@@ -743,11 +776,11 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
 
             @Override
             public void onSuccess(NetworkInterface data) {
-                if (data!=null){
+                if (data != null) {
                     NetworkInterface.NetworkInterfaceListDTO networkInterfaceList = data.getNetworkInterfaceList();
-                    if (networkInterfaceList!=null){
+                    if (networkInterfaceList != null) {
                         List<NetworkInterface.NetworkInterfaceListDTO.NetworkInterfaceDTO> networkInterface = networkInterfaceList.getNetworkInterface();
-                        if (networkInterface!=null && networkInterface.size()>=2) {
+                        if (networkInterface != null && networkInterface.size() >= 2) {
                             deviceInfo.setIpAaddress(networkInterface.get(0).getIPAddress().getIpAddress());
                         }
                     }
@@ -760,6 +793,7 @@ public class WJSettingWiredActivity extends BaseUikitActivity {
         });
 
     }
+
     public void showWiredHint() {
         new XPopup.Builder(this).asConfirm("有线网络连接失败", "1.请检查网线是否已插好 \n2.请检查输入的IP地址是否正确", new OnConfirmListener() {
             @Override

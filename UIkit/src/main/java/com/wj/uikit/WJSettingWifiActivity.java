@@ -39,6 +39,7 @@ import com.lxj.xpopup.core.BasePopupView;
 import com.lxj.xpopup.impl.LoadingPopupView;
 import com.lxj.xpopup.interfaces.OnConfirmListener;
 import com.lxj.xpopup.interfaces.SimpleCallback;
+import com.tencent.live2.V2TXLiveCode;
 import com.thanosfisherman.wifiutils.WifiUtils;
 import com.thanosfisherman.wifiutils.wifiConnect.ConnectionErrorCode;
 import com.thanosfisherman.wifiutils.wifiConnect.ConnectionSuccessListener;
@@ -51,13 +52,18 @@ import com.wj.camera.net.OkHttpUtils;
 import com.wj.camera.net.RxConsumer;
 import com.wj.camera.response.AddCameraInfoResultResponse;
 import com.wj.camera.response.BaseDeviceResponse;
+import com.wj.camera.response.CheckDevcieUpdate;
+import com.wj.camera.response.DeviceData;
+import com.wj.camera.response.DeviceInfoListResponse;
 import com.wj.camera.response.NetworkInterface;
+import com.wj.camera.response.ResponseStatus;
 import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.uitl.WJLogUitl;
 import com.wj.camera.view.WJDeviceConfig;
 import com.wj.uikit.adapter.OnItemClickListener;
 import com.wj.uikit.adapter.WifiListAdapter;
 import com.wj.uikit.db.DeviceInfo;
+import com.wj.uikit.subscribe.LoadingObserver;
 import com.wj.uikit.uitl.WJActivityControl;
 
 import org.greenrobot.eventbus.EventBus;
@@ -136,6 +142,43 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
         mDeviceCode = extras.getInt(WJDeviceConfig.DEVICE_CODE);
 
         mMode = extras.getInt(WJDeviceConfig.SUPPORT_APP_MODE);
+
+        Observable.just(mDeviceInfo)
+                .map(new Function<DeviceInfo, DeviceInfoListResponse>() {
+                    @Override
+                    public DeviceInfoListResponse apply(DeviceInfo deviceInfo) throws Exception {
+//                        BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(deviceInfo.device_serial);
+//                        boolean oldVersion = false;//是不是旧版的
+//                        try {
+//                            String currentVersion = deviceResponse.getData().getCurrentVersion();
+//                            String version = currentVersion.substring(currentVersion.lastIndexOf(" ") + 1);
+//                            oldVersion = (Integer.parseInt(version.substring(0, 2)) <= 22);
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
+
+                            DeviceInfoListResponse infoListResponse = DeviceApi.getInstance().getDeviceList(deviceInfo.device_serial);
+
+                     OkHttpUtils.getInstance().setOldVersion(0==infoListResponse.getSearchResult().getNumOfMatches());
+
+                        return infoListResponse;
+                    }
+                }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe(new RxConsumer(this))
+                .subscribe(new LoadingObserver<DeviceInfoListResponse>(this) {
+                    @Override
+                    public void onNext(DeviceInfoListResponse data) {
+                        super.onNext(data);
+                        if (data != null) {
+
+
+                        } else {
+                            System.out.println("获取不到数据~~");
+                        }
+                    }
+                });
+
 
     }
 
@@ -425,8 +468,46 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
         Observable.just(mDeviceInfo).map(new Function<DeviceInfo, DeviceInfo>() {
                     @Override
                     public DeviceInfo apply(@io.reactivex.annotations.NonNull DeviceInfo deviceInfo) throws Exception {
+//                        BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(deviceInfo.device_serial);
+//
+//                        boolean oldVersion = false;//是不是旧版的
+//                        try {
+//                            String currentVersion = deviceResponse.getData().getCurrentVersion();
+//                            String version = currentVersion.substring(currentVersion.lastIndexOf(" ") + 1);
+//                            oldVersion = (Integer.parseInt(version.substring(0, 2)) <= 22);
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
+                        DeviceInfoListResponse infoListResponse = DeviceApi.getInstance().getDeviceList(deviceInfo.device_serial);
+                        boolean oldVersion = 0 == infoListResponse.getSearchResult().getNumOfMatches();//是不是旧版的
 
-                        RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial);
+
+
+//                        RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial);
+                        RtmpConfig rtmp = null;
+
+                        if (oldVersion) {
+                            rtmp = ISAPI.getInstance().getRTMP_byVersion(oldVersion, deviceInfo.device_serial, null);
+                        } else {
+//                            DeviceInfoListResponse infoListResponse = DeviceApi.getInstance().getDeviceList(deviceInfo.device_serial);
+
+                            if (0 != infoListResponse.getSearchResult().getNumOfMatches()) {
+                                if (!infoListResponse.getSearchResult().getMatchList().isEmpty()) {
+                                    DeviceInfoListResponse.SearchResultBean.MatchListBean.DeviceBean device = infoListResponse.getSearchResult().getMatchList().get(0).getDevice();
+                                    String mDevIndex = device.getDevIndex();
+                                    DeviceData deviceData = new DeviceData();
+                                    deviceData.setDeviceName(device.getDevName());
+                                    deviceData.setDeviceSerial(deviceInfo.device_serial);
+                                    deviceData.setStatus("online".equals(device.getDevStatus()) ? 1 : 0);
+
+                                    deviceInfo.deviceData = deviceData;
+                                    deviceInfo.setDevIndex(mDevIndex);
+                                    rtmp = ISAPI.getInstance().getRTMP_byVersion(false, mDevIndex, null);
+                                }
+                            }
+                        }
+
+
                         if (rtmp == null || rtmp.getRTMP() == null) {
                             return deviceInfo;
                         }
@@ -678,7 +759,7 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
     public void post(DeviceInfo deviceInfo) {
         deviceInfo.setNetworkMode("2");
         deviceInfo.setSsid(ssid);
-        WJLogUitl.d("这个就是全部的数据",new Gson().toJson(deviceInfo));
+        WJLogUitl.d("这个就是全部的数据", new Gson().toJson(deviceInfo));
         ISAPI.getInstance().getNetworkInterface(deviceInfo.device_serial, new JsonCallback<NetworkInterface>() {
             @Override
             public void onError(int code, String msg) {
@@ -698,8 +779,6 @@ public class WJSettingWifiActivity extends BaseUikitActivity implements OnItemCl
                         List<NetworkInterface.NetworkInterfaceListDTO.NetworkInterfaceDTO> networkInterface = networkInterfaceList.getNetworkInterface();
                         if (networkInterface != null && networkInterface.size() >= 2) {
                             deviceInfo.setIpAaddress(networkInterface.get(1).getIPAddress().getIpAddress());
-
-
                         }
                     }
                 }

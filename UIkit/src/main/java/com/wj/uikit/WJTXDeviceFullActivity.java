@@ -3,8 +3,10 @@ package com.wj.uikit;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 
@@ -13,6 +15,7 @@ import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.wj.camera.callback.JsonCallback;
 import com.wj.camera.net.ISAPI;
+import com.wj.camera.net.RxConsumer;
 import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.uitl.WJLogUitl;
 import com.wj.camera.view.WJDeviceConfig;
@@ -21,6 +24,12 @@ import com.wj.uikit.player.event.WJReconnectEventConfig;
 import com.wj.uikit.status.StatusBarUtil;
 import com.wj.uikit.tx.TXVideoPlayer;
 import com.wj.uikit.tx.cover.TXControlCover;
+
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * FileName: WJTXDeviceFullActivity
@@ -36,6 +45,7 @@ public class WJTXDeviceFullActivity extends BaseUikitActivity {
     private FrameLayout mFrameLayout;
     private TXVideoPlayer mTxVideoPlayer;
     private DeviceInfo mDeviceInfo;
+    AudioManager audioManager = null;
 
     public static void start(Context context, DeviceInfo deviceInfo) {
 
@@ -50,9 +60,33 @@ public class WJTXDeviceFullActivity extends BaseUikitActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.wj_activity_tx_device_full);
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         initView();
         getDeviceInfo();
         initWebrtc();
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (null != audioManager) {
+            int volume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_VOLUME_DOWN:
+                    volume = Math.max(0, volume - 1);
+                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, AudioManager.FLAG_SHOW_UI);
+                    break;
+                case KeyEvent.KEYCODE_VOLUME_UP:
+                    volume = Math.min(100, volume + 1);
+                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, AudioManager.FLAG_SHOW_UI);
+                    break;
+                case KeyEvent.KEYCODE_BACK:
+                    finish();
+                    break;
+            }
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     /**
@@ -82,27 +116,45 @@ public class WJTXDeviceFullActivity extends BaseUikitActivity {
             WJLogUitl.d(url);
             mTxVideoPlayer.startPlay(url);
         } else {
-            String deviceSerial = TextUtils.isEmpty(mDeviceInfo.getDevIndex()) ? mDeviceInfo.getDevice_serial() : mDeviceInfo.getDevIndex();
 
-            ISAPI.getInstance().getRTMP_byVersion(TextUtils.isEmpty(mDeviceInfo.getDevIndex()), deviceSerial, new JsonCallback<RtmpConfig>() {
-                @Override
-                public void onSuccess(RtmpConfig data) {
-                    if (data != null) {
-                        RtmpConfig.RTMPDTO rtmp = data.getRTMP();
-                        if (rtmp != null) {
-                            String url;
-                            if ("true".equals(rtmp.getPrivatelyEnabled())) {
-                                url = rtmp.getPlayURL2();
-                            } else {
-                                url = rtmp.getPlayURL1();
-                            }
+            Observable.just(mDeviceInfo)
+                    .map(new Function<DeviceInfo, DeviceInfo>() {
+                        @Override
+                        public DeviceInfo apply(DeviceInfo deviceInfo) throws Exception {
+                            String deviceSerial = TextUtils.isEmpty(mDeviceInfo.getDevIndex()) ? mDeviceInfo.getDevice_serial() : mDeviceInfo.getDevIndex();
+
+                            ISAPI.getInstance().getRTMP_byVersion(TextUtils.isEmpty(mDeviceInfo.getDevIndex()), deviceSerial, new JsonCallback<RtmpConfig>() {
+                                @Override
+                                public void onSuccess(RtmpConfig data) {
+                                    if (data != null) {
+                                        RtmpConfig.RTMPDTO rtmp = data.getRTMP();
+                                        if (rtmp != null) {
+                                            String url;
+                                            if ("true".equals(rtmp.getPrivatelyEnabled())) {
+                                                url = rtmp.getPlayURL2();
+                                            } else {
+                                                url = rtmp.getPlayURL1();
+                                            }
 //                        url = WJReconnectEventConfig.transformUrl(url);
-                            WJLogUitl.d(url);
-                            mTxVideoPlayer.startPlay(url);
+                                            WJLogUitl.d(url);
+                                            mTxVideoPlayer.startPlay(url);
+                                        }
+                                    }
+                                }
+                            });
+                            return deviceInfo;
                         }
-                    }
-                }
-            });
+                    }).subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doOnSubscribe(new RxConsumer(this))
+                    .subscribe(new Consumer<DeviceInfo>() {
+                        @Override
+                        public void accept(DeviceInfo deviceInfo) throws Exception {
+
+                        }
+
+                    });
+
         }
         TXControlCover txControlCover = (TXControlCover) mTxVideoPlayer.getReceiver("TXControlCover");
         txControlCover.getWj_full_iv().setVisibility(View.GONE);

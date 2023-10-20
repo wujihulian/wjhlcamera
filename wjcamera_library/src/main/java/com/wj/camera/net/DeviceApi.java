@@ -86,7 +86,8 @@ public class DeviceApi {
         builder.addEncoded("deviceSerial", deviceSerial);
         FormBody formBody = builder.build();
         Request request = new Request.Builder()
-                .url(Api.DeviceInfo)
+
+                .url(ApiNew.baseUrl + "/api/lapp/device/info")
                 .post(formBody)
                 .build();
 
@@ -206,7 +207,7 @@ public class DeviceApi {
                     .build();
             Response execute = getClient().newCall(request).execute();
             String string = execute.body().string();
-            System.out.println("checkDeviceUpdate--- " + string);
+            System.out.println("getDeviceList--- " + string);
             Type jsonType = new TypeToken<DeviceInfoListResponse>() {
             }.getType();
             DeviceInfoListResponse baseDeviceResponse = mGson.fromJson(string, jsonType);
@@ -320,6 +321,7 @@ public class DeviceApi {
     //检查设备
     public BaseDeviceResponse<CheckDevcieUpdate> checkDeviceUpdate(String deviceSerial) {
         FormBody.Builder builder = new FormBody.Builder();
+//        builder.addEncoded("accessToken", "12");
         builder.addEncoded("accessToken", WJCamera.getInstance().getAccessToken());
         builder.addEncoded("deviceSerial", deviceSerial);
         System.out.println("checkDeviceUpdate--- " + deviceSerial + "  " + WJCamera.getInstance().getAccessToken());
@@ -335,6 +337,13 @@ public class DeviceApi {
             Type jsonType = new TypeToken<BaseDeviceResponse<CheckDevcieUpdate>>() {
             }.getType();
             BaseDeviceResponse<CheckDevcieUpdate> baseDeviceResponse = mGson.fromJson(string, jsonType);
+            if (baseDeviceResponse.getCode() != 200) {
+                BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = new BaseDeviceResponse<>();
+                CheckDevcieUpdate data = new CheckDevcieUpdate();
+                data.setCurrentVersion("V5.5.42 build 239999");
+                deviceResponse.setData(data);
+                return deviceResponse;
+            }
             return baseDeviceResponse;
         } catch (IOException e) {
             e.printStackTrace();
@@ -355,6 +364,7 @@ public class DeviceApi {
         try {
             Response execute = getClient().newCall(request).execute();
             String string = execute.body().string();
+            System.out.println("升级新版本--- "+string);
             BaseDeviceResponse baseDeviceResponse = mGson.fromJson(string, BaseDeviceResponse.class);
             return baseDeviceResponse;
         } catch (IOException e) {

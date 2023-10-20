@@ -12,11 +12,16 @@ import androidx.fragment.app.FragmentActivity;
 import com.google.gson.Gson;
 import com.tencent.live2.V2TXLiveDef;
 import com.tencent.live2.V2TXLivePlayer;
+import com.wj.camera.net.DeviceApi;
 import com.wj.camera.net.ISAPI;
 import com.wj.camera.net.OkHttpUtils;
 import com.wj.camera.net.RxConsumer;
 import com.wj.camera.net.request.GetRequest;
+import com.wj.camera.response.BaseDeviceResponse;
 import com.wj.camera.response.CameraDeviceLiveUrlResponse;
+import com.wj.camera.response.CheckDevcieUpdate;
+import com.wj.camera.response.DeviceData;
+import com.wj.camera.response.DeviceInfoListResponse;
 import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.uitl.WJLogUitl;
 import com.wj.uikit.player.event.WJReconnectEventConfig;
@@ -51,8 +56,8 @@ public class TXReconnectCover extends TXBaseCover {
 
     public TXReconnectCover(Context context) {
         super(context);
-        if (context instanceof FragmentActivity){
-            mFragmentActivity= (FragmentActivity) context;
+        if (context instanceof FragmentActivity) {
+            mFragmentActivity = (FragmentActivity) context;
         }
     }
 
@@ -66,7 +71,7 @@ public class TXReconnectCover extends TXBaseCover {
     public void onError(V2TXLivePlayer player, int code, String msg, Bundle extraInfo) {
         super.onError(player, code, msg, extraInfo);
         reconnection();
-        WJLogUitl.d("onError "+(System.currentTimeMillis()/1000));
+        WJLogUitl.d("onError " + (System.currentTimeMillis() / 1000));
     }
 
     @Override
@@ -74,7 +79,7 @@ public class TXReconnectCover extends TXBaseCover {
         super.onVideoLoading(player, extraInfo);
         if (fps == 0) {
             reconnection();
-            WJLogUitl.d("V2TXLivePlayStatusStopped "+(System.currentTimeMillis()/1000));
+            WJLogUitl.d("V2TXLivePlayStatusStopped " + (System.currentTimeMillis() / 1000));
         }
     }
 
@@ -99,96 +104,116 @@ public class TXReconnectCover extends TXBaseCover {
         super.onStatisticsUpdate(player, statistics);
         fps = statistics.fps;
     }
-    boolean isReconnection =false;
+
+    boolean isReconnection = false;
+
     @SuppressLint("CheckResult")
     public void reconnection() {
-        isReconnection=true;
-        if (mSubscribe!=null){
+        isReconnection = true;
+        if (mSubscribe != null) {
             if (!mSubscribe.isDisposed()) {
                 mSubscribe.dispose();
-                mSubscribe=null;
+                mSubscribe = null;
             }
         }
         WJLogUitl.d("reconnection");
         mSubscribe = Observable.timer(2, TimeUnit.SECONDS).map(new Function<Long, RtmpConfig>() {
-            @Override
-            public RtmpConfig apply(@NonNull Long aLong) throws Exception {
-                RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDevIndex);
-                if (rtmp == null) {
-                    return new RtmpConfig();
-                }
-                return rtmp;
-            }
-        }).filter(new Predicate<RtmpConfig>() {
-            @Override
-            public boolean test(@NonNull RtmpConfig rtmpConfig) throws Exception {
-                RtmpConfig.RTMPDTO rtmp = rtmpConfig.getRTMP();
-                if (rtmp == null) {
-                    return true;
-                }
+                    @Override
+                    public RtmpConfig apply(@NonNull Long aLong) throws Exception {
+//                RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDevIndex);
 
-                //设备未开启  开启预览功能
-                if ("false".equals(rtmp.getEnabled())) {
-                    rtmpConfig.getRTMP().setEnabled("true");
-                    rtmpConfig.getRTMP().setPrivatelyEnabled("true");
-                    //确定预览地址
-                    String playURL2 = rtmp.getPlayURL2();
-                    String privatelyURL = rtmp.getPrivatelyURL();
-                    if (TextUtils.isEmpty(privatelyURL) || TextUtils.isEmpty(playURL2)) {
-                        //预览地址为空 或者 预览推流地址为空  需要给设备配置 推流地址 啦流地址
-                        WJLogUitl.i("apply: 预览地址为空 开始配置预览地址");
-                        configPrivatelyURL(rtmpConfig);
-                    } else if (checkPreviewUrl(playURL2)) {
-                        WJLogUitl.i("apply: 预览地址过期 开始配置预览地址");
-                        configPrivatelyURL(rtmpConfig);
-                    } else {
-                        ISAPI.getInstance().setRtmp(getDeviceSerial(), rtmpConfig);
+                        DeviceInfoListResponse infoListResponse = DeviceApi.getInstance().getDeviceList(getDeviceSerial());
+                        boolean oldVersion = 0 == infoListResponse.getSearchResult().getNumOfMatches();//是不是旧版的
+
+//                        RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial);
+                        RtmpConfig rtmp = null;
+
+                        if (oldVersion) {
+                            rtmp = ISAPI.getInstance().getRTMP_byVersion(oldVersion, getDeviceSerial(), null);
+                        } else {
+
+                            if (!infoListResponse.getSearchResult().getMatchList().isEmpty()) {
+                                DeviceInfoListResponse.SearchResultBean.MatchListBean.DeviceBean device = infoListResponse.getSearchResult().getMatchList().get(0).getDevice();
+                                rtmp = ISAPI.getInstance().getRTMP_byVersion(false, device.getDevIndex(), null);
+                            }
+                        }
+
+
+                        if (rtmp == null) {
+                            return new RtmpConfig();
+                        }
+                        return rtmp;
                     }
-                }
+                }).filter(new Predicate<RtmpConfig>() {
+                    @Override
+                    public boolean test(@NonNull RtmpConfig rtmpConfig) throws Exception {
+                        RtmpConfig.RTMPDTO rtmp = rtmpConfig.getRTMP();
+                        if (rtmp == null) {
+                            return true;
+                        }
 
-                return true;
-            }
-        }).map(new Function<RtmpConfig, RtmpConfig>() {
-            @Override
-            public RtmpConfig apply(@NonNull RtmpConfig rtmpConfig) throws Exception {
-                if (TextUtils.isEmpty(getHost())) {
-                    return rtmpConfig;
-                }
-                if (rtmpConfig.getRTMP() == null) {
-                    return rtmpConfig;
-                }
-                if (liveReconnectCount>=2){
-                   return triggerLiveCheck();
-                }
+                        //设备未开启  开启预览功能
+                        if ("false".equals(rtmp.getEnabled())) {
+                            rtmpConfig.getRTMP().setEnabled("true");
+                            rtmpConfig.getRTMP().setPrivatelyEnabled("true");
+                            //确定预览地址
+                            String playURL2 = rtmp.getPlayURL2();
+                            String privatelyURL = rtmp.getPrivatelyURL();
+                            if (TextUtils.isEmpty(privatelyURL) || TextUtils.isEmpty(playURL2)) {
+                                //预览地址为空 或者 预览推流地址为空  需要给设备配置 推流地址 啦流地址
+                                WJLogUitl.i("apply: 预览地址为空 开始配置预览地址");
+                                configPrivatelyURL(rtmpConfig);
+                            } else if (checkPreviewUrl(playURL2)) {
+                                WJLogUitl.i("apply: 预览地址过期 开始配置预览地址");
+                                configPrivatelyURL(rtmpConfig);
+                            } else {
+                                ISAPI.getInstance().setRtmp(getDeviceSerial(), rtmpConfig);
+                            }
+                        }
 
-                //确定预览地址
-                RtmpConfig.RTMPDTO rtmp = rtmpConfig.getRTMP();
-                String playURL2 = rtmp.getPlayURL2();
-                String privatelyURL = rtmp.getPrivatelyURL();
-                String url = rtmp.getURL();
-                String playURL1 = rtmp.getPlayURL1();
-                String privatelyEnabled = rtmp.getPrivatelyEnabled();
-
-                if ("true".equals(privatelyEnabled)) {
-
-                    if (TextUtils.isEmpty(privatelyURL) || TextUtils.isEmpty(playURL2)) {
-                        //预览地址为空 或者 预览推流地址为空  需要给设备配置 推流地址 啦流地址
-                        WJLogUitl.i("apply: 预览地址为空 开始配置预览地址");
-                        configPrivatelyURL(rtmpConfig);
-                    } else if (checkPreviewUrl(playURL2)) {
-                        WJLogUitl.i("apply: 预览地址过期 开始配置预览地址");
-                        configPrivatelyURL(rtmpConfig);
+                        return true;
                     }
+                }).map(new Function<RtmpConfig, RtmpConfig>() {
+                    @Override
+                    public RtmpConfig apply(@NonNull RtmpConfig rtmpConfig) throws Exception {
+                        if (TextUtils.isEmpty(getHost())) {
+                            return rtmpConfig;
+                        }
+                        if (rtmpConfig.getRTMP() == null) {
+                            return rtmpConfig;
+                        }
+                        if (liveReconnectCount >= 2) {
+                            return triggerLiveCheck();
+                        }
 
-                } else {
-                    if (liveReconnectCount >= 2 || TextUtils.isEmpty(playURL1)) {
-                        //直播流重连3次取不到
-                        return  triggerLiveCheck();
+                        //确定预览地址
+                        RtmpConfig.RTMPDTO rtmp = rtmpConfig.getRTMP();
+                        String playURL2 = rtmp.getPlayURL2();
+                        String privatelyURL = rtmp.getPrivatelyURL();
+                        String url = rtmp.getURL();
+                        String playURL1 = rtmp.getPlayURL1();
+                        String privatelyEnabled = rtmp.getPrivatelyEnabled();
+
+                        if ("true".equals(privatelyEnabled)) {
+
+                            if (TextUtils.isEmpty(privatelyURL) || TextUtils.isEmpty(playURL2)) {
+                                //预览地址为空 或者 预览推流地址为空  需要给设备配置 推流地址 啦流地址
+                                WJLogUitl.i("apply: 预览地址为空 开始配置预览地址");
+                                configPrivatelyURL(rtmpConfig);
+                            } else if (checkPreviewUrl(playURL2)) {
+                                WJLogUitl.i("apply: 预览地址过期 开始配置预览地址");
+                                configPrivatelyURL(rtmpConfig);
+                            }
+
+                        } else {
+                            if (liveReconnectCount >= 2 || TextUtils.isEmpty(playURL1)) {
+                                //直播流重连3次取不到
+                                return triggerLiveCheck();
+                            }
+                        }
+                        return rtmpConfig;
                     }
-                }
-                return rtmpConfig;
-            }
-        }).subscribeOn(Schedulers.io())
+                }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnError(new Consumer<Throwable>() {
                     @Override
@@ -235,7 +260,39 @@ public class TXReconnectCover extends TXBaseCover {
         getRequest.addHeader("token", getToken()).execute();
         liveReconnectCount = 0;
 
-        RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDevIndex);
+//        BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(getDeviceSerial());
+//
+//        boolean oldVersion = false;//是不是旧版的
+//        try {
+//            String currentVersion = deviceResponse.getData().getCurrentVersion();
+//            String version = currentVersion.substring(currentVersion.lastIndexOf(" ") + 1);
+//            oldVersion = (Integer.parseInt(version.substring(0, 2)) <= 22);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+
+        DeviceInfoListResponse infoListResponse = DeviceApi.getInstance().getDeviceList(getDeviceSerial());
+        boolean oldVersion = 0 == infoListResponse.getSearchResult().getNumOfMatches();//是不是旧版的
+
+
+//                        RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial);
+        RtmpConfig rtmp = null;
+
+        if (oldVersion) {
+            rtmp = ISAPI.getInstance().getRTMP_byVersion(oldVersion, getDeviceSerial(), null);
+        } else {
+//            DeviceInfoListResponse infoListResponse = DeviceApi.getInstance().getDeviceList(getDeviceSerial());
+
+            if (0 != infoListResponse.getSearchResult().getNumOfMatches()) {
+                if (!infoListResponse.getSearchResult().getMatchList().isEmpty()) {
+                    DeviceInfoListResponse.SearchResultBean.MatchListBean.DeviceBean device = infoListResponse.getSearchResult().getMatchList().get(0).getDevice();
+
+                    rtmp = ISAPI.getInstance().getRTMP_byVersion(false, device.getDevIndex(), null);
+                }
+            }
+        }
+
+//        RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDevIndex);
         if (rtmp == null) {
             return new RtmpConfig();
         }
@@ -304,7 +361,6 @@ public class TXReconnectCover extends TXBaseCover {
     public void setDeviceSerial(String deviceSerial) {
         mDeviceSerial = deviceSerial;
     }
-
 
 
     public void configPrivatelyURL(RtmpConfig rtmpConfig) {

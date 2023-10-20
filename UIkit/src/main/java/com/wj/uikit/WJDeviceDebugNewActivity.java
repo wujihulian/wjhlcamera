@@ -1,10 +1,13 @@
 package com.wj.uikit;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.TextUtils;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -16,7 +19,9 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.lxj.xpopup.XPopup;
+import com.lxj.xpopup.core.BasePopupView;
 import com.lxj.xpopup.interfaces.OnConfirmListener;
+import com.lxj.xpopup.interfaces.SimpleCallback;
 import com.tencent.live2.V2TXLiveCode;
 import com.tencent.live2.impl.V2TXLivePlayerImpl;
 import com.videogo.openapi.EZPlayer;
@@ -73,6 +78,7 @@ import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.OkHttp;
 import okhttp3.Response;
 
 /**
@@ -129,18 +135,153 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
     private V2TXLivePlayerImpl mLivePlayer;
     private TXVideoPlayer mTxVideoPlayer;
     private String mDevIndex = "";
+    AudioManager audioManager = null;
+    private boolean isOldVersion = false; //是否是旧版
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.wj_activity_device_debug_new);
         EventBus.getDefault().register(this);
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         getDeviceInfo();
-        isLatestVersion();
+        checkDeviceStatus();//判断设备是否需要更新
+//        isLatestVersion();
         findView();
         initClick();
 //        getData();
 //        initAudio();
+    }
+
+    /**
+     * 判断设备是否需要更新
+     */
+    @SuppressLint("CheckResult")
+    private void checkDeviceStatus() {
+        Observable.fromCallable(new Callable<DeviceInfoListResponse>() {
+                    @Override
+                    public DeviceInfoListResponse call() throws Exception {
+                        DeviceInfoListResponse deviceInfoListResponse = DeviceApi.getInstance().getDeviceList(mDeviceInfo.device_serial);
+                        return deviceInfoListResponse;
+                    }
+                })
+                .map(new Function<DeviceInfoListResponse, DeviceInfoListResponse>() {
+                    @Override
+                    public DeviceInfoListResponse apply(DeviceInfoListResponse deviceUpdateStatus) throws Exception {
+                        BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = new BaseDeviceResponse<>();
+                        if (0 == deviceUpdateStatus.getSearchResult().getNumOfMatches()) {
+                            deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(mDeviceInfo.device_serial);
+                            isOldVersion = true;
+                            if (null != deviceResponse.getData() && deviceResponse.getData().getIsUpgrading() == 1) {
+                                //设备正在升级
+                                toUpdateProgress();
+                            } else {
+                                OkHttpUtils.getInstance().setOldVersion(isOldVersion);
+                                if (deviceResponse.getData().getIsNeedUpgrade() != 0) {
+
+                                    // 有新版本
+                                    new XPopup.Builder(WJDeviceDebugNewActivity.this).setPopupCallback(new SimpleCallback() {
+                                                @Override
+                                                public boolean onBackPressed(BasePopupView popupView) {
+                                                    finish();
+                                                    return true;
+                                                }
+                                            })
+                                            .dismissOnTouchOutside(false).asConfirm("该设备需要更新", "是否将设备更新到新版本", "否", "是", new OnConfirmListener() {
+                                                @Override
+                                                public void onConfirm() {
+                                                    deviceUpdate();
+                                                }
+                                            }, null, true, 0).show();
+                                }
+                                return deviceUpdateStatus;
+                            }
+                        }
+
+                        return deviceUpdateStatus;
+                    }
+                }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe(new RxConsumer(this))
+                .subscribe(new Consumer<DeviceInfoListResponse>() {
+                    @Override
+                    public void accept(DeviceInfoListResponse deviceUpdateStatus) throws Exception {
+                        if (!deviceUpdateStatus.getSearchResult().getMatchList().isEmpty()) {
+                            isOldVersion = false;
+                            OkHttpUtils.getInstance().setOldVersion(isOldVersion);
+                            mDevIndex = deviceUpdateStatus.getSearchResult().getMatchList().get(0).getDevice().getDevIndex();
+                            initVideoPlay();
+
+                        }
+                    }
+                });
+//        DeviceApi.getInstance().getDeviceList(mDeviceInfo.device_serial, new Callback() {
+//            @Override
+//            public void onFailure(@androidx.annotation.NonNull Call call, @androidx.annotation.NonNull IOException e) {
+//                System.out.println("onFailure--> " + e.getMessage());
+//            }
+//
+//            @Override
+//            public void onResponse(@androidx.annotation.NonNull Call call, @androidx.annotation.NonNull Response response) throws IOException {
+//                String json = response.body().string();
+//                System.out.println("onResponse--> " + json);
+//                runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        DeviceInfoListResponse infoListResponse = new Gson().fromJson(json, DeviceInfoListResponse.class);
+//                        if (0 == infoListResponse.getSearchResult().getNumOfMatches()) {
+//                            isOldVersion = true;
+//                            OkHttpUtils.getInstance().setOldVersion(isOldVersion);
+//                            // 有新版本
+//                            new XPopup.Builder(WJDeviceDebugNewActivity.this).setPopupCallback(new SimpleCallback() {
+//                                        @Override
+//                                        public boolean onBackPressed(BasePopupView popupView) {
+//                                            finish();
+//                                            return true;
+//                                        }
+//                                    })
+//                                    .dismissOnTouchOutside(false).asConfirm("该设备需要更新", "是否将设备更新到新版本", "否", "是", new OnConfirmListener() {
+//                                        @Override
+//                                        public void onConfirm() {
+//                                            deviceUpdate();
+//                                        }
+//                                    }, null, true, 0).show();
+//                            return;
+//                        }
+//                        if (!infoListResponse.getSearchResult().getMatchList().isEmpty()) {
+//                            isOldVersion = false;
+//                            OkHttpUtils.getInstance().setOldVersion(isOldVersion);
+//                            mDevIndex = infoListResponse.getSearchResult().getMatchList().get(0).getDevice().getDevIndex();
+//                            initVideoPlay();
+//
+//                        }
+//                    }
+//                });
+//            }
+//        });
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (null != audioManager) {
+            int volume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_VOLUME_DOWN:
+                    volume = Math.max(0, volume - 1);
+                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, AudioManager.FLAG_SHOW_UI);
+                    break;
+                case KeyEvent.KEYCODE_VOLUME_UP:
+                    volume = Math.min(100, volume + 1);
+                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, AudioManager.FLAG_SHOW_UI);
+                    break;
+                case KeyEvent.KEYCODE_BACK:
+                    finish();
+                    break;
+            }
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     private void initVideoPlay() {
@@ -164,19 +305,19 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                 .map(new Function<DeviceInfo, RtmpConfig>() {
                     @Override
                     public RtmpConfig apply(DeviceInfo deviceInfo) throws Exception {
-                        BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(deviceInfo.device_serial);
-                        boolean oldVersion = false;//是不是旧版的
-                        try {
-                            String currentVersion = deviceResponse.getData().getCurrentVersion();
-                            String version = currentVersion.substring(currentVersion.lastIndexOf(" ") + 1);
-                            oldVersion = (Integer.parseInt(version.substring(0, 2)) <= 22);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+//                        BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(deviceInfo.device_serial);
+//                        boolean oldVersion = false;//是不是旧版的
+//                        try {
+//                            String currentVersion = deviceResponse.getData().getCurrentVersion();
+//                            String version = currentVersion.substring(currentVersion.lastIndexOf(" ") + 1);
+//                            oldVersion = (Integer.parseInt(version.substring(0, 2)) <= 22);
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
 
                         RtmpConfig rtmp = null;
-                        if (oldVersion) {
-                            rtmp = ISAPI.getInstance().getRTMP_byVersion(oldVersion, deviceInfo.device_serial, null);
+                        if (isOldVersion) {
+                            rtmp = ISAPI.getInstance().getRTMP_byVersion(isOldVersion, deviceInfo.device_serial, null);
                         } else {
                             DeviceInfoListResponse infoListResponse = DeviceApi.getInstance().getDeviceList(deviceInfo.device_serial);
 
@@ -189,7 +330,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                             }
 
                         }
-
+                        System.out.println("DeviceInfoListResponse-- " + rtmp);
                         return rtmp;
                     }
                 }).subscribeOn(Schedulers.io())
@@ -211,8 +352,24 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
 //                        url = WJReconnectEventConfig.transformUrl(url);
                                 WJLogUitl.d(url);
                                 if (TextUtils.isEmpty(url)) {
-                                    Toast.makeText(WJDeviceDebugNewActivity.this, "设备不在线，请重新添加", Toast.LENGTH_SHORT).show();
-                                    finish();
+                                    new Thread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            ResponseStatus responseStatus = ISAPI.getInstance().configPrivatelyURL(mDevIndex, deviceSerial, data);
+                                            if (responseStatus.ResponseStatus != null && "1".equals(responseStatus.ResponseStatus.statusCode)) {
+                                                runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        initWebrtc();
+
+                                                    }
+                                                });
+                                            }
+
+                                        }
+                                    }).start();
+//                                    Toast.makeText(WJDeviceDebugNewActivity.this, "设备不在线，请重新添加", Toast.LENGTH_SHORT).show();
+//                                    finish();
                                     return;
                                 }
                                 if (mTxVideoPlayer != null) {
@@ -225,50 +382,12 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                                     }
                                 }
                             }
+                        } else {
+                            System.out.println("获取不到数据~~");
                         }
                     }
                 });
 
-
-//        ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial, new JsonCallback<RtmpConfig>() {
-//            @Override
-//            public void onSuccess(RtmpConfig data) {
-//                System.out.println("ISAPI.getInstance().getRTMP--> " + new Gson().toJson(data));
-//                if (data != null) {
-//                    RtmpConfig.RTMPDTO rtmp = data.getRTMP();
-//                    if (rtmp != null) {
-//                        String url;
-//                        if ("true".equals(rtmp.getPrivatelyEnabled())) {
-//                            url = rtmp.getPlayURL2();
-//                        } else {
-//                            url = rtmp.getPlayURL1();
-//                        }
-////                        url = WJReconnectEventConfig.transformUrl(url);
-//                        WJLogUitl.d(url);
-//                        if (TextUtils.isEmpty(url)) {
-//                            Toast.makeText(WJDeviceDebugNewActivity.this, "设备不在线，请重新添加", Toast.LENGTH_SHORT).show();
-//                            finish();
-//                            return;
-//                        }
-//                        if (mTxVideoPlayer != null) {
-//                            int startCode = mTxVideoPlayer.startPlay(url);
-//                            WJLogUitl.d("startPlay " + (System.currentTimeMillis() / 1000));
-//                            if (startCode == V2TXLiveCode.V2TXLIVE_OK) {
-//
-//                            } else {
-//                                mTxVideoPlayer.getReconnectCover().reconnection();
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//
-//            @Override
-//            public void onError(int code, String msg) {
-//                super.onError(code, msg);
-//                System.out.println("ISAPI.getInstance().getRTM-->" + msg);
-//            }
-//        });
 
         TXControlCover txControlCover = (TXControlCover) mTxVideoPlayer.getReceiver("TXControlCover");
         txControlCover.getWj_full_iv().setOnClickListener(new View.OnClickListener() {
@@ -649,7 +768,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
         mDevice_update_fl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                checkDevice();
+//                checkDevice();
             }
         });
 
@@ -738,7 +857,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                 new XPopup.Builder(WJDeviceDebugNewActivity.this).asConfirm("重新配网", "你确定设备重新配网？", new OnConfirmListener() {
                     @Override
                     public void onConfirm() {
-                        ISAPI.getInstance().wirelessServer(mDeviceInfo.device_serial);
+                        ISAPI.getInstance().wirelessServer(OkHttpUtils.getInstance().isOldVersion(), mDeviceInfo.device_serial);
                         Intent intent = new Intent(WJDeviceDebugNewActivity.this, WJSettingModeActivity.class);
                         Bundle bundle = new Bundle();
                         bundle.putSerializable(WJDeviceConfig.DEVICE_INFO, mDeviceInfo);
@@ -842,9 +961,14 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                                 String currentVersion = responseData.getCurrentVersion();
                                 String version = currentVersion.substring(currentVersion.lastIndexOf(" ") + 1);
                                 OkHttpUtils.getInstance().setOldVersion(Integer.parseInt(version.substring(0, 2)) <= 22);
+                                if (Integer.parseInt(version.substring(0, 2)) <= 22) {
+                                    checkDevice();
+                                    return;
+                                }
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
+
                             OkHttpUtils.getInstance(WJDeviceDebugNewActivity.this).setBaseUrl(OkHttpUtils.getInstance().isOldVersion() ? ApiNew.baseUrl : Api.baseUrl);
 
                             if (OkHttpUtils.getInstance().isOldVersion()) {
@@ -920,9 +1044,26 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
 
 
                         if (response.getCode() == 200 && response.getData() != null) {
-
-
                             CheckDevcieUpdate responseData = response.getData();
+//                            boolean oldVersion = false;//是不是旧版的
+//                            try {
+//                                String currentVersion = responseData.getCurrentVersion();
+//                                String version = currentVersion.substring(currentVersion.lastIndexOf(" ") + 1);
+//                                oldVersion = (Integer.parseInt(version.substring(0, 2)) <= 22);
+//                            } catch (Exception e) {
+//                                e.printStackTrace();
+//                            }
+                            if (isOldVersion) {
+                                // 有新版本
+                                new XPopup.Builder(WJDeviceDebugNewActivity.this).dismissOnBackPressed(false)
+                                        .dismissOnTouchOutside(false).asConfirm("检测到新版本", responseData.getCurrentVersion() + " 是否升级到 " + responseData.getLatestVersion(), "否", "是", new OnConfirmListener() {
+                                            @Override
+                                            public void onConfirm() {
+                                                deviceUpdate();
+                                            }
+                                        }, null, true, 0).show();
+                                return;
+                            }
                             if (responseData.getIsUpgrading() == 1) {
                                 //设备正在升级
                                 toUpdateProgress();
@@ -977,6 +1118,7 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
         extras.putSerializable(WJDeviceConfig.DEVICE_INFO, mDeviceInfo);
         intent.putExtras(extras);
         startActivity(intent);
+        finish();
     }
 
     @SuppressLint("CheckResult")
@@ -985,6 +1127,10 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                     @Override
                     public BaseDeviceResponse apply(@NonNull DeviceInfo deviceInfo) throws Exception {
                         BaseDeviceResponse deviceResponse = DeviceApi.getInstance().deviceUpdate(deviceInfo.device_serial);
+                        if (deviceResponse.getCode() != 200) {
+                            finish();
+                            return deviceResponse;
+                        }
                         return deviceResponse;
                     }
                 }).subscribeOn(Schedulers.io())
@@ -1039,6 +1185,10 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
         Bundle extras = getIntent().getExtras();
         mDeviceInfo = (DeviceInfo) extras.getSerializable(WJDeviceConfig.DEVICE_INFO);
         deviceSerial = mDeviceInfo.getDevice_serial();
+
+        mIsapi = ISAPI.getInstance();
+        mIsapi.config(deviceSerial);
+        mIsapi.setDevIndex(mDevIndex);
     }
 
     @Override

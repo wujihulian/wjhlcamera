@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.Call;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.logging.HttpLoggingInterceptor;
 
 
@@ -144,6 +145,14 @@ public class OkHttpUtils {
 
     public GetRequest get(String url) {
         return new GetRequest(url);
+    }
+
+
+    public Request getNoBase(String url) {
+        Request request = new Request.Builder().url(url)
+
+                .get().build();
+        return request;
     }
 
     public PutRequest put(String url) {

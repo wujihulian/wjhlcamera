@@ -40,8 +40,17 @@ import okhttp3.Response;
 public class WJReconnectEvent extends WJBaseReconnectEvent {
     private AssistPlay mAssistPlay;
     private String mDeviceSerial;
+    private String mDevIndex;
     private int liveReconnectCount = 0;
     private Disposable mSubscribe;
+
+    public String getDevIndex() {
+        return mDevIndex;
+    }
+
+    public void setDevIndex(String devIndex) {
+        mDevIndex = devIndex;
+    }
 
     public void setHost(String host) {
         this.host = host;
@@ -117,90 +126,90 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
     @SuppressLint("CheckResult")
     private void reconnection() {
         WJLogUitl.d("reconnection");
-        if (mSubscribe!=null){
+        if (mSubscribe != null) {
             if (!mSubscribe.isDisposed()) {
                 mSubscribe.dispose();
-                mSubscribe=null;
+                mSubscribe = null;
             }
         }
 
         mSubscribe = Observable.timer(2, TimeUnit.SECONDS).map(new Function<Long, RtmpConfig>() {
-            @Override
-            public RtmpConfig apply(@NonNull Long aLong) throws Exception {
-                RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDeviceSerial);
-                if (rtmp == null) {
-                    return new RtmpConfig();
-                }
-                return rtmp;
-            }
-        }).filter(new Predicate<RtmpConfig>() {
-            @Override
-            public boolean test(@NonNull RtmpConfig rtmpConfig) throws Exception {
-                RtmpConfig.RTMPDTO rtmp = rtmpConfig.getRTMP();
-                if (rtmp == null) {
-                    return true;
-                }
-
-                //设备未开启  开启预览功能
-                if ("false".equals(rtmp.getEnabled())) {
-                    rtmpConfig.getRTMP().setEnabled("true");
-                    rtmpConfig.getRTMP().setPrivatelyEnabled("true");
-                    //确定预览地址
-                    String playURL2 = rtmp.getPlayURL2();
-                    String privatelyURL = rtmp.getPrivatelyURL();
-                    if (TextUtils.isEmpty(privatelyURL) || TextUtils.isEmpty(playURL2)) {
-                        //预览地址为空 或者 预览推流地址为空  需要给设备配置 推流地址 啦流地址
-                        WJLogUitl.i("apply: 预览地址为空 开始配置预览地址");
-                        configPrivatelyURL(rtmpConfig);
-                    } else if (checkPreviewUrl(playURL2)) {
-                        WJLogUitl.i("apply: 预览地址过期 开始配置预览地址");
-                        configPrivatelyURL(rtmpConfig);
-                    } else {
-                        ISAPI.getInstance().setRtmp(getDeviceSerial(), rtmpConfig);
+                    @Override
+                    public RtmpConfig apply(@NonNull Long aLong) throws Exception {
+                        RtmpConfig rtmp = ISAPI.getInstance().getRTMP_byVersion(TextUtils.isEmpty(mDevIndex), TextUtils.isEmpty(mDevIndex) ? mDeviceSerial : mDevIndex, null);
+                        if (rtmp == null) {
+                            return new RtmpConfig();
+                        }
+                        return rtmp;
                     }
-                }
-                //直播状态 并且没有直播预览地址
+                }).filter(new Predicate<RtmpConfig>() {
+                    @Override
+                    public boolean test(@NonNull RtmpConfig rtmpConfig) throws Exception {
+                        RtmpConfig.RTMPDTO rtmp = rtmpConfig.getRTMP();
+                        if (rtmp == null) {
+                            return true;
+                        }
+
+                        //设备未开启  开启预览功能
+                        if ("false".equals(rtmp.getEnabled())) {
+                            rtmpConfig.getRTMP().setEnabled("true");
+                            rtmpConfig.getRTMP().setPrivatelyEnabled("true");
+                            //确定预览地址
+                            String playURL2 = rtmp.getPlayURL2();
+                            String privatelyURL = rtmp.getPrivatelyURL();
+                            if (TextUtils.isEmpty(privatelyURL) || TextUtils.isEmpty(playURL2)) {
+                                //预览地址为空 或者 预览推流地址为空  需要给设备配置 推流地址 啦流地址
+                                WJLogUitl.i("apply: 预览地址为空 开始配置预览地址");
+                                configPrivatelyURL(rtmpConfig);
+                            } else if (checkPreviewUrl(playURL2)) {
+                                WJLogUitl.i("apply: 预览地址过期 开始配置预览地址");
+                                configPrivatelyURL(rtmpConfig);
+                            } else {
+                                ISAPI.getInstance().setRtmp(getDeviceSerial(), rtmpConfig);
+                            }
+                        }
+                        //直播状态 并且没有直播预览地址
            /*     if ("false".equals(rtmp.getPrivatelyEnabled()) && TextUtils.isEmpty(rtmp.getPlayURL1())) {
                     return false;
                 }*/
-                return true;
-            }
-        }).map(new Function<RtmpConfig, RtmpConfig>() {
-            @Override
-            public RtmpConfig apply(@NonNull RtmpConfig rtmpConfig) throws Exception {
-                if (TextUtils.isEmpty(getHost())) {
-                    return rtmpConfig;
-                }
-                if (rtmpConfig.getRTMP() == null) {
-                    return rtmpConfig;
-                }
-
-                //确定预览地址
-                RtmpConfig.RTMPDTO rtmp = rtmpConfig.getRTMP();
-                String playURL2 = rtmp.getPlayURL2();
-                String privatelyURL = rtmp.getPrivatelyURL();
-                String url = rtmp.getURL();
-                String playURL1 = rtmp.getPlayURL1();
-                String privatelyEnabled = rtmp.getPrivatelyEnabled();
-
-                if ("true".equals(privatelyEnabled)) {
-                    if (TextUtils.isEmpty(privatelyURL) || TextUtils.isEmpty(playURL2)) {
-                        //预览地址为空 或者 预览推流地址为空  需要给设备配置 推流地址 啦流地址
-                        WJLogUitl.i("apply: 预览地址为空 开始配置预览地址");
-                        configPrivatelyURL(rtmpConfig);
-                    } else if (checkPreviewUrl(playURL2)) {
-                        WJLogUitl.i("apply: 预览地址过期 开始配置预览地址");
-                        configPrivatelyURL(rtmpConfig);
+                        return true;
                     }
-                } else {
-                    if (liveReconnectCount >= 2 || TextUtils.isEmpty(playURL1)) {
-                        //直播流重连3次取不到
-                        triggerLiveCheck();
+                }).map(new Function<RtmpConfig, RtmpConfig>() {
+                    @Override
+                    public RtmpConfig apply(@NonNull RtmpConfig rtmpConfig) throws Exception {
+                        if (TextUtils.isEmpty(getHost())) {
+                            return rtmpConfig;
+                        }
+                        if (rtmpConfig.getRTMP() == null) {
+                            return rtmpConfig;
+                        }
+
+                        //确定预览地址
+                        RtmpConfig.RTMPDTO rtmp = rtmpConfig.getRTMP();
+                        String playURL2 = rtmp.getPlayURL2();
+                        String privatelyURL = rtmp.getPrivatelyURL();
+                        String url = rtmp.getURL();
+                        String playURL1 = rtmp.getPlayURL1();
+                        String privatelyEnabled = rtmp.getPrivatelyEnabled();
+
+                        if ("true".equals(privatelyEnabled)) {
+                            if (TextUtils.isEmpty(privatelyURL) || TextUtils.isEmpty(playURL2)) {
+                                //预览地址为空 或者 预览推流地址为空  需要给设备配置 推流地址 啦流地址
+                                WJLogUitl.i("apply: 预览地址为空 开始配置预览地址");
+                                configPrivatelyURL(rtmpConfig);
+                            } else if (checkPreviewUrl(playURL2)) {
+                                WJLogUitl.i("apply: 预览地址过期 开始配置预览地址");
+                                configPrivatelyURL(rtmpConfig);
+                            }
+                        } else {
+                            if (liveReconnectCount >= 2 || TextUtils.isEmpty(playURL1)) {
+                                //直播流重连3次取不到
+                                triggerLiveCheck();
+                            }
+                        }
+                        return rtmpConfig;
                     }
-                }
-                return rtmpConfig;
-            }
-        }).subscribeOn(Schedulers.io())
+                }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<RtmpConfig>() {
                     @Override
@@ -301,7 +310,8 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
                 rtmpConfig.getRTMP().setURL(data.getDocpub());
                 rtmpConfig.getRTMP().setPlayURL1(data.getDocplay());
             }
-            ISAPI.getInstance().setRtmp(getDeviceSerial(), rtmpConfig);
+//            ISAPI.getInstance().setRtmp(getDeviceSerial(), rtmpConfig);
+            ISAPI.getInstance().setRtmp(TextUtils.isEmpty(mDevIndex), TextUtils.isEmpty(mDevIndex) ? mDeviceSerial : mDevIndex, rtmpConfig);
         } catch (IOException e) {
             e.printStackTrace();
         }

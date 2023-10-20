@@ -11,7 +11,10 @@ import com.wj.camera.callback.XmlCallback;
 import com.wj.camera.config.WJDeviceSceneEnum;
 import com.wj.camera.net.request.GetRequest;
 import com.wj.camera.request.XML;
+import com.wj.camera.response.BaseDeviceResponse;
 import com.wj.camera.response.CameraDeviceLiveUrlResponse;
+import com.wj.camera.response.CheckDevcieUpdate;
+import com.wj.camera.response.DeviceInfoListResponse;
 import com.wj.camera.response.FOCUSCTRL;
 import com.wj.camera.response.FocusEntity;
 import com.wj.camera.response.NetworkInterface;
@@ -38,6 +41,7 @@ import io.reactivex.functions.BiFunction;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.Response;
 /// 启用预览，设置预览推流地址
 /// @param deviceSerial deviceSerial description
@@ -58,7 +62,7 @@ public class ISAPI {
     private static final String TAG = "ISAPI";
     public static ISAPI isapi;
     private OkHttpClient mClient;
-    private String deviceSerial;
+    private String deviceSerial = "";
     private String devIndex = "";
     private Gson mGson;
 
@@ -104,8 +108,10 @@ public class ISAPI {
         try {
             Response execute;
             if (OkHttpUtils.getInstance().isOldVersion()) {
+                OkHttpUtils.getInstance().setBaseUrl(Api.baseUrlOld);
                 execute = OkHttpUtils.getInstance().put(ApiNew.RTMP).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(rtmpConfig)).execute();
             } else {
+                OkHttpUtils.getInstance().setBaseUrl(Api.baseUrl);
                 execute = OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.RTMP_NEW, devIndex))
                         .addHeader("EZO-DeviceSerial", devIndex).execute();
             }
@@ -128,8 +134,10 @@ public class ISAPI {
         try {
             Response execute;
             if (oldVersion) {
+                OkHttpUtils.getInstance().setBaseUrl(Api.baseUrlOld);
                 execute = OkHttpUtils.getInstance().put(ApiNew.RTMP).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(rtmpConfig)).execute();
             } else {
+                OkHttpUtils.getInstance().setBaseUrl(Api.baseUrl);
                 execute = OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.RTMP_NEW, deviceSerial))
                         .jsons(entityToXml(rtmpConfig)).execute();
             }
@@ -153,9 +161,11 @@ public class ISAPI {
         zoomResponse.setZoom(new ZoomResponse.ZoomDTO());
         zoomResponse.getZoom().setRatio(zoom);
         if (OkHttpUtils.getInstance().isOldVersion()) {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrlOld);
             OkHttpUtils.getInstance().put(ApiNew.Zoom).addHeader("EZO-DeviceSerial", deviceSerial)
                     .jsons(entityToXml(zoomResponse)).enqueue(new XmlCallback(null));
         } else {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrl);
             OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.Zoom_NEW, devIndex))
                     .addHeader("EZO-DeviceSerial", devIndex)
                     .jsons(entityToXml(zoomResponse))
@@ -168,8 +178,10 @@ public class ISAPI {
     //获取RTMP配置
     public void getRTMP(String deviceSerial, JsonCallback<RtmpConfig> callback) {
         if (OkHttpUtils.getInstance().isOldVersion()) {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrlOld);
             OkHttpUtils.getInstance().get(ApiNew.RTMP).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
         } else {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrl);
             OkHttpUtils.getInstance().get(String.format("%s?devIndex=%s", ApiNew.RTMP_NEW, devIndex))
                     .addHeader("EZO-DeviceSerial", devIndex)
                     .enqueue(new XmlCallback(callback));
@@ -183,16 +195,20 @@ public class ISAPI {
 
     public void getAudio(JsonCallback<TwoWayAudio> callback) {
         if (OkHttpUtils.getInstance().isOldVersion()) {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrlOld);
             OkHttpUtils.getInstance().get(ApiNew.Audio).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
         } else {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrl);
             OkHttpUtils.getInstance().get(String.format("%s?devIndex=%s", ApiNew.Audio_NEW, devIndex)).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
         }
     }
 
     public void getAudio(String deviceSerial, JsonCallback<TwoWayAudio> callback) {
         if (OkHttpUtils.getInstance().isOldVersion()) {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrlOld);
             OkHttpUtils.getInstance().get(ApiNew.Audio).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
         } else {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrl);
             OkHttpUtils.getInstance().get(String.format("%s?devIndex=%s", ApiNew.Audio_NEW, devIndex)).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
         }
 
@@ -202,8 +218,10 @@ public class ISAPI {
 
     public void setAuido(TwoWayAudio twoWayAudio, JsonCallback<ResponseStatus> callback) {
         if (OkHttpUtils.getInstance().isOldVersion()) {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrlOld);
             OkHttpUtils.getInstance().put(ApiNew.Audio).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(twoWayAudio)).enqueue(new XmlCallback(callback));
         } else {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrl);
             OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.Audio_NEW, devIndex)).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(twoWayAudio)).enqueue(new XmlCallback(callback));
         }
 
@@ -244,10 +262,15 @@ public class ISAPI {
     //获取RTMP配置
     public synchronized RtmpConfig getRTMP(String device_serial) {
         try {
+
+
             Response execute = null;
             if (OkHttpUtils.getInstance().isOldVersion()) {
+                OkHttpUtils.getInstance().setBaseUrl(Api.baseUrlOld);
+
                 execute = OkHttpUtils.getInstance().get(ApiNew.RTMP).addHeader("EZO-DeviceSerial", device_serial).execute();
             } else {
+                OkHttpUtils.getInstance().setBaseUrl(Api.baseUrl);
                 execute = OkHttpUtils.getInstance().get(String.format("%s?devIndex=%s", ApiNew.RTMP_NEW, devIndex)).execute();
             }
 
@@ -271,8 +294,11 @@ public class ISAPI {
         try {
             Response execute = null;
             if (oldVersion) {
+
+                OkHttpUtils.getInstance().setBaseUrl(Api.baseUrlOld);
                 execute = OkHttpUtils.getInstance().get(ApiNew.RTMP).addHeader("EZO-DeviceSerial", deviceSerial).execute();
             } else {
+                OkHttpUtils.getInstance().setBaseUrl(Api.baseUrl);
                 if (null != callback) {
                     OkHttpUtils.getInstance().get(String.format("%s?devIndex=%s", ApiNew.RTMP_NEW, deviceSerial)).enqueue(new XmlCallback(callback));
                 } else {
@@ -300,6 +326,76 @@ public class ISAPI {
         }
         return new RtmpConfig();
     }
+
+
+    public String getToken() {
+
+        return token;
+    }
+
+    public String getHost() {
+
+        return host;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    private String token;
+    private String host;
+
+    /**
+     * url为空的情况 重新设置
+     *
+     * @param devIndex
+     * @param deviceSerial
+     * @param rtmpConfig
+     * @return
+     */
+    public ResponseStatus configPrivatelyURL(String devIndex, String deviceSerial, RtmpConfig rtmpConfig) {
+        ResponseStatus responseStatus = null;
+        GetRequest getRequest = OkHttpUtils.getInstance().get("/api/course/getCameraDeviceLiveUrl?deviceCode=" + deviceSerial);
+        getRequest.setBaseUrl(getHost());
+        Response response = getRequest.addHeader("token", getToken()).execute();
+        if (response == null || response.body() == null) {
+            return responseStatus;
+        }
+        String string = null;
+        try {
+            string = response.body().string();
+            CameraDeviceLiveUrlResponse deviceLiveUrlResponse = new Gson().fromJson(string, CameraDeviceLiveUrlResponse.class);
+            if (deviceLiveUrlResponse == null || deviceLiveUrlResponse.getData() == null) {
+                return responseStatus;
+            }
+            CameraDeviceLiveUrlResponse.CameraDeviceLiveUrlData data = deviceLiveUrlResponse.getData();
+            rtmpConfig.getRTMP().setPrivatelyURL(data.getDocpub());
+            rtmpConfig.getRTMP().setPlayURL2(data.getDocplay());
+
+            //必传参数 我也没办法 随便设置一个咯
+            if (TextUtils.isEmpty(rtmpConfig.getRTMP().getURL())) {
+                rtmpConfig.getRTMP().setURL(data.getDocpub());
+                rtmpConfig.getRTMP().setPlayURL1(data.getDocplay());
+            }
+//            ISAPI.getInstance().setRtmp(getDeviceSerial(), rtmpConfig);
+
+//            BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(deviceSerial);
+
+            DeviceInfoListResponse infoListResponse = DeviceApi.getInstance().getDeviceList(deviceSerial);
+            boolean oldVersion = 0 == infoListResponse.getSearchResult().getNumOfMatches();//是不是旧版的
+
+            responseStatus = ISAPI.getInstance().setRtmp(oldVersion, oldVersion ? deviceSerial : devIndex, rtmpConfig);
+            return responseStatus;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return responseStatus;
+    }
+
 
     /**
      * 用当前配置去获取配置
@@ -345,8 +441,10 @@ public class ISAPI {
     //获取当前设置 分辨率 码率相关设置
     public Call getVideoConfig(JsonCallback<VideoConfig> callback) {
         if (OkHttpUtils.getInstance().isOldVersion()) {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrlOld);
             return OkHttpUtils.getInstance().get(ApiNew.setting101).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(callback));
         } else {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrl);
             return OkHttpUtils.getInstance().get(String.format("%s?devIndex=%s", ApiNew.setting101_NEW, devIndex)).addHeader("EZO-DeviceSerial", devIndex).enqueue(new XmlCallback(callback));
         }
     }
@@ -354,9 +452,11 @@ public class ISAPI {
     //设置当前设置 分辨率 码率相关设置
     public Call setVideoConfig(VideoConfig videoConfig, JsonCallback<ResponseStatus> callback) {
         if (OkHttpUtils.getInstance().isOldVersion()) {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrlOld);
             return OkHttpUtils.getInstance().put(ApiNew.setting101).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(videoConfig))
                     .enqueue(new XmlCallback(callback));
         } else {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrl);
             return OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.setting101_NEW, devIndex))
                     .addHeader("EZO-DeviceSerial", devIndex).jsons(entityToXml(videoConfig)).enqueue(new XmlCallback(callback));
         }
@@ -370,8 +470,10 @@ public class ISAPI {
 
     public Call getZoom(String deviceSerial, JsonCallback<ZoomResponse> jsonCallback) {
         if (OkHttpUtils.getInstance().isOldVersion()) {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrlOld);
             return OkHttpUtils.getInstance().get(ApiNew.Zoom).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(jsonCallback));
         } else {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrl);
             return OkHttpUtils.getInstance().get(String.format("%s?devIndex=%s", ApiNew.Zoom_NEW, devIndex)).addHeader("EZO-DeviceSerial", devIndex).enqueue(new XmlCallback(jsonCallback));
         }
 
@@ -429,12 +531,14 @@ public class ISAPI {
 
     public Call getScene(String deviceSerial, JsonCallback<SceneResponse> jsonCallback) {
         if (OkHttpUtils.getInstance().isOldVersion()) {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrlOld);
             return OkHttpUtils.getInstance()
                     .get(ApiNew.Scene)
                     .addHeader("EZO-DeviceSerial", deviceSerial)
                     .enqueue(new XmlCallback(jsonCallback));
 
         } else {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrl);
 
             return OkHttpUtils.getInstance()
                     .get(String.format("%s?devIndex=%s", ApiNew.Scene_NEW, devIndex))
@@ -448,10 +552,20 @@ public class ISAPI {
         SceneResponse sceneResponse = new SceneResponse();
         sceneResponse.setMountingScenario(new SceneResponse.MountingScenarioDTO());
         sceneResponse.getMountingScenario().setMode(indoor.getScene());
-        return OkHttpUtils.getInstance().put(ApiNew.Scene)
-                .jsons(entityToXml(sceneResponse))
-                .addHeader("EZO-DeviceSerial", deviceSerial)
-                .enqueue(new XmlCallback(jsonCallback));
+        if (OkHttpUtils.getInstance().isOldVersion()) {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrlOld);
+            return OkHttpUtils.getInstance().put(ApiNew.Scene)
+                    .jsons(entityToXml(sceneResponse))
+                    .addHeader("EZO-DeviceSerial", deviceSerial)
+                    .enqueue(new XmlCallback(jsonCallback));
+        } else {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrl);
+            return OkHttpUtils.getInstance()
+                    .put(String.format("%s?devIndex=%s", ApiNew.Scene_NEW, devIndex))
+                    .jsons(entityToXml(sceneResponse))
+                    .addHeader("EZO-DeviceSerial", deviceSerial)
+                    .enqueue(new XmlCallback(jsonCallback));
+        }
     }
 
     //聚焦
@@ -535,7 +649,13 @@ public class ISAPI {
         zoommctrldto.setMode(mode);
         zoommctrldto.setStep(step);
         zoomCTRL.setZOOMCTRL(zoommctrldto);
-        return OkHttpUtils.getInstance().put(ApiNew.ZOOMCTRL).jsons(entityToXml(zoomCTRL)).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
+        if (OkHttpUtils.getInstance().isOldVersion()) {
+            return OkHttpUtils.getInstance().put(ApiNew.ZOOMCTRL).jsons(entityToXml(zoomCTRL)).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
+        } else {
+            return OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.ZOOMCTRL_NEW, devIndex)).jsons(entityToXml(zoomCTRL)).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
+
+        }
+
     }
 
     public Call FOCUSCTRL(String deviceSerial, String mode) {
@@ -549,7 +669,11 @@ public class ISAPI {
         focusctrldto.setMode(mode);
         focusctrldto.setStep(step);
         focusctrl.setFOCUSCTRL(focusctrldto);
-        return OkHttpUtils.getInstance().put(ApiNew.FOCUSCTRL).jsons(entityToXml(focusctrl)).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
+        if (OkHttpUtils.getInstance().isOldVersion()) {
+            return OkHttpUtils.getInstance().put(ApiNew.FOCUSCTRL).jsons(entityToXml(focusctrl)).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
+        } else {
+            return OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.FOCUSCTRL_NEW, devIndex)).jsons(entityToXml(focusctrl)).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(null);
+        }
     }
 
     //简单恢复
@@ -564,12 +688,34 @@ public class ISAPI {
 
     //重新配网
     public void wirelessServer(String deviceSerial) {
-        OkHttpUtils.getInstance().get(ApiNew.wirelessServer).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(new JsonCallback<WirelessServer>() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                DeviceInfoListResponse deviceList = DeviceApi.getInstance().getDeviceList(deviceSerial);
+                wirelessServer(deviceList.getSearchResult().getNumOfMatches() == 0, deviceSerial);
+            }
+        }).start();
+//        OkHttpUtils.getInstance().get(ApiNew.wirelessServer).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(new JsonCallback<WirelessServer>() {
+//            @Override
+//            public void onSuccess(WirelessServer data) {
+//                if (data != null && data.getWirelessServer() != null) {
+//                    data.getWirelessServer().setWifiApEnabled("true");
+//                    OkHttpUtils.getInstance().put(ApiNew.wirelessServer).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(data)).enqueue(null);
+//                }
+//            }
+//        }));
+    }
+
+    //重新配网
+    public void wirelessServer(boolean isOldVersion, String deviceSerial) {
+        String url = isOldVersion ? ApiNew.wirelessServer : String.format("%s?devIndex=%s", ApiNew.wirelessServer_NEW, deviceSerial);
+        OkHttpUtils.getInstance().setBaseUrl(isOldVersion ? Api.baseUrlOld : Api.baseUrl);
+        OkHttpUtils.getInstance().get(url).addHeader("EZO-DeviceSerial", deviceSerial).enqueue(new XmlCallback(new JsonCallback<WirelessServer>() {
             @Override
             public void onSuccess(WirelessServer data) {
                 if (data != null && data.getWirelessServer() != null) {
                     data.getWirelessServer().setWifiApEnabled("true");
-                    OkHttpUtils.getInstance().put(ApiNew.wirelessServer).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(data)).enqueue(null);
+                    OkHttpUtils.getInstance().put(url).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(data)).enqueue(null);
                 }
             }
         }));
@@ -579,6 +725,7 @@ public class ISAPI {
     public void getNetworkInterface(String deviceSerial, JsonCallback<NetworkInterface> jsonCallback) {
 
         if (OkHttpUtils.getInstance().isOldVersion()) {
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrlOld);
             OkHttpUtils.getInstance()
                     .get(ApiNew.networkInterface)
                     .addHeader("EZO-DeviceSerial", deviceSerial)
@@ -586,6 +733,7 @@ public class ISAPI {
 
         } else {
 
+            OkHttpUtils.getInstance().setBaseUrl(Api.baseUrl);
             OkHttpUtils.getInstance()
                     .get(String.format("%s?devIndex=%s", ApiNew.networkInterface_NEW, devIndex))
                     .addHeader("EZO-DeviceSerial", deviceSerial)
@@ -597,7 +745,11 @@ public class ISAPI {
     }
 
     public void onepushFoucsStart(String deviceSerial) {
-        OkHttpUtils.getInstance().put(ApiNew.onepushfoucsStart).addHeader("EZO-DeviceSerial", deviceSerial).jsons(XML.PTZDATA_0).enqueue(null);
+        if (OkHttpUtils.getInstance().isOldVersion()) {
+            OkHttpUtils.getInstance().put(ApiNew.onepushfoucsStart).addHeader("EZO-DeviceSerial", deviceSerial).jsons(XML.PTZDATA_0).enqueue(null);
+        } else {
+            OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.onepushfoucsStart_NEW, devIndex)).addHeader("EZO-DeviceSerial", deviceSerial).jsons(XML.PTZDATA_0).enqueue(null);
+        }
     }
 
     //获取配网错误日志

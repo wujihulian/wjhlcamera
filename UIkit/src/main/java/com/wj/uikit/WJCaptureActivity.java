@@ -93,7 +93,8 @@ public class WJCaptureActivity extends AppCompatActivity {
                         if ("QR_CODE".equals(result.getFormatName())) {
                             //  Toast.makeText(WJCaptureActivity.this, "Scanned: " + result.getContents(), Toast.LENGTH_LONG).show();
                             mDeviceInfo = parse(result.getContents());
-                            isLatestVersion(mDeviceInfo);
+//                            isLatestVersion(mDeviceInfo);
+                            getDevice(mDeviceInfo);
                         } else {
                             Toast.makeText(WJCaptureActivity.this, "请扫描正确的二维码", Toast.LENGTH_SHORT).show();
                         }
@@ -197,18 +198,17 @@ public class WJCaptureActivity extends AppCompatActivity {
                 Log.d(TAG, "onResponse: " + json);
                 DeviceInfoListResponse infoListResponse = new Gson().fromJson(json, DeviceInfoListResponse.class);
                 if (0 == infoListResponse.getSearchResult().getNumOfMatches()) {
+                    OkHttpUtils.getInstance().setOldVersion(true);
                     Intent intent = new Intent(WJCaptureActivity.this, WJSettingModeActivity.class);
                     Bundle bundle = new Bundle();
                     bundle.putSerializable(WJDeviceConfig.DEVICE_INFO, deviceInfo);
-//                bundle.putInt(WJDeviceConfig.SUPPORT_APP_MODE, probeDeviceInfo.getSupportAP());
-//                if (result.getBaseException().getErrorCode() == 120029) {
-//                    bundle.putInt(WJDeviceConfig.DEVICE_CODE, 120020);
                     intent.putExtras(bundle);
                     startActivity(intent);
                     finish();
                     return;
                 }
                 if (!infoListResponse.getSearchResult().getMatchList().isEmpty()) {
+                    OkHttpUtils.getInstance().setOldVersion(false);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -418,7 +418,38 @@ public class WJCaptureActivity extends AppCompatActivity {
                     public Boolean apply(@io.reactivex.annotations.NonNull DeviceInfo deviceInfo) throws Exception {
                         boolean isApi = false;
                         for (int i = 0; i < 2; i++) {
-                            RtmpConfig rtmp = ISAPI.getInstance().getRTMP(deviceInfo.device_serial);
+//                            RtmpConfig rtmp = ISAPI.getInstance().getRTMP(deviceInfo.device_serial);
+
+//                            BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(deviceInfo.device_serial);
+//
+//                            boolean oldVersion = false;//是不是旧版的
+//                            try {
+//                                String currentVersion = deviceResponse.getData().getCurrentVersion();
+//                                String version = currentVersion.substring(currentVersion.lastIndexOf(" ") + 1);
+//                                oldVersion = (Integer.parseInt(version.substring(0, 2)) <= 22);
+//                            } catch (Exception e) {
+//                                e.printStackTrace();
+//                            }
+
+                            DeviceInfoListResponse infoListResponse = DeviceApi.getInstance().getDeviceList(deviceInfo.device_serial);
+                            boolean oldVersion = 0 == infoListResponse.getSearchResult().getNumOfMatches();//是不是旧版的
+
+//                        RtmpConfig rtmp = ISAPI.getInstance().getRTMP(mDeviceInfo.device_serial);
+                            RtmpConfig rtmp = null;
+
+                            if (oldVersion) {
+                                rtmp = ISAPI.getInstance().getRTMP_byVersion(oldVersion, deviceInfo.device_serial, null);
+                            } else {
+//                                DeviceInfoListResponse infoListResponse = DeviceApi.getInstance().getDeviceList(deviceInfo.device_serial);
+
+                                if (0 != infoListResponse.getSearchResult().getNumOfMatches()) {
+                                    if (!infoListResponse.getSearchResult().getMatchList().isEmpty()) {
+                                        DeviceInfoListResponse.SearchResultBean.MatchListBean.DeviceBean device = infoListResponse.getSearchResult().getMatchList().get(0).getDevice();
+                                        rtmp = ISAPI.getInstance().getRTMP_byVersion(false, device.getDevIndex(), null);
+                                    }
+                                }
+                            }
+
                             if (rtmp == null || rtmp.getRTMP() == null) {
                             } else {
                                 isApi = true;
