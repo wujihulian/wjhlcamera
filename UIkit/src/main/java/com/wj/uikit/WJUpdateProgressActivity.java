@@ -88,6 +88,8 @@ public class WJUpdateProgressActivity extends BaseUikitActivity {
         mDeviceInfo = (DeviceInfo) extras.getSerializable(WJDeviceConfig.DEVICE_INFO);
     }
 
+    int progress = -1;
+
     @SuppressLint("CheckResult")
     private void getProgress() {
         Observable.just(mDeviceInfo).map(new Function<DeviceInfo, BaseDeviceResponse<DeviceUpdateStatus>>() {
@@ -107,21 +109,28 @@ public class WJUpdateProgressActivity extends BaseUikitActivity {
                         // Gson gson = new Gson();
                         WJLogUitl.i("getProgress", "accept: " + new Gson().toJson(data));
                         if (data != null) {
+                            if (data.getProgress() > progress) {
+                                progress = data.getProgress() + 1;
+                            } else {
+                                progress = progress < 100 ? progress + 1 : 100;
+                            }
+
                             if (data.getStatus() == 0) {
-                                mWj_progress.setProgressSmooth(data.getProgress());
+
+                                mWj_progress.setProgressSmooth(progress);
                                 mTv_status.setText("正在升级");
                                 sendProgress();
                             } else if (data.getStatus() == 1) {
                                 mTv_status.setText("设备重启中");
                                 sendProgress();
                             } else if (data.getStatus() == 2) {
-                                if (data.getProgress()==0) {
+                                if (data.getProgress() == 0) {
                                     return;
                                 }
                                 addDevice();
                                 if (data.getProgress() == 100) {
                                     mTv_status.setText("设备重启中");
-                                    mWj_progress.setProgressSmooth(data.getProgress());
+                                    mWj_progress.setProgressSmooth(progress);
                                     sendProgress();
                                 } else {
                                     mWj_progress.setProgressSmooth(100);
@@ -158,7 +167,7 @@ public class WJUpdateProgressActivity extends BaseUikitActivity {
     /**
      * 添加设备到后台
      */
-    public void addDevice(){
+    public void addDevice() {
         if (mLoadingPopupView != null) {
             mLoadingPopupView.show();
         }
@@ -183,6 +192,7 @@ public class WJUpdateProgressActivity extends BaseUikitActivity {
         });
 
     }
+
     public void post(DeviceInfo deviceInfo) {
         WJLogUitl.d("这个就是全部的数据", new Gson().toJson(deviceInfo));
         ISAPI.getInstance().getNetworkInterface(deviceInfo.device_serial, new JsonCallback<NetworkInterface>() {
