@@ -12,8 +12,12 @@ import com.wj.camera.net.ISAPI;
 import com.wj.camera.net.OkHttpUtils;
 import com.wj.camera.net.request.GetRequest;
 import com.wj.camera.response.CameraDeviceLiveUrlResponse;
+import com.wj.camera.response.ResponseStatus;
 import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.uitl.WJLogUitl;
+import com.wj.uikit.entity.EventBusUpdateRtmpConfig;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -311,7 +315,21 @@ public class WJReconnectEvent extends WJBaseReconnectEvent {
                 rtmpConfig.getRTMP().setPlayURL1(data.getDocplay());
             }
 //            ISAPI.getInstance().setRtmp(getDeviceSerial(), rtmpConfig);
-            ISAPI.getInstance().setRtmp(TextUtils.isEmpty(mDevIndex), TextUtils.isEmpty(mDevIndex) ? mDeviceSerial : mDevIndex, rtmpConfig);
+//            ISAPI.getInstance().setRtmp(TextUtils.isEmpty(mDevIndex), TextUtils.isEmpty(mDevIndex) ? mDeviceSerial : mDevIndex, rtmpConfig);
+            OkHttpUtils.getInstance().setOldVersion(false);
+            ResponseStatus responseStatus = ISAPI.getInstance().setRtmp(getDeviceSerial(), rtmpConfig);
+            if ("1".equals(responseStatus.ResponseStatus.statusCode)) {
+                DataSource dataSource = new DataSource();
+                dataSource.setData(data.getDocplay());
+
+                WJLogUitl.i(data.getDocplay() );
+                if (mAssistPlay.isPlaying()) {
+                    mAssistPlay.stop();
+                }
+                mAssistPlay.setDataSource(dataSource);
+                mAssistPlay.play(true);
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }

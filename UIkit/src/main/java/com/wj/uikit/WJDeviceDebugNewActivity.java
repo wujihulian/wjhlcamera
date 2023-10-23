@@ -7,6 +7,7 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -49,6 +50,7 @@ import com.wj.camera.view.WJDeviceConfig;
 import com.wj.camera.view.WJPlayView;
 import com.wj.uikit.adapter.OnItemClickListener;
 import com.wj.uikit.db.DeviceInfo;
+import com.wj.uikit.entity.EventBusUpdateRtmpConfig;
 import com.wj.uikit.player.WJRelationAssistUtil;
 import com.wj.uikit.player.WJVideoPlayer;
 import com.wj.uikit.player.event.WJReconnectEvent;
@@ -293,8 +295,10 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
             initAction();
         }
     }
-
     private void initWebrtc() {
+        if (null == mDeviceInfo) {
+            return;
+        }
         FrameLayout frameLayout = findViewById(R.id.fl);
         frameLayout.setVisibility(View.VISIBLE);
         mTxVideoPlayer = new TXVideoPlayer(this);
@@ -349,9 +353,10 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                                 } else {
                                     url = rtmp.getPlayURL1();
                                 }
+
 //                        url = WJReconnectEventConfig.transformUrl(url);
                                 WJLogUitl.d(url);
-                                if (TextUtils.isEmpty(url)) {
+                                if (TextUtils.isEmpty(url)||checkPreviewUrl(url)) {
                                     new Thread(new Runnable() {
                                         @Override
                                         public void run() {
@@ -361,7 +366,6 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                                                     @Override
                                                     public void run() {
                                                         initWebrtc();
-
                                                     }
                                                 });
                                             }
@@ -396,6 +400,35 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
                 WJTXDeviceFullActivity.start(WJDeviceDebugNewActivity.this, mDeviceInfo);
             }
         });
+    }
+    //检查推流是否过期
+    public boolean checkPreviewUrl(String previewUrl) {
+        if (TextUtils.isEmpty(previewUrl)) {
+            return true;
+        }
+        String[] split = previewUrl.split("\\?");
+        if (split.length >= 1) {
+            for (String s : split) {
+                String[] split1 = s.split("&");
+                for (String s1 : split1) {
+                    WJLogUitl.i(s1);
+                    String[] split2 = s1.split("=");
+                    String s2 = split2[0];
+                    if ("txTime".equals(s2)) {
+                        String hex = split2[1];
+                        WJLogUitl.i(hex);
+                        long time = Long.valueOf(hex, 16);
+                        long currentTimeMillis = System.currentTimeMillis() / 1000;
+                        WJLogUitl.i("checkPreviewUrl: 剩余时间 " + (time - currentTimeMillis));
+                        if (time <= currentTimeMillis) {
+                            WJLogUitl.i("拉流地址过期");
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -1175,6 +1208,17 @@ public class WJDeviceDebugNewActivity extends BaseUikitActivity {
         mIv_high = findViewById(R.id.iv_high);
 
         mFrameLayout = findViewById(R.id.fl_video);
+
+    }
+
+    boolean isUpdate = true;
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void updateConfig(EventBusUpdateRtmpConfig updateRtmpConfig) {
+        if (isUpdate) {
+//            initWebrtc();
+            isUpdate=false;
+        }
 
     }
 

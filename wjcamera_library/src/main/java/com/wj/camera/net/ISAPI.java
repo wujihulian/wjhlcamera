@@ -26,6 +26,7 @@ import com.wj.camera.response.VideoConfig;
 import com.wj.camera.response.WirelessServer;
 import com.wj.camera.response.ZOOMCTRL;
 import com.wj.camera.response.ZoomResponse;
+import com.wj.camera.uitl.WJLogUitl;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -109,22 +110,27 @@ public class ISAPI {
             Response execute;
             if (OkHttpUtils.getInstance().isOldVersion()) {
                 OkHttpUtils.getInstance().setBaseUrl(Api.baseUrlOld);
-                execute = OkHttpUtils.getInstance().put(ApiNew.RTMP).addHeader("EZO-DeviceSerial", deviceSerial).jsons(entityToXml(rtmpConfig)).execute();
+                execute = OkHttpUtils.getInstance().put(ApiNew.RTMP).addHeader("EZO-DeviceSerial", deviceSerial)
+                        .jsons(entityToXml(rtmpConfig)).execute();
             } else {
                 OkHttpUtils.getInstance().setBaseUrl(Api.baseUrl);
                 execute = OkHttpUtils.getInstance().put(String.format("%s?devIndex=%s", ApiNew.RTMP_NEW, devIndex))
+                        .jsons(entityToXml(rtmpConfig))
                         .addHeader("EZO-DeviceSerial", devIndex).execute();
             }
 
+            WJLogUitl.d("setRtmp--- "+execute.request().url());
             if (execute == null || execute.body() == null) {
                 return null;
             }
             String string = execute.body().string();
+            WJLogUitl.d("setRtmp--- "+string);
             String xml = Objects.requireNonNull(string);
             String json = new XmlToJson.Builder(xml).build().toString();
             return new Gson().fromJson(json, ResponseStatus.class);
         } catch (IOException e) {
             e.printStackTrace();
+            WJLogUitl.d("setRtmp--- "+e.getMessage());
         }
         return null;
     }
@@ -334,7 +340,6 @@ public class ISAPI {
     }
 
     public String getHost() {
-
         return host;
     }
 
@@ -358,6 +363,10 @@ public class ISAPI {
      * @return
      */
     public ResponseStatus configPrivatelyURL(String devIndex, String deviceSerial, RtmpConfig rtmpConfig) {
+        if (null==rtmpConfig||null==rtmpConfig.getRTMP()){
+            rtmpConfig=new RtmpConfig();
+            rtmpConfig.setRTMP(new RtmpConfig.RTMPDTO());
+        }
         ResponseStatus responseStatus = null;
         GetRequest getRequest = OkHttpUtils.getInstance().get("/api/course/getCameraDeviceLiveUrl?deviceCode=" + deviceSerial);
         getRequest.setBaseUrl(getHost());

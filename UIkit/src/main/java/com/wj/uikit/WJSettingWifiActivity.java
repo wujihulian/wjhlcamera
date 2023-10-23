@@ -32,7 +32,6 @@ import com.ap.ezviz.pub.YsApManager;
 import com.ap.ezviz.pub.ap.ApWifiConfigInfo;
 import com.ap.ezviz.pub.ap.FIXED_IP;
 import com.ap.ezviz.pub.http.APHttpClient;
-import com.google.firebase.database.annotations.NotNull;
 import com.google.gson.Gson;
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.core.BasePopupView;
@@ -67,6 +66,7 @@ import com.wj.uikit.subscribe.LoadingObserver;
 import com.wj.uikit.uitl.WJActivityControl;
 
 import org.greenrobot.eventbus.EventBus;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;

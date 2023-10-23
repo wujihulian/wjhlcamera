@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
 import com.google.gson.Gson;
+import com.tencent.live2.V2TXLiveCode;
 import com.tencent.live2.V2TXLiveDef;
 import com.tencent.live2.V2TXLivePlayer;
 import com.wj.camera.net.DeviceApi;
@@ -22,10 +23,16 @@ import com.wj.camera.response.CameraDeviceLiveUrlResponse;
 import com.wj.camera.response.CheckDevcieUpdate;
 import com.wj.camera.response.DeviceData;
 import com.wj.camera.response.DeviceInfoListResponse;
+import com.wj.camera.response.ResponseStatus;
 import com.wj.camera.response.RtmpConfig;
 import com.wj.camera.uitl.WJLogUitl;
+import com.wj.uikit.db.DeviceInfo;
+import com.wj.uikit.entity.EventBusUpdateRtmpConfig;
 import com.wj.uikit.player.event.WJReconnectEventConfig;
+import com.wj.uikit.subscribe.LoadingObserver;
 import com.wj.uikit.tx.bs.TXBaseCover;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -151,7 +158,7 @@ public class TXReconnectCover extends TXBaseCover {
                         if (rtmp == null) {
                             return true;
                         }
-
+//                        configPrivatelyURL(rtmpConfig);
                         //设备未开启  开启预览功能
                         if ("false".equals(rtmp.getEnabled())) {
                             rtmpConfig.getRTMP().setEnabled("true");
@@ -167,7 +174,8 @@ public class TXReconnectCover extends TXBaseCover {
                                 WJLogUitl.i("apply: 预览地址过期 开始配置预览地址");
                                 configPrivatelyURL(rtmpConfig);
                             } else {
-                                ISAPI.getInstance().setRtmp(getDeviceSerial(), rtmpConfig);
+                                ResponseStatus responseStatus = ISAPI.getInstance().setRtmp(getDeviceSerial(), rtmpConfig);
+
                             }
                         }
 
@@ -203,10 +211,12 @@ public class TXReconnectCover extends TXBaseCover {
                             } else if (checkPreviewUrl(playURL2)) {
                                 WJLogUitl.i("apply: 预览地址过期 开始配置预览地址");
                                 configPrivatelyURL(rtmpConfig);
+                            } else {
+                                configPrivatelyURL(rtmpConfig);
                             }
 
                         } else {
-                            if (liveReconnectCount >= 2 || TextUtils.isEmpty(playURL1)) {
+                            if (liveReconnectCount >= 1 || TextUtils.isEmpty(playURL1)) {
                                 //直播流重连3次取不到
                                 return triggerLiveCheck();
                             }
@@ -260,17 +270,6 @@ public class TXReconnectCover extends TXBaseCover {
         getRequest.addHeader("token", getToken()).execute();
         liveReconnectCount = 0;
 
-//        BaseDeviceResponse<CheckDevcieUpdate> deviceResponse = DeviceApi.getInstance().checkDeviceUpdate(getDeviceSerial());
-//
-//        boolean oldVersion = false;//是不是旧版的
-//        try {
-//            String currentVersion = deviceResponse.getData().getCurrentVersion();
-//            String version = currentVersion.substring(currentVersion.lastIndexOf(" ") + 1);
-//            oldVersion = (Integer.parseInt(version.substring(0, 2)) <= 22);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-
         DeviceInfoListResponse infoListResponse = DeviceApi.getInstance().getDeviceList(getDeviceSerial());
         boolean oldVersion = 0 == infoListResponse.getSearchResult().getNumOfMatches();//是不是旧版的
 
@@ -286,7 +285,6 @@ public class TXReconnectCover extends TXBaseCover {
             if (0 != infoListResponse.getSearchResult().getNumOfMatches()) {
                 if (!infoListResponse.getSearchResult().getMatchList().isEmpty()) {
                     DeviceInfoListResponse.SearchResultBean.MatchListBean.DeviceBean device = infoListResponse.getSearchResult().getMatchList().get(0).getDevice();
-
                     rtmp = ISAPI.getInstance().getRTMP_byVersion(false, device.getDevIndex(), null);
                 }
             }
@@ -364,32 +362,44 @@ public class TXReconnectCover extends TXBaseCover {
 
 
     public void configPrivatelyURL(RtmpConfig rtmpConfig) {
-        GetRequest getRequest = OkHttpUtils.getInstance().get("/api/course/getCameraDeviceLiveUrl?deviceCode=" + getDeviceSerial());
-        getRequest.setBaseUrl(getHost());
-        Response response = getRequest.addHeader("token", getToken()).execute();
-        if (response == null || response.body() == null) {
-            return;
-        }
-        String string = null;
-        try {
-            string = response.body().string();
-            CameraDeviceLiveUrlResponse deviceLiveUrlResponse = new Gson().fromJson(string, CameraDeviceLiveUrlResponse.class);
-            if (deviceLiveUrlResponse == null || deviceLiveUrlResponse.getData() == null) {
-                return;
-            }
-            CameraDeviceLiveUrlResponse.CameraDeviceLiveUrlData data = deviceLiveUrlResponse.getData();
-            rtmpConfig.getRTMP().setPrivatelyURL(data.getDocpub());
-            rtmpConfig.getRTMP().setPlayURL2(data.getDocplay());
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                GetRequest getRequest = OkHttpUtils.getInstance().get("/api/course/getCameraDeviceLiveUrl?deviceCode=" + getDeviceSerial());
+                getRequest.setBaseUrl(getHost());
+                Response response = getRequest.addHeader("token", getToken()).execute();
+                WJLogUitl.d("Response--- " + response.body());
+                if (response == null || response.body() == null) {
+                    return;
+                }
+                String string = null;
+                try {
+                    string = response.body().string();
+                    WJLogUitl.d("Response--- " + string);
+                    CameraDeviceLiveUrlResponse deviceLiveUrlResponse = new Gson().fromJson(string, CameraDeviceLiveUrlResponse.class);
+                    if (deviceLiveUrlResponse == null || deviceLiveUrlResponse.getData() == null) {
+                        return;
+                    }
+                    CameraDeviceLiveUrlResponse.CameraDeviceLiveUrlData data = deviceLiveUrlResponse.getData();
+                    rtmpConfig.getRTMP().setPrivatelyURL(data.getDocpub());
+                    rtmpConfig.getRTMP().setPlayURL2(data.getDocplay());
 
-            //必传参数 我也没办法 随便设置一个咯
-            if (TextUtils.isEmpty(rtmpConfig.getRTMP().getURL())) {
-                rtmpConfig.getRTMP().setURL(data.getDocpub());
-                rtmpConfig.getRTMP().setPlayURL1(data.getDocplay());
+                    //必传参数 我也没办法 随便设置一个咯
+                    if (TextUtils.isEmpty(rtmpConfig.getRTMP().getURL())) {
+                        rtmpConfig.getRTMP().setURL(data.getDocpub());
+                        rtmpConfig.getRTMP().setPlayURL1(data.getDocplay());
+                    }
+                    ResponseStatus responseStatus = ISAPI.getInstance().setRtmp(getDeviceSerial(), rtmpConfig);
+                    if ("1".equals(responseStatus.ResponseStatus.statusCode)) {
+                        EventBus.getDefault().post(new EventBusUpdateRtmpConfig());
+                        getEvent().startPlay(data.getDocplay());
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
             }
-            ISAPI.getInstance().setRtmp(getDeviceSerial(), rtmpConfig);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        }).start();
 
     }
 
